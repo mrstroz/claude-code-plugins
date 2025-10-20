@@ -1,0 +1,13 @@
+{
+  "name": "mrstroz-marketplace",
+  "owner": {
+    "name": "mrstroz"
+  },
+  "plugins": [
+    {
+      "name": "task-creator",
+      "source": "./task-creator",
+      "description": "Plugin for creating and managing tasks in Claude Code"
+    }
+  ]
+}
