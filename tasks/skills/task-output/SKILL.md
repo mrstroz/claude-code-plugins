@@ -6,6 +6,7 @@ description: Defines the standard output format and template for task creation. 
 # Task Output Format Specification
 
 ## Target Audience
+
 Assume the primary reader of the task is a junior developer. Therefore, the requirements should be explicit and unambiguous, and jargon should be avoided where possible. Provide enough detail to enable them to understand the purpose of the task and its core logic.
 
 ## Creating Tasks
@@ -35,6 +36,7 @@ Task titles should follow these patterns based on category:
 - **Subtask**: `<Parent Context> - <Specific Action>` - e.g., "OAuth2 - Add frontend integration"
 
 **General Title Rules:**
+
 - Use imperative mood (Add, Fix, Update, Remove, Implement)
 - Be specific and concise (max 80 characters)
 - Avoid technical jargon when possible
@@ -52,11 +54,13 @@ A brief description (1-2 sentences) of _why_ this task is needed. What problem d
 
 A list of specific, verifiable conditions that must be met to consider the task **done**. Present them as a checklist.
 
-### Technical Details / Implementation Hints
+### Technical Details / Implementation Hints (Optional)
 
 Technical guidance that can speed up the work. Not a full instruction manual, but helpful information about key files, libraries, patterns, and implementation approach.
 
-### Designs & Attachments
+This section should be included for **Complex** tasks to provide deep technical context and implementation guidance.
+
+### Designs & Attachments (Optional)
 
 Links to mockups, documentation, API specifications, logs, or other materials needed to complete the task.
 
@@ -69,27 +73,32 @@ Dependencies or related tasks. Include URLs if using a task management system.
 When creating any task, ensure you follow these requirements:
 
 **Titles:**
+
 - [ ] Use imperative mood (Add, Fix, Update, Remove, Implement)
 - [ ] Be specific and descriptive (max 80 characters)
 - [ ] Follow the category naming convention
 
 **Goal Section:**
+
 - [ ] Keep to 1-2 sentences explaining WHY, not WHAT
 - [ ] Clearly state business value or problem being solved
 
 **Acceptance Criteria:**
+
 - [ ] 3-6 essential criteria only (avoid overwhelming lists)
 - [ ] Each criterion is unique and specific
 - [ ] All criteria are testable and verifiable
 - [ ] Use checkbox format for trackability
 
 **Technical Details:**
+
 - [ ] 3-5 main points maximum
 - [ ] Mention key files/components that need modification
 - [ ] Include essential patterns or existing code to follow
 - [ ] Avoid obvious implementation details
 
 **Overall Task:**
+
 - [ ] Keep entire description under 50 lines
 - [ ] Include all required sections (even if some are brief)
 - [ ] Use proper Markdown formatting
@@ -150,6 +159,7 @@ The goal is to implement OAuth2 authentication to improve security and enable si
 ## Quick Reference Examples
 
 ### Bug Task
+
 ```markdown
 **Title:** Fix PDF export failing intermittently
 
@@ -168,6 +178,7 @@ Fix intermittent PDF export failures (~20% rate) to reduce support tickets.
 ```
 
 ### Simple Task
+
 ```markdown
 **Title:** Update documentation for API v2 endpoints
 
@@ -179,10 +190,6 @@ Update API docs to reflect v2 changes and improve developer onboarding.
 - [ ] Authentication section updated
 - [ ] Code examples in JavaScript and Python
 
-## Technical Details / Implementation Hints
-- Update files in `docs/api/v2/` directory
-- Follow template in `docs/api/v1/users.md`
-- Run `npm run docs:validate` to check for broken links
 ```
 
 ## Usage Notes

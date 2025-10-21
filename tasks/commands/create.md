@@ -29,11 +29,20 @@ Use the `AskUserQuestion` tool to gather essential task metadata:
 
 Ask clarifying questions using the `AskUserQuestion` tool if you don't have enough information to create a complete task.
 
-### Step 4: Delegate to Task Creator Agent
+### Step 4: Create Task Based on Complexity
 
-Use the `@task-creator` agent to analyze requirements and create the task.
+**If Task Complexity is "Simple":**
 
-**CRITICAL:** You MUST use the Claude Code agent system (Task tool) for this step - do not attempt to create the task yourself.
+- Create the task directly based on the task details provided
+- Do NOT analyze the application in-depth
+- Focus on creating a straightforward task definition with basic information
+- Structure the task with essential fields only (title, description, type, acceptance criteria)
+
+**If Task Complexity is "Complex":**
+
+- Use the `@task-creator` agent to perform deep analysis of requirements and create the task
+- The agent will analyze the application context and dependencies
+- **CRITICAL:** You MUST use the Claude Code agent system (Task tool) for complex tasks - do not attempt to create complex tasks yourself
 
 ### Step 5: Task Output
 

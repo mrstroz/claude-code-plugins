@@ -30,6 +30,7 @@ Ask about what's missing:
 ## When You Have Enough
 
 Stop asking when you can clearly define:
+
 - What problem we're solving
 - What success looks like
 - What's in and out of scope
