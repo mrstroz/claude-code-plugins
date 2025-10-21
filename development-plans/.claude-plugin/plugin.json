@@ -1,0 +1,8 @@
+{
+  "name": "development-plands",
+  "description": "Plugin for creating and managing development plans in Claude Code",
+  "version": "1.0.0",
+  "author": {
+    "name": "mrstroz"
+  }
+}

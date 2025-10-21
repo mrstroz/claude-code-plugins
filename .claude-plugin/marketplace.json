@@ -8,6 +8,11 @@
       "name": "tasks",
       "source": "./tasks",
       "description": "Plugin for creating and managing tasks in Claude Code"
+    },
+    {
+      "name": "development-plans",
+      "source": "./development-plans",
+      "description": "Plugin for creating and managing development plans in Claude Code"
     }
   ]
 }
