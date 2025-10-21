@@ -27,7 +27,7 @@ Use the `AskUserQuestion` tool to gather essential task metadata:
 
 ### Step 3: Gather Clarifying Questions
 
-Ask clarifying questions using the `AskUserQuestion` tool **only if** you don't have enough information to create a complete task.
+Ask clarifying questions using the `AskUserQuestion` tool if you don't have enough information to create a complete task.
 
 ### Step 4: Delegate to Task Creator Agent
 

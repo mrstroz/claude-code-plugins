@@ -5,12 +5,14 @@ description: Defines the standard output format and template for task creation. 
 
 # Task Output Format Specification
 
+## Target Audience
+Assume the primary reader of the task is a junior developer. Therefore, the requirements should be explicit and unambiguous, and jargon should be avoided where possible. Provide enough detail to enable them to understand the purpose of the task and its core logic.
+
 ## Creating Tasks
 
 - The title and description must always be in English.
 - The description should contain all required sections in Markdown format.
 - **Never** create a task before returning the proposed version to the console for user review.
-- **CRITICAL**: The output format described below is EXACTLY how tasks must be formatted when displayed to the user.
 
 ## Task Categories
 
