@@ -5,8 +5,8 @@
   },
   "plugins": [
     {
-      "name": "task-creator",
-      "source": "./task-creator",
+      "name": "tasks",
+      "source": "./tasks",
       "description": "Plugin for creating and managing tasks in Claude Code"
     }
   ]
