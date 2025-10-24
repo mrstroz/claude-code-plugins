@@ -40,10 +40,10 @@ Ask clarifying questions using the `AskUserQuestion` tool if you don't have enou
 
 **If Task Complexity is "Complex":**
 
-- Use the `@task-creator` agent to perform deep analysis of requirements and create the task
+- Use the `tasks:task-creator` agent to perform deep analysis of requirements and create the task
 - The agent will analyze the application context and dependencies
 - **CRITICAL:** You MUST use the Claude Code agent system (Task tool) for complex tasks - do not attempt to create complex tasks yourself
 
 ### Step 5: Task Output
 
-Return the task output in a standardized, structured, and consistent format. Review and present the task to the user for approval.
+Return the task output in a standardized, structured, and consistent format. Use skill `tasks:task-output`. Review and present the task to the user for approval.
