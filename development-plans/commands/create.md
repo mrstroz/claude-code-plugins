@@ -22,5 +22,7 @@ Use the `development-plans:development-plan-creator` agent to create a comprehen
 
 1. Format the development plan output using the `development-plans:development-plan-output` skill
 2. Save the development plan to `docs/dev-plans/` directory with a descriptive filename:
-   - Format: `{TASK-KEY}-{brief-description}.md` or `{brief-description}.md`
+   - Format: `{prefix}-{TASK-KEY}-{brief-description}.md`, `{TASK-KEY}-{brief-description}.md`, or `{brief-description}.md`
+   - Where `{prefix}` is the system name (e.g., `jira`, `gh` for GitHub, `linear`, etc.) if applicable
+   - Example: `jira-PROJ-123-add-user-authentication.md` or `gh-456-fix-login-bug.md`
 3. Present the development plan to the user for review

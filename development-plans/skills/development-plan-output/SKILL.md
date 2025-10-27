@@ -17,7 +17,18 @@ Assume the primary reader of the development workflow is a **junior developer** 
 
 ### File Naming
 
-Save as: `{TASK-KEY}-{brief-description}.md` or `{brief-description}.md` in the project's designated development plans directory.
+Save as: `{prefix}-{TASK-KEY}-{brief-description}.md`, `{TASK-KEY}-{brief-description}.md`, or `{brief-description}.md` in the project's designated development plans directory.
+
+- `{prefix}` - Optional system name (e.g., `jira`, `gh` for GitHub, `linear`, etc.)
+- `{TASK-KEY}` - Optional task identifier from your project management system
+- `{brief-description}` - Short, kebab-case description of the task
+
+Examples:
+
+- `jira-PROJ-123-add-user-authentication.md`
+- `gh-456-fix-login-bug.md`
+- `FEAT-789-implement-search-feature.md`
+- `add-user-authentication.md`
 
 ### Required Sections
 
