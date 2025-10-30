@@ -2,15 +2,15 @@
 description: Create a new task for software development projects
 ---
 
-## Workflow
+# Workflow
 
-### Step 1: Task Details
+## Step 1: Task Details
 
 Task details provided: $ARGUMENTS
 
 If no arguments are provided, ask the user to provide task details or description.
 
-### Step 2: Determine Task Type and Complexity
+## Step 2: Determine Task Type and Complexity
 
 Use the `AskUserQuestion` tool to gather essential task metadata:
 
@@ -25,11 +25,11 @@ Use the `AskUserQuestion` tool to gather essential task metadata:
 
 **CRITICAL:** You MUST use the `AskUserQuestion` tool for these questions - do not ask in plain text.
 
-### Step 3: Gather Clarifying Questions
+## Step 3: Gather Clarifying Questions
 
 Ask clarifying questions using the `AskUserQuestion` tool if you don't have enough information to create a complete task.
 
-### Step 4: Create Task Based on Complexity
+## Step 4: Create Task Based on Complexity
 
 **If Task Complexity is "Simple":**
 
@@ -40,10 +40,10 @@ Ask clarifying questions using the `AskUserQuestion` tool if you don't have enou
 
 **If Task Complexity is "Complex":**
 
-- Use the `tasks:task-creator` agent to perform deep analysis of requirements and create the task
+- Use the `task:task-creator` agent to perform deep analysis of requirements and create the task
 - The agent will analyze the application context and dependencies
 - **CRITICAL:** You MUST use the Claude Code agent system (Task tool) for complex tasks - do not attempt to create complex tasks yourself
 
-### Step 5: Task Output
+## Step 5: Task Output
 
-Return the task output in a standardized, structured, and consistent format. Use skill `tasks:task-output`. Review and present the task to the user for approval.
+Return the task output in a standardized, structured, and consistent format. Use skill `task:task-output`. Review and present the task to the user for approval.
