@@ -68,6 +68,17 @@ Links to mockups, documentation, API specifications, logs, or other materials ne
 
 Dependencies or related tasks. Include URLs if using a task management system.
 
+### Reviewer Comments (Only for Plan Reviews)
+
+This section is populated only during development plan reviews. It contains additional changes and recommendations identified during the architectural review process. When creating a new development plan, leave this section empty.
+
+If populated during review, this section should include:
+
+- Critical or high-priority issues that require attention
+- Recommended changes to improve the implementation
+- References to existing patterns that should be followed
+- Brief rationale for suggested modifications
+
 ## Quality Requirements Checklist
 
 When creating any task, ensure you follow these requirements:

@@ -11,7 +11,9 @@ This skill defines the exact structure and format for architectural review repor
 
 ## Target Audience
 
-The review report is intended for:
+Assume the primary reader of the review report is a junior developer. Therefore, the findings and recommendations should be explicit and unambiguous, and jargon should be avoided where possible. Provide enough detail to enable them to understand the issue, its impact, and how to fix it.
+
+The review report is also intended for:
 
 - Developers who created the implementation plan
 - Technical leads reviewing the architectural approach
@@ -37,10 +39,6 @@ All architectural review reports MUST follow this exact structure:
 
 **Critical Issues**: [Number] Critical | [Number] High | [Number] Medium | [Number] Low
 
-**Summary**: [2-3 sentence summary of the overall assessment and key findings]
-
-**Recommendation**: [Clear, actionable recommendation on how to proceed]
-
 ---
 
 ## Architectural Analysis
@@ -52,19 +50,16 @@ All architectural review reports MUST follow this exact structure:
 - **Location**: [Reference to specific section/component in the plan]
 
 **Description**:
-[Clear, detailed explanation of the identified issue]
+[Concise explanation of the identified issue - 1-2 sentences max]
 
 **Impact**:
-[Explanation of what could go wrong if this issue is not addressed, including potential risks and consequences]
-
-**Existing Pattern Reference**:
-[How similar problems are solved in the current project, with specific file paths and component examples when available. If no existing pattern exists, note this explicitly.]
+[Brief statement of potential consequences - 1 sentence]
 
 **Recommendation**:
-[Concrete, actionable solution or alternative approach that should be implemented]
+[Concrete, actionable solution - 1-2 sentences with file references if applicable]
 
-**Code Example** (if applicable):
-[Include code block showing both problematic and recommended approaches with comments]
+**Code Example** (optional, only for complex cases):
+[Brief code snippet showing recommended approach only - not both problematic and recommended]
 
 ---
 
@@ -76,7 +71,7 @@ All architectural review reports MUST follow this exact structure:
 
 [If no violations found, state: "No consistency violations identified."]
 
-[List violations with references to project standards. Include: naming conventions, file structure, pattern violations, and style guide deviations]
+[List as concise bullet points. Each point should briefly state the violation and the correct pattern with file reference. Example: "- File structure: Use `src/auth/` not `src/services/auth/` (see AdminAuthService.php)"]
 
 ---
 
@@ -110,11 +105,11 @@ All architectural review reports MUST follow this exact structure:
 
 ### Tone and Language
 
-- Be constructive and professional
-- Always explain WHY something is problematic, not just WHAT is wrong
-- Use clear, specific language avoiding vague critiques
+- Be constructive, professional, and concise
+- Explain WHY something is problematic in 1-2 sentences
+- Use clear, specific language avoiding verbose explanations
 - Balance criticism with recognition of positive aspects
-- Frame recommendations as improvements, not just problems
+- Focus on actionable recommendations
 
 ### Severity Definitions
 
@@ -127,24 +122,24 @@ All architectural review reports MUST follow this exact structure:
 
 ### Code Examples and References
 
-- Show both problematic and recommended approaches with comments
+- Include code examples only for complex cases where verbal explanation is insufficient
+- Show recommended approach only (not both problematic and recommended)
+- Keep code snippets brief and focused on the key concept
 - Reference specific file paths: `path/to/file.ext:line_number`
-- Use actual project code patterns in recommendations
-- Reference specific functions, classes, or components by name
+- Reference specific functions, classes, or components by name in recommendations
 
 ## Quality Requirements Checklist
 
 When creating a review report, ensure:
 
 - [ ] Clear overall assessment with accurate issue counts
-- [ ] Each issue has category, severity, description, impact, and recommendation
-- [ ] Existing patterns referenced with specific file paths
-- [ ] Code examples show both problematic and recommended approaches
-- [ ] Consistency violations documented with project references
+- [ ] Each issue is concise (descriptions 1-2 sentences, impacts 1 sentence)
+- [ ] Code examples included only when necessary and kept brief
+- [ ] Consistency violations as single-line bullets with file references
 - [ ] At least 2-3 positive aspects highlighted
 - [ ] Recommendations properly prioritized by severity
-- [ ] Professional, constructive tone throughout
-- [ ] Proper markdown formatting
+- [ ] Professional, constructive, and concise tone throughout
+- [ ] No unnecessary verbosity - every sentence should add value
 
 ## Example Review Report
 
@@ -163,10 +158,6 @@ When creating a review report, ensure:
 
 **Critical Issues**: 0 Critical | 1 High | 0 Medium | 0 Low
 
-**Summary**: The authentication plan demonstrates solid security principles and follows many project patterns. However, the session storage approach contradicts project security standards and should be addressed.
-
-**Recommendation**: Change session storage from localStorage to httpOnly cookies before implementation. Address consistency violations during development.
-
 ---
 
 ## Architectural Analysis
@@ -178,29 +169,22 @@ When creating a review report, ensure:
 - **Location**: Phase 2 - Session Management Implementation
 
 **Description**:
-The plan proposes storing session tokens in localStorage, which exposes them to XSS attacks. This contradicts the project's security standards for sensitive data storage.
+Plan proposes storing session tokens in localStorage, exposing them to XSS attacks and contradicting project security standards.
 
 **Impact**:
-If session tokens are stored in localStorage, any XSS vulnerability in the application could allow attackers to steal user sessions, leading to account takeover attacks. This represents a significant security risk.
-
-**Existing Pattern Reference**:
-The project uses httpOnly cookies for session management in the existing admin authentication system (see `src/auth/AdminAuthService.ts:45-67`). This approach prevents JavaScript access to tokens, mitigating XSS risks.
+XSS vulnerabilities could allow attackers to steal user sessions, leading to account takeover.
 
 **Recommendation**:
-Follow the existing pattern and store session tokens in httpOnly cookies rather than localStorage. Update the authentication service to set cookies on the server side with appropriate security flags (httpOnly, secure, sameSite).
+Store session tokens in httpOnly cookies following the pattern in `src/auth/AdminAuthService.ts:45-67`. Set cookies server-side with httpOnly, secure, and sameSite flags.
 
 **Code Example**:
 ```typescript
-// Current proposed approach (problematic)
-localStorage.setItem('authToken', token);
-
-// Recommended approach (following project pattern)
-// Server-side (Node.js/Express)
+// Recommended approach
 res.cookie('authToken', token, {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'strict',
-  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  maxAge: 24 * 60 * 60 * 1000
 });
 ```
 
@@ -208,14 +192,14 @@ res.cookie('authToken', token, {
 
 ## Consistency Violations
 
-- File structure: Authentication files should be in `src/auth/` not `src/services/auth/` (see existing AdminAuthService, UserAuthService)
+- File structure: Use `src/auth/` not `src/services/auth/` (see AdminAuthService.ts)
 - Naming: Use `*Service` pattern instead of `AuthenticationManager` (e.g., `UserAuthenticationService`)
 
 ---
 
 ## Positive Aspects
 
-- Comprehensive consideration of password hashing using bcrypt, following security best practices
+- Solid password hashing with bcrypt following security best practices
 - Good separation of concerns between authentication logic and API endpoints
 - Clear phase breakdown making implementation manageable
 - Thorough API endpoint design with proper HTTP methods and status codes
@@ -230,21 +214,22 @@ None identified.
 
 ### High Priority Improvements
 
-1. Change session storage from localStorage to httpOnly cookies following the pattern in `src/auth/AdminAuthService.ts`
+1. Change session storage from localStorage to httpOnly cookies (see `src/auth/AdminAuthService.ts`)
 
 ### Optional Enhancements
 
-1. Move authentication files to `src/auth/` directory to match project structure
-2. Rename `AuthenticationManager` to `UserAuthenticationService` for naming consistency
-3. Consider adding rate limiting for login attempts to prevent brute force attacks
+1. Move authentication files to `src/auth/` directory
+2. Rename `AuthenticationManager` to `UserAuthenticationService`
+3. Add rate limiting for login attempts
 
 ````
 
 ## Usage Notes
 
 - Always use this exact structure for consistency across reviews
-- Adapt the depth of analysis to the complexity of the plan being reviewed
-- Reference actual project files and patterns whenever possible
-- Be thorough but maintain a constructive, helpful tone
-- Ensure every issue has a concrete recommendation
+- Keep descriptions and impacts concise (1-2 sentences max)
+- Include code examples only when necessary for clarity
+- Reference actual project files with specific paths and line numbers
+- Maintain constructive tone while being direct and concise
+- Every sentence should add value - avoid verbose explanations
 - Balance criticism with recognition of strengths
