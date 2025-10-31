@@ -37,14 +37,17 @@ Use the `dev-plan:dev-plan-reviewer` agent to conduct a comprehensive architectu
 Use the `AskUserQuestion` tool to ask if the user wants to apply the corrections suggested in the review:
 
 1. **Apply Corrections**: Ask the user if they want to apply corrections to the development plan:
-   - Yes
+   - Yes - All (apply all recommended corrections)
+   - Yes - Select which corrections to apply
    - No
 
 **CRITICAL:** You MUST use the `AskUserQuestion` tool for this question - do not ask in plain text.
 
 If the user selects "No", end the workflow here.
 
-If the user selects "Yes", proceed to Step 5.
+If the user selects "Yes - All", skip Step 5 and proceed directly to Step 6, applying all recommended corrections.
+
+If the user selects "Yes - Select which corrections to apply", proceed to Step 5.
 
 ## Step 5: Gather Implementation Preferences for Issues
 
