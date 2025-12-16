@@ -1,6 +1,6 @@
 ---
 name: task-clarifying-questions
-description: Guidelines for gathering task requirements through focused clarifying questions.
+description: Guidelines for gathering task requirements through focused clarifying questions. Use when creating tasks and the provided requirements are incomplete, ambiguous, or missing critical information like acceptance criteria, scope, technical constraints, or target users.
 ---
 
 # Clarifying Questions Skill

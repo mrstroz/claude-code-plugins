@@ -1,7 +1,7 @@
 {
   "name": "dev-plan",
   "description": "Plugin for creating and managing development plans in Claude Code",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "author": {
     "name": "mrstroz"
   }

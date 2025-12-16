@@ -1,5 +1,5 @@
 ---
-name: development-plan-output
+name: dev-plan-output
 description: Defines the standard output format and template for creating development plans. Use this skill to ensure consistent, well-structured development plan formatting across any project type and technology stack.
 ---
 

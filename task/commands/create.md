@@ -4,46 +4,46 @@ description: Create a new task for software development projects
 
 # Workflow
 
-## Step 1: Task Details
+## Step 1: Gather Task Details
 
 Task details provided: $ARGUMENTS
 
-If no arguments are provided, ask the user to provide task details or description.
+If no arguments provided, ask the user to provide task details or description.
 
-## Step 2: Determine Task Type and Complexity
+## Step 2: Clarify Requirements (if needed)
 
-Use the `AskUserQuestion` tool to gather essential task metadata:
+If the provided details are incomplete or ambiguous, use skill `task:task-clarifying-questions` to gather missing information via `AskUserQuestion` tool.
 
-1. **Task Type**: Ask the user to select the type of task:
-   - Task
-   - Story
-   - Bug
+## Step 3: Determine Task Metadata
 
-2. **Task Complexity**: Ask the user to indicate the complexity level:
-   - Simple
-   - Complex
+Use `AskUserQuestion` tool to gather task metadata in a **single call**:
 
+1. **Task Type**:
+   - Story (new functionality)
+   - Task (refactoring, improvements)
+   - Bug (fixing defects)
+   - Epic (large feature spanning multiple tasks)
+   - Subtask (part of larger story/task)
+
+2. **Task Complexity**:
+   - Simple (straightforward, no deep analysis needed)
+   - Complex (requires codebase analysis, multiple components)
 **CRITICAL:** You MUST use the `AskUserQuestion` tool for these questions - do not ask in plain text.
 
-## Step 3: Gather Clarifying Questions
+## Step 4: Create Task
 
-Ask clarifying questions using the `AskUserQuestion` tool if you don't have enough information to create a complete task.
+**Simple tasks:**
 
-## Step 4: Create Task Based on Complexity
+- Create directly based on provided details
+- No in-depth application analysis
+- Essential fields only: title, goal, acceptance criteria
 
-**If Task Complexity is "Simple":**
+**Complex tasks:**
 
-- Create the task directly based on the task details provided
-- Do NOT analyze the application in-depth
-- Focus on creating a straightforward task definition with basic information
-- Structure the task with essential fields only (title, description, type, acceptance criteria)
+- Use `task:task-creator` agent (Task tool) for deep analysis
+- Agent analyzes application context, dependencies, and patterns
+- **CRITICAL:** Always use the agent for complex tasks
 
-**If Task Complexity is "Complex":**
+## Step 5: Output and Review
 
-- Use the `task:task-creator` agent to perform deep analysis of requirements and create the task
-- The agent will analyze the application context and dependencies
-- **CRITICAL:** You MUST use the Claude Code agent system (Task tool) for complex tasks - do not attempt to create complex tasks yourself
-
-## Step 5: Task Output
-
-Return the task output in a standardized, structured, and consistent format. Use skill `task:task-output`. Review and present the task to the user for approval.
+Use skill `task:task-output` to format the task. Present to user for approval before finalizing.
