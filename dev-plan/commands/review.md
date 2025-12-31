@@ -25,7 +25,7 @@ Use the `dev-plan:dev-plan-reviewer` agent to conduct a comprehensive architectu
 
 ## Step 3: Format and Save Review Report
 
-1. Format the review report output using the `dev-plan:review-output` skill
+1. **CRITICAL:** You MUST use the Skill tool to invoke `dev-plan:review-output` skill to format the review report output according to the standard template
 2. Save the review report to `docs/plan-reviews/` directory with the same filename as the development plan:
    - If the development plan was at `docs/dev-plans/TASK-123-feature.md`, save review to `docs/plan-reviews/TASK-123-feature.md`
    - Extract the filename from the development plan path and use it for the review file
@@ -67,6 +67,6 @@ For each **Critical** and **High** severity issue identified in the review, use 
 2. Apply the recommended changes for issues where user selected "Implement as recommended"
 3. For "Custom approach", incorporate the user's provided details
 4. Skip issues where user selected "Skip this issue"
-5. Format the updated development plan using the `dev-plan:dev-plan-output` skill to ensure consistency
+5. **CRITICAL:** You MUST use the Skill tool to invoke `dev-plan:dev-plan-output` skill to format the updated development plan according to the standard template
 6. Save the updated development plan to the same file
 7. Inform the user that the corrections have been applied and provide a summary of changes made
