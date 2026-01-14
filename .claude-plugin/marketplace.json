@@ -13,6 +13,11 @@
       "name": "dev-plan",
       "source": "./dev-plan",
       "description": "Plugin for creating and managing development plans in Claude Code"
+    },
+    {
+      "name": "pr-review",
+      "source": "./pr-review",
+      "description": "Multi-agent PR review system with specialized agents for architecture, code quality, bugs, security, tests, and performance"
     }
   ]
 }
