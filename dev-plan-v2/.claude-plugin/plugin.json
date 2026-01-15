@@ -2,5 +2,7 @@
   "name": "dev-plan-v2",
   "description": "Intelligent development planning with discovery, clarification, and optional alternatives. Hybrid workflow that adapts to task complexity.",
   "version": "1.0.1",
-  "author": "mrstroz"
+  "author": {
+    "name": "mrstroz"
+  }
 }
