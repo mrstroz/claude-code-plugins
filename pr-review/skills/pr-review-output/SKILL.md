@@ -96,59 +96,6 @@ What the code does well:
 
 ---
 
-## Agent Reports
-
-<details>
-<summary>🏛️ Architect Visioner Report</summary>
-
-[Full agent report]
-
-</details>
-
-<details>
-<summary>🧹 Code Cleaner Report</summary>
-
-[Full agent report]
-
-</details>
-
-<details>
-<summary>🐛 Bug Smasher Report</summary>
-
-[Full agent report]
-
-</details>
-
-<details>
-<summary>✅ Acceptance Checker Report</summary>
-
-[Full agent report]
-
-</details>
-
-<details>
-<summary>🔒 Security Guard Report</summary>
-
-[Full agent report]
-
-</details>
-
-<details>
-<summary>🧪 Test Guardian Report</summary>
-
-[Full agent report]
-
-</details>
-
-<details>
-<summary>⚡ Performance Scout Report</summary>
-
-[Full agent report]
-
-</details>
-
----
-
 ## Recommended Actions
 
 ### Before Merge (Required)
@@ -162,7 +109,7 @@ What the code does well:
 ### Post-Merge (Consider)
 - [ ] [Action for medium issue]
 - [ ] [Action for low issue]
-```
+
 
 ## Issue ID Prefixes
 

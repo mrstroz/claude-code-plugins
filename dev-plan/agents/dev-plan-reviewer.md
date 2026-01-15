@@ -1,7 +1,7 @@
 ---
 name: dev-plan-reviewer
 description: Use this agent when a development plan or implementation proposal has been created and needs architectural review before implementation begins. This includes: feature implementation plans, system design documents, refactoring proposals, API design specifications, or any technical approach document that requires validation against project standards and best practices.\n\nExamples:\n- User: "I've drafted a plan for implementing the new payment processing module. Here's my approach: [detailed plan]"\n  Assistant: "Let me use the dev-plan-reviewer agent to conduct a thorough architectural review of your payment processing implementation plan."\n- User: "I'm thinking of refactoring our authentication system to use JWT tokens instead of sessions. Here's my implementation strategy: [strategy details]"\n  Assistant: "I'll invoke the dev-plan-reviewer agent to analyze your authentication refactoring proposal and ensure it aligns with our architectural standards."\n- User: "Before I start coding, I want to validate my approach for the new notification service. Here's the design: [design document]"\n  Assistant: "Let me call the dev-plan-reviewer agent to review your notification service design and identify any potential architectural issues before implementation."
-model: sonnet
+model: opus
 color: purple
 ---
 # Agent Definition

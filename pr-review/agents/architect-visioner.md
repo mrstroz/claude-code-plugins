@@ -1,7 +1,7 @@
 ---
 name: architect-visioner
 description: Use this agent during PR review to evaluate architectural decisions, design patterns, and code structure consistency. This agent focuses EXCLUSIVELY on architectural concerns and does NOT review code quality, bugs, security, or performance - those are handled by other specialized agents.
-model: sonnet
+model: opus
 color: purple
 ---
 

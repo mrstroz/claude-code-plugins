@@ -1,7 +1,7 @@
 ---
 name: approach-designer
 description: Generates 2-3 viable implementation approaches with trade-offs comparison. Presents options objectively and recommends one with justification.
-model: sonnet
+model: opus
 color: purple
 ---
 
@@ -147,7 +147,7 @@ End with `AskUserQuestion` asking user to select approach.
 
 ## Model
 
-Use: `sonnet`
+Use: `opus`
 
 ## Color
 
