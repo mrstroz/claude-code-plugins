@@ -164,6 +164,24 @@ What the code does well:
 - [ ] [Action for low issue]
 ```
 
+## Issue ID Prefixes
+
+**CRITICAL:** Use agent-specific prefixes, NEVER generic `HIGH-001`, `MED-001`.
+
+| Agent | Prefix |
+|-------|--------|
+| Architect Visioner | `ARCH-` |
+| Code Cleaner | `CLEAN-` |
+| Bug Smasher | `BUG-` |
+| Acceptance Checker | `REQ-` |
+| Security Guard | `SEC-` |
+| Test Guardian | `TEST-` |
+| Performance Scout | `PERF-` |
+
+Each agent has its own counter (001, 002...). Prefix = agent, NOT severity.
+
+---
+
 ## Deduplication Rules
 
 When multiple agents find overlapping issues:
