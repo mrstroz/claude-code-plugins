@@ -22,7 +22,7 @@
     {
       "name": "jira",
       "source": "./jira",
-      "description": "JIRA task creator for the Tesoro real estate CRM platform"
+      "description": "JIRA task creator for any software project"
     }
   ]
 }
