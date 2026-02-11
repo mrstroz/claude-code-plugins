@@ -20,9 +20,9 @@
       "description": "Multi-agent PR review system with specialized agents for architecture, code quality, bugs, security, tests, and performance"
     },
     {
-      "name": "dev-plan-v2",
-      "source": "./dev-plan-v2",
-      "description": "Intelligent development planning with discovery, clarification, and optional alternatives. Hybrid workflow that adapts to task complexity."
+      "name": "jira",
+      "source": "./jira",
+      "description": "JIRA task creator for the Tesoro real estate CRM platform"
     }
   ]
 }
