@@ -9,32 +9,16 @@ Create well-structured JIRA tasks by analyzing the project codebase and drafting
 
 ## Workflow
 
-1. **JIRA configuration** — Resolve `cloudId` and `projectKey` (see below)
-2. **Initial setup** — Ask language and task type via `AskUserQuestion` (see below)
-3. **Parse the request** — Identify what the user wants done and which subsystem(s) are affected
-4. **Search the codebase** — Find relevant files, patterns, and existing implementations
-5. **Clarify architectural decisions** — Before drafting, ask the user about any ambiguities or open design questions discovered during codebase analysis (see below)
-6. **Draft the task** — Write the JIRA task in the chosen language and type
-7. **Present for review** — Show the draft to the user and wait for confirmation
-8. **Send to JIRA** — Only after user approves the draft
+1. **Initial setup** — Ask language and task type via `AskUserQuestion` (see below)
+2. **Parse the request** — Identify what the user wants done and which subsystem(s) are affected
+3. **Search the codebase** — Find relevant files, patterns, and existing implementations
+4. **Clarify architectural decisions** — Before drafting, ask the user about any ambiguities or open design questions discovered during codebase analysis (see below)
+5. **Draft the task** — Write the JIRA task in the chosen language and type
+6. **Present for review** — Show the draft to the user and wait for confirmation
+7. **Resolve JIRA configuration** — After user confirms the draft, resolve `cloudId` and `projectKey` (see below)
+8. **Send to JIRA** — Only after configuration is resolved
 
-## JIRA Configuration (Step 1)
-
-The skill needs a JIRA `cloudId` (e.g. `mycompany.atlassian.net`) and `projectKey` (e.g. `PROJ`) to send tickets.
-
-**Resolution order:**
-
-1. Check the project's `CLAUDE.md` for a JIRA config block:
-   ```
-   ## JIRA
-   - Cloud: mycompany.atlassian.net
-   - Project key: PROJ
-   ```
-2. If not found, ask the user via `AskUserQuestion` (header: "JIRA config") for both values.
-
-Store the resolved values for the rest of the session.
-
-## Initial Setup (Step 2)
+## Initial Setup (Step 1)
 
 Before anything else, use `AskUserQuestion` with two questions:
 
@@ -43,7 +27,7 @@ Before anything else, use `AskUserQuestion` with two questions:
 
 Use the selected language for the entire draft. Use the selected type in the `**Type:**` field.
 
-## Architectural Clarification (Step 5)
+## Architectural Clarification (Step 4)
 
 After analyzing the codebase but **before** drafting the task, identify anything that is not explicitly specified in the user's request and could be implemented in more than one way. Ask concise, focused questions about:
 
@@ -85,7 +69,7 @@ Use findings to write accurate **Technical Details** in the task. Keep searches 
 
 ## Task Formats
 
-Every task MUST be written in the **language chosen in Step 2**. The structure varies by type. After selecting the type in Step 2, read the corresponding example file for a full reference.
+Every task MUST be written in the **language chosen in Step 1**. The structure varies by type. After selecting the type in Step 1, read the corresponding example file for a full reference.
 
 ### Format: Task
 
@@ -197,12 +181,30 @@ Always present the draft inside a clearly marked block and ask:
 
 Do NOT send to JIRA until the user explicitly confirms.
 
+## JIRA Configuration (Step 7)
+
+After the user confirms the draft, resolve the JIRA connection before sending.
+
+The skill needs a JIRA `cloudId` (e.g. `mycompany.atlassian.net`) and `projectKey` (e.g. `PROJ`).
+
+**Resolution order:**
+
+1. Check the project's `CLAUDE.md` for a JIRA config block:
+   ```
+   ## JIRA
+   - Cloud: mycompany.atlassian.net
+   - Project key: PROJ
+   ```
+2. If not found, ask the user via `AskUserQuestion` (header: "JIRA config") for both values.
+
+Store the resolved values for the rest of the session.
+
 ## Sending to JIRA (Step 8)
 
-After user confirms the draft, use the `createJiraIssue` MCP tool:
+After configuration is resolved, use the `createJiraIssue` MCP tool:
 
-- **cloudId**: resolved in Step 1
-- **projectKey**: resolved in Step 1
+- **cloudId**: resolved in Step 7
+- **projectKey**: resolved in Step 7
 - **issueTypeName**: map from task type — `Task`, `Bug`, `Story` (use `Bug` for Hotfix too)
 - **summary**: task title (without `##` prefix)
 - **description**: full markdown body (everything below the title line — Description, Acceptance Criteria, Technical Details, Steps to Reproduce, Features, Links)
