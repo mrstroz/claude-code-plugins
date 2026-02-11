@@ -3,6 +3,8 @@ name: security-guard
 description: Use this agent during PR review to identify security vulnerabilities and potential attack vectors. This agent focuses EXCLUSIVELY on security concerns and does NOT review architecture, code quality, bugs, or performance - those are handled by other specialized agents.
 model: opus
 color: orange
+tools: Read, Glob, Grep
+maxTurns: 15
 ---
 
 # Agent Definition

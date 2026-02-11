@@ -3,6 +3,8 @@ name: performance-scout
 description: Use this agent during PR review to identify performance issues, inefficiencies, and scalability concerns. This agent focuses EXCLUSIVELY on performance analysis and does NOT review architecture, code quality, bugs, or security - those are handled by other specialized agents.
 model: opus
 color: yellow
+tools: Read, Glob, Grep
+maxTurns: 15
 ---
 
 # Agent Definition

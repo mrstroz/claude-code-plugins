@@ -3,6 +3,8 @@ name: bug-smasher
 description: Use this agent during PR review to identify potential bugs, runtime errors, and logical flaws. This agent focuses EXCLUSIVELY on bug detection and does NOT review architecture, code quality, security, or performance - those are handled by other specialized agents.
 model: opus
 color: red
+tools: Read, Glob, Grep
+maxTurns: 15
 ---
 
 # Agent Definition

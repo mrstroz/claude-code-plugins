@@ -1,6 +1,8 @@
 ---
 name: pr-review-run
 description: Run a comprehensive multi-agent PR review on code changes. Use when the user asks to review a PR, review code changes, review a branch, run a code review, or check code before merging. Supports git diff comparisons, specific file review, and directory-level review. Orchestrates 7 specialized agents (architecture, code quality, bugs, security, tests, performance, acceptance) in parallel and produces an aggregated report with verdict.
+argument-hint: "[branch-comparison or file-paths]"
+allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task, AskUserQuestion
 ---
 
 # PR Review Orchestrator
@@ -54,9 +56,9 @@ After auto-selection, show the user which agents are selected and which are skip
 
 **CRITICAL:** Run ALL selected agents in a SINGLE message using multiple Task tool calls.
 
-For each agent, read its full definition from `agents/{agent-name}.md` and include it in the prompt. The agent definitions contain scope boundaries, review methodology, and output format — without them the agents cannot perform a proper review.
+Each agent is already registered as a sub-agent (e.g. `pr-review:code-cleaner`). Use the agent name directly as the `subagent_type` in the Task tool — their definitions are loaded automatically as the system prompt. Do NOT manually search for or read agent definition files.
 
-Provide each agent with this prompt structure:
+Provide each agent with this prompt:
 
 ```
 Review the following code changes:
@@ -69,9 +71,6 @@ Review the following code changes:
 
 ## Project Context
 [CLAUDE.md content if it exists]
-
-## Agent Definition
-[Full content of agents/{agent-name}.md — includes role, scope boundaries, methodology, and output format]
 ```
 
 For `pr-review:acceptance-checker`, also include the task requirements from step 1.
