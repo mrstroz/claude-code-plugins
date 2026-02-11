@@ -1,15 +1,48 @@
----
-name: pr-review-output
-description: Defines the standard output format for aggregated PR review reports. Use this skill to format the combined output from all review agents into a unified, actionable report.
----
-
 # PR Review Output Format
 
-This skill standardizes the format of PR review reports that aggregate findings from multiple specialized agents.
+## Issue ID Prefixes
 
-## Report Structure
+Use agent-specific prefixes. NEVER use generic prefixes like `HIGH-001` or `MED-001`.
 
-The final PR review report MUST follow this structure:
+| Agent | Prefix |
+|-------|--------|
+| Architect Visioner | `ARCH-` |
+| Code Cleaner | `CLEAN-` |
+| Bug Smasher | `BUG-` |
+| Acceptance Checker | `REQ-` |
+| Security Guard | `SEC-` |
+| Test Guardian | `TEST-` |
+| Performance Scout | `PERF-` |
+
+Each agent has its own counter (001, 002...). Prefix = agent, NOT severity.
+
+## Verdict Decision Matrix
+
+| Critical | High | Verdict |
+|----------|------|---------|
+| > 0 | any | ❌ Blocked |
+| 0 | > 3 | 🔶 Changes Requested |
+| 0 | 1-3 | ⚠️ Approved with Comments |
+| 0 | 0 | ✅ Approved (with medium/low noted) |
+
+## Severity Mapping
+
+| Severity | Merge Impact | Description |
+|----------|--------------|-------------|
+| Critical | ❌ Blocked | Security vulnerability, data loss risk, breaking bug |
+| High | 🔶 Changes Requested | Significant issue that should be fixed |
+| Medium | ⚠️ Approved with Comments | Notable issue, fix recommended |
+| Low | ✅ Approved | Minor suggestion, optional fix |
+
+## Deduplication Rules
+
+When multiple agents find overlapping issues:
+
+1. **Same issue, different perspectives** — keep the most detailed report, note which agents flagged it
+2. **Related but distinct issues** — keep both, cross-reference them
+3. **True duplicates** — merge into single entry, list all agents that found it
+
+## Report Template
 
 ```markdown
 # PR Review Report
@@ -109,54 +142,8 @@ What the code does well:
 ### Post-Merge (Consider)
 - [ ] [Action for medium issue]
 - [ ] [Action for low issue]
+```
 
+## Example
 
-## Issue ID Prefixes
-
-**CRITICAL:** Use agent-specific prefixes, NEVER generic `HIGH-001`, `MED-001`.
-
-| Agent | Prefix |
-|-------|--------|
-| Architect Visioner | `ARCH-` |
-| Code Cleaner | `CLEAN-` |
-| Bug Smasher | `BUG-` |
-| Acceptance Checker | `REQ-` |
-| Security Guard | `SEC-` |
-| Test Guardian | `TEST-` |
-| Performance Scout | `PERF-` |
-
-Each agent has its own counter (001, 002...). Prefix = agent, NOT severity.
-
----
-
-## Deduplication Rules
-
-When multiple agents find overlapping issues:
-
-1. **Same issue, different perspectives** - Keep the most detailed report, note which agents flagged it
-2. **Related but distinct issues** - Keep both, cross-reference them
-3. **True duplicates** - Merge into single entry, list all agents that found it
-
-## Severity Mapping
-
-| Severity | Merge Impact | Description |
-|----------|--------------|-------------|
-| Critical | ❌ Blocked | Security vulnerability, data loss risk, breaking bug |
-| High | 🔶 Changes Requested | Significant issue that should be fixed |
-| Medium | ⚠️ Approved with Comments | Notable issue, fix recommended |
-| Low | ✅ Approved | Minor suggestion, optional fix |
-
-## Verdict Decision Matrix
-
-| Critical | High | Verdict |
-|----------|------|---------|
-| > 0 | any | ❌ Blocked |
-| 0 | > 3 | 🔶 Changes Requested |
-| 0 | 1-3 | ⚠️ Approved with Comments |
-| 0 | 0 | ✅ Approved (with medium/low noted) |
-
-## File Output
-
-Save the report to: `docs/pr-reviews/{branch-name}-{date}.md`
-
-Example: `docs/pr-reviews/feature-auth-2024-01-15.md`
+See [example-report.md](example-report.md) for a complete example report.

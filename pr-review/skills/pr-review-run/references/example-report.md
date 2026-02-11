@@ -147,46 +147,6 @@ What the code does well:
 
 ---
 
-## Agent Reports
-
-<details>
-<summary>🏛️ Architect Visioner Report</summary>
-
-## Architectural Assessment Summary
-
-**Overall Score:** 🟡 Acceptable
-
-**Issues Found:**
-- Critical: 0
-- High: 1
-- Medium: 1
-- Low: 0
-
-[Full details...]
-
-</details>
-
-<details>
-<summary>🔒 Security Guard Report</summary>
-
-## Security Assessment Summary
-
-**Security Posture:** 🔴 Critical Vulnerabilities
-
-**Issues Found:**
-- Critical: 1
-- High: 1
-- Medium: 0
-- Low: 0
-
-[Full details...]
-
-</details>
-
-[Other agent reports...]
-
----
-
 ## Recommended Actions
 
 ### Before Merge (Required)
