@@ -1,7 +1,7 @@
 ---
 name: acceptance-checker
 description: Use this agent during PR review to verify that implemented code meets the requirements and acceptance criteria from the task/ticket. This agent focuses EXCLUSIVELY on requirements compliance and does NOT review architecture, code quality, bugs, security, or performance - those are handled by other specialized agents.
-model: sonnet
+model: opus
 color: blue
 ---
 

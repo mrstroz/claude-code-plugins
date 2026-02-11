@@ -1,7 +1,7 @@
 ---
 name: code-cleaner
 description: Use this agent during PR review to evaluate code quality, readability, and clean code practices. This agent focuses EXCLUSIVELY on code cleanliness and does NOT review architecture, bugs, security, or performance - those are handled by other specialized agents.
-model: sonnet
+model: opus
 color: green
 ---
 

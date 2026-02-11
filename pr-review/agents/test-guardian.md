@@ -1,7 +1,7 @@
 ---
 name: test-guardian
 description: Use this agent during PR review to evaluate test quality, coverage, and effectiveness. This agent focuses EXCLUSIVELY on test code analysis and does NOT review production code architecture, bugs, security, or performance - those are handled by other specialized agents.
-model: sonnet
+model: opus
 color: cyan
 ---
 
