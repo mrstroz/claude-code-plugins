@@ -1,6 +1,6 @@
 # The Devil's Advocate (Adwokat Diabła)
 
-**Prefix:** `EDGE-`
+**Prefix:** `EDG-`
 
 ## Odpowiedzialność
 
@@ -23,5 +23,5 @@ Bądź kreatywny. Wymyślaj scenariusze, o których programista zapomniał.
 ## Cross-Reviewer Communication
 
 - **Flag to SEC:** Race conditions z exploitable security implications (TOCTOU w auth checks) — zgłoś Security Sentinel
-- **Flag to BACK:** Wzorce DB wymagające transakcji lub lockingu, problemy ze skalowalnością — zgłoś Backend Solidifier
-- **Flag to LEAD:** Fundamentalne błędy w logice biznesowej, brakujące scenariusze — zgłoś Virtual Mariusz
+- **Flag to BCK:** Wzorce DB wymagające transakcji lub lockingu, problemy ze skalowalnością — zgłoś Backend Solidifier
+- **Flag to VMR:** Fundamentalne błędy w logice biznesowej, brakujące scenariusze — zgłoś Virtual Mariusz

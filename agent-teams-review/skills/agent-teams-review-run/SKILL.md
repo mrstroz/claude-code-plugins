@@ -39,17 +39,17 @@ Also read `CLAUDE.md` if it exists in the project root — this contains project
 
 ### Step 3: Analyze Files & Select Reviewers
 
-**Virtual Mariusz (LEAD-) — ALWAYS RUNS.** No condition needed.
+**Virtual Mariusz (VMR-) — ALWAYS RUNS.** No condition needed.
 
 **Conditional reviewers:**
 
 | Reviewer | Trigger Condition |
 |----------|-------------------|
-| Backend Solidifier (BACK-) | Files match: `*.php`, `composer.json`, `config/*.php`, `migrations/*`, `database/*` |
-| Frontend Virtuoso (FRONT-) | Files match: `*.vue`, `*.ts`, `*.tsx`, `*.js`, `*.jsx`, `nuxt.config.*`, `*.css`, `*.scss` |
-| Quality Purist (QUAL-) | When Backend Solidifier OR Frontend Virtuoso is selected |
+| Backend Solidifier (BCK-) | Files match: `*.php`, `composer.json`, `config/*.php`, `migrations/*`, `database/*` |
+| Frontend Virtuoso (FRO-) | Files match: `*.vue`, `*.ts`, `*.tsx`, `*.js`, `*.jsx`, `nuxt.config.*`, `*.css`, `*.scss` |
+| Quality Purist (QAL-) | When Backend Solidifier OR Frontend Virtuoso is selected |
 | Security Sentinel (SEC-) | Any file content contains: `auth`, `login`, `password`, `token`, `api`, `form`, `session`, `secret`, `key`, `middleware`, `guard`, `policy` |
-| Devil's Advocate (EDGE-) | New classes/functions >30 lines, complex conditionals (>3 nesting levels), financial/payment logic detected, OR total lines changed >150 |
+| Devil's Advocate (EDG-) | New classes/functions >30 lines, complex conditionals (>3 nesting levels), financial/payment logic detected, OR total lines changed >150 |
 
 After auto-selection, show the user which reviewers are selected and which are skipped (with reasons).
 
@@ -110,7 +110,7 @@ When you receive a message from a teammate:
 ### Step 6: Wait & Collect Results
 
 As teammates finish their reviews, collect their findings. Each teammate will produce:
-- A list of issues with their prefix (LEAD-, BACK-, FRONT-, QUAL-, SEC-, EDGE-)
+- A list of issues with their prefix (VMR-, BCK-, FRO-, QAL-, SEC-, EDG-)
 - Cross-reviewer findings with CROSS- prefix
 - Positive observations
 - Summary assessment

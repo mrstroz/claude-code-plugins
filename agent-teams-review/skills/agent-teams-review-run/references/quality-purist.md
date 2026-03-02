@@ -1,6 +1,6 @@
 # The Quality Purist (Strażnik Jakości)
 
-**Prefix:** `QUAL-`
+**Prefix:** `QAL-`
 
 ## Odpowiedzialność
 
@@ -24,6 +24,6 @@ Bądź zwięzły. Wskaż linię i konkretną zasadę, która została złamana.
 
 ## Cross-Reviewer Communication
 
-- **Flag to LEAD:** AI-generated boilerplate, komentarze typu "// Get the user" nad `$user = User::find($id)` — zgłoś Virtual Mariusz
-- **Flag to BACK:** PHP-specific conventions (PSR, Yii2/Laravel patterns) których nie jesteś pewien — zgłoś Backend Solidifier
-- **Flag to FRONT:** Vue/TS-specific conventions których nie jesteś pewien — zgłoś Frontend Virtuoso
+- **Flag to VMR:** AI-generated boilerplate, komentarze typu "// Get the user" nad `$user = User::find($id)` — zgłoś Virtual Mariusz
+- **Flag to BCK:** PHP-specific conventions (PSR, Yii2/Laravel patterns) których nie jesteś pewien — zgłoś Backend Solidifier
+- **Flag to FRO:** Vue/TS-specific conventions których nie jesteś pewien — zgłoś Frontend Virtuoso
