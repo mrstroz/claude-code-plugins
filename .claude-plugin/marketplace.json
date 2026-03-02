@@ -18,6 +18,11 @@
       "name": "utils",
       "source": "./utils",
       "description": "Utility helpers for common development workflows"
+    },
+    {
+      "name": "agent-teams-review",
+      "source": "./agent-teams-review",
+      "description": "Agent Teams-powered collaborative code review with cross-reviewer communication, AI Slop detection, and unified professional reports"
     }
   ]
 }
