@@ -1,8 +1,0 @@
-{
-  "name": "task",
-  "description": "Plugin for creating and managing tasks in Claude Code",
-  "version": "1.2.1",
-  "author": {
-    "name": "mrstroz"
-  }
-}
