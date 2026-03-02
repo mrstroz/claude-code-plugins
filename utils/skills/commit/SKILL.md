@@ -17,8 +17,9 @@ Create clean, single-line conventional commits with automatic task number detect
 ## Commit Format
 
 ```
-type: TASK-123 short lowercase summary
-type: short lowercase summary           # when no task number found
+type: TASK-123 short lowercase summary   # Jira-style task number
+type: #456 short lowercase summary       # GitHub-style issue number
+type: short lowercase summary            # when no task number found
 ```
 
 ## Workflow
@@ -29,16 +30,24 @@ Run `git status` to see staged and unstaged changes. If there are no changes at 
 
 ### Step 2 — Detect task number
 
-Parse the current branch name for a task number pattern:
+Run `git branch --show-current` to get the branch name. Try the following patterns **in order** (first match wins):
+
+**Pattern A — Jira-style** (`[A-Z]{2,6}-\d+`):
+An uppercase prefix of 2-6 letters, a hyphen, then one or more digits. Use the match as-is.
 
 - `feature/TES-42-add-login-form` → `TES-42`
 - `fix/RO-118-broken-sidebar` → `RO-118`
 - `feature/PROJ-123-some-description` → `PROJ-123`
-- `fix/GH-456-bug-title` → `GH-456`
 - `RO-55-update-dashboard` → `RO-55`
-- Pattern: an uppercase prefix of 2-6 letters, a hyphen, then one or more digits (e.g., `[A-Z]{2,6}-\d+`)
 
-Run `git branch --show-current` to get the branch name. If no pattern matches, check conversation context for a task/ticket reference. If still not found, proceed without a task number — do **not** ask the user for one.
+**Pattern B — GitHub-style** (plain number after `/`):
+After the first `/`, look for a leading number followed by a hyphen (`*/digits-*`). Extract the digits and prepend `#`.
+
+- `fix/456-bug-title` → `#456`
+- `feature/123-add-login` → `#123`
+- `chore/78-update-deps` → `#78`
+
+If no pattern matches, check conversation context for a task/ticket reference. If still not found, proceed without a task number — do **not** ask the user for one.
 
 ### Step 3 — Review changes and recent style
 
@@ -68,7 +77,8 @@ Based on the diff, determine:
 2. A short lowercase **summary** describing *what* changed (imperative mood, no period)
 
 Construct the message:
-- With task: `type: TASK-123 summary`
+- With Jira task: `type: TASK-123 summary`
+- With GitHub issue: `type: #456 summary`
 - Without task: `type: summary`
 
 ### Step 6 — Confirm and commit
@@ -100,7 +110,7 @@ Show the result of the commit. Do **not** push.
 
 ```
 feat: PROJ-123 add user avatar upload endpoint
-fix: GH-456 prevent duplicate form submissions
+fix: #456 prevent duplicate form submissions
 refactor: extract validation logic into shared module
 chore: update eslint config to v9
 test: APP-89 add integration tests for payment flow
