@@ -237,18 +237,18 @@ Notable examples:
 
 | Reviewer | Verdict | Issues | Summary |
 |----------|---------|--------|---------|
-| Virtual Mariusz | :large_orange_diamond: | 3 | Debug code left in, AI Slop w service layer (6/10), unnecessary interface |
-| Backend Solidifier | :large_orange_diamond: | 4 | N+1 query i brak transakcji — musi być naprawione |
-| Frontend Virtuoso | :white_check_mark: | 2 | Drobne UX issues, ogólnie dobrze napisane komponenty |
-| Quality Purist | :warning: | 3 | Naming violations i magic numbers, ale struktura OK |
-| Security Sentinel | :large_orange_diamond: | 3 | Rate limiting i path traversal — realne zagrożenia |
+| Virtual Mariusz | :large_orange_diamond: | 3 | Debug code left in, AI Slop in service layer (6/10), unnecessary interface |
+| Backend Solidifier | :large_orange_diamond: | 4 | N+1 query and missing transaction — must be fixed |
+| Frontend Virtuoso | :white_check_mark: | 2 | Minor UX issues, overall well-written components |
+| Quality Purist | :warning: | 3 | Naming violations and magic numbers, but structure OK |
+| Security Sentinel | :large_orange_diamond: | 3 | Rate limiting and path traversal — real threats |
 
 ---
 
 ## What's Good
 
-- :white_check_mark: Czysta separacja controller/service/model — architektura warstwowa dobrze zaimplementowana
-- :white_check_mark: Composition API i poprawne typowanie TypeScript w komponentach Vue
-- :white_check_mark: Konsekwentne użycie ActiveRecord patterns i Yii2 validation rules
-- :white_check_mark: Dobrze zorganizowana struktura plików zgodna z konwencjami projektu
-- :white_check_mark: Unit testy pokrywają główny flow aktualizacji profilu
+- :white_check_mark: Clean controller/service/model separation — layered architecture well implemented
+- :white_check_mark: Composition API and correct TypeScript typing in Vue components
+- :white_check_mark: Consistent use of ActiveRecord patterns and Yii2 validation rules
+- :white_check_mark: Well-organized file structure following project conventions
+- :white_check_mark: Unit tests cover the main profile update flow
