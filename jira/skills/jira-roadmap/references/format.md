@@ -14,20 +14,6 @@ Reference document defining the structure, formatting rules, and writing guideli
 
 ---
 
-## Version X.Y.Z — [Theme Name]
-**Status:** Released | **Date:** Q4 2025
-
-[2-3 sentence summary of key focus areas and business value.]
-
-**Highlights:**
-- Highlight 1
-- Highlight 2
-- Highlight 3
-
-[→ Release notes](link-to-release-notes-page)
-
----
-
 ## Version X.Y+1.0 — [Theme Name]
 **Status:** In Progress | **Target:** Q1 2026
 
@@ -46,6 +32,20 @@ Reference document defining the structure, formatting rules, and writing guideli
 **Status:** Planned | **Target:** Q2 2026
 
 [2-3 sentence summary]
+
+**Highlights:**
+- Highlight 1
+- Highlight 2
+- Highlight 3
+
+[→ Release notes](link-to-release-notes-page)
+
+---
+
+## Version X.Y.Z — [Theme Name]
+**Status:** Released | **Date:** Q4 2025
+
+[2-3 sentence summary of key focus areas and business value.]
 
 **Highlights:**
 - Highlight 1
@@ -115,16 +115,16 @@ Add a back-link at the bottom of each release notes page:
 
 ### Link Formats
 - **Confluence**: Use the full page URL (e.g., `https://mycompany.atlassian.net/wiki/spaces/PROJ/pages/123456`)
-- **Markdown**: Use relative file paths (e.g., `release-notes-4.2.0.md`, `roadmap-main.md`)
+- **Markdown**: Use relative file paths (e.g., `../release-notes/release-notes-4.2.0.md`, `../roadmaps/roadmap-main.md`)
 
 ## Section Header Translations
 
 | Section | EN | ES | PL | DE |
 |---------|----|----|----|----|
 | Product Roadmap | Product Roadmap | Hoja de ruta del producto | Mapa drogowa produktu | Produkt-Roadmap |
-| Overview | Overview | Vision general | Przeglad | Uberblick |
-| Released | Released | Publicado | Wydane | Veroffentlicht |
+| Overview | Overview | Visión general | Przegląd | Überblick |
+| Released | Released | Publicado | Wydane | Veröffentlicht |
 | In Progress | In Progress | En progreso | W trakcie | In Bearbeitung |
 | Planned | Planned | Planificado | Planowane | Geplant |
-| Release notes | Release notes | Notas de la version | Informacje o wydaniu | Versionshinweise |
-| Highlights | Highlights | Aspectos destacados | Najwazniejsze zmiany | Highlights |
+| Release notes | Release notes | Notas de la versión | Informacje o wydaniu | Versionshinweise |
+| Highlights | Highlights | Aspectos destacados | Najważniejsze zmiany | Highlights |

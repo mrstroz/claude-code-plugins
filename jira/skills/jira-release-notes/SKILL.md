@@ -66,7 +66,10 @@ Use the available MCP tool for JQL search with expanded fields to minimize follo
 ```
 project = {projectKey} AND fixVersion = "{version}" ORDER BY priority DESC, issuetype ASC
 fields: ["summary", "description", "status", "issuetype", "priority", "labels", "components"]
+maxResults: 100
 ```
+
+If more than 100 issues exist, use the `nextPageToken` to paginate through all results.
 
 From each result, collect: `key`, `summary`, `description`, `issuetype`, `priority`, `status`, `labels`, `components`.
 

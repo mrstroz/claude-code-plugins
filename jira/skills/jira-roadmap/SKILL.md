@@ -41,7 +41,7 @@ Auto-discover the JIRA project — do not ask the user for cloudId or projectKey
 
 1. Call `getAccessibleAtlassianResources` to get the available cloud instances. Use the first (or only) instance as the cloudId.
 2. Call `getVisibleJiraProjects` to list all projects in the instance.
-3. If a project name or key was extracted from `$ARGUMENTS`, match it against the project list and use it directly.
+3. If a project name or key was extracted from `$ARGUMENTS`, match it against the project list and use it directly. If no match is found, fall through to the steps below.
 4. If only one project exists, use it automatically.
 5. If multiple projects exist, pick the most likely match based on context (Confluence page content if available) or present them via `AskUserQuestion` (header: "Project").
 
@@ -56,7 +56,10 @@ Use JQL to find all versions with issues in the project:
 ```
 project = {projectKey} AND fixVersion IS NOT EMPTY ORDER BY fixVersion DESC
 fields: ["summary", "fixVersion"]
+maxResults: 100
 ```
+
+If more than 100 issues exist, use the `nextPageToken` to paginate through all results.
 
 Extract unique `fixVersion` values from the results. Present them to the user via `AskUserQuestion` (header: "Versions") to confirm which versions to include. Allow the user to deselect versions they want to exclude.
 
@@ -67,6 +70,7 @@ For each selected version, run a single optimized JQL query:
 ```
 project = {projectKey} AND fixVersion = "{version}" ORDER BY priority DESC
 fields: ["summary", "status", "issuetype", "priority"]
+maxResults: 100
 ```
 
 Collect aggregate stats per version:
@@ -97,7 +101,7 @@ For each version, produce:
 - **Highlights**: 3-5 bullet points of the most impactful features (derived from Epics/Stories with highest priority)
 - **Link**: URL to release notes page (Confluence) or file path (markdown)
 
-Use same business-value transformation rules as single version (no jargon, active voice, user-outcome focus).
+Apply business-value transformation rules from the writing guidelines in references/format.md (no jargon, active voice, user-outcome focus).
 
 Reference format: [references/format.md](references/format.md)
 

@@ -126,11 +126,11 @@ When a category has **more than 10 items**:
 
 | Section | EN | ES | PL | DE |
 |---------|----|----|----|----|
-| Release Notes | Release Notes | Notas de la version | Informacje o wydaniu | Versionshinweise |
+| Release Notes | Release Notes | Notas de la versión | Informacje o wydaniu | Versionshinweise |
 | Executive Summary | Executive Summary | Resumen ejecutivo | Podsumowanie | Zusammenfassung |
-| Features | Features | Funcionalidades | Funkcjonalnosci | Funktionen |
-| Bug Fixes | Bug Fixes | Correcciones de errores | Poprawki bledow | Fehlerbehebungen |
-| Key Metrics & Impact | Key Metrics & Impact | Metricas clave e impacto | Kluczowe wskazniki i wplyw | Kennzahlen & Auswirkungen |
+| Features | Features | Funcionalidades | Funkcjonalności | Funktionen |
+| Bug Fixes | Bug Fixes | Correcciones de errores | Poprawki błędów | Fehlerbehebungen |
+| Key Metrics & Impact | Key Metrics & Impact | Métricas clave e impacto | Kluczowe wskaźniki i wpływ | Kennzahlen & Auswirkungen |
 | Done | Done | Completado | Gotowe | Fertig |
 | In Progress | In Progress | En progreso | W trakcie | In Bearbeitung |
 | Planned | Planned | Planificado | Planowane | Geplant |
