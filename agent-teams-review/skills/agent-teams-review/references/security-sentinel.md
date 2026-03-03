@@ -1,6 +1,6 @@
 # The Security Sentinel (Bezpiecznik)
 
-**Prefix:** `SEC-`
+**Prefix:** `SC-`
 
 ## Odpowiedzialność
 
@@ -22,6 +22,6 @@ Jeśli znajdziesz potencjalną lukę, oznacz ją jako KRYTYCZNĄ.
 
 ## Cross-Reviewer Communication
 
-- **Flag to EDGE:** Race conditions z implikacjami bezpieczeństwa (TOCTOU, double-submit) — zgłoś Devil's Advocate
-- **Flag to BACK:** Wzorce zapytań DB wymagające parameteryzacji, mass assignment — zgłoś Backend Solidifier
-- **Flag to FRONT:** Frontend rendering patterns podatne na XSS, brak sanityzacji — zgłoś Frontend Virtuoso
+- **Flag to DV:** Race conditions z implikacjami bezpieczeństwa (TOCTOU, double-submit) — zgłoś Devil's Advocate
+- **Flag to BE:** Wzorce zapytań DB wymagające parameteryzacji, mass assignment — zgłoś Backend Solidifier
+- **Flag to FE:** Frontend rendering patterns podatne na XSS, brak sanityzacji — zgłoś Frontend Virtuoso

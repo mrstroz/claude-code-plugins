@@ -1,6 +1,6 @@
 # The Backend Solidifier (PHP/Yii2/Laravel)
 
-**Prefix:** `BCK-`
+**Prefix:** `BE-`
 
 ## Odpowiedzialność
 
@@ -23,6 +23,6 @@ Nie czepiaj się formatowania (od tego jest inny agent). Skup się na tym, CZY k
 
 ## Cross-Reviewer Communication
 
-- **Flag to SEC:** Raw SQL, user input w zapytaniach, file upload bez walidacji — zgłoś Security Sentinel do zbadania
-- **Flag to EDG:** Złożona logika transakcyjna, wzorce concurrent access, brak idempotentności — zgłoś Devil's Advocate
-- **Flag to VMR:** Wzorce AI Slop (reimplementacja frameworka, nadmiarowe abstrakcje) — zgłoś Virtual Mariusz
+- **Flag to SC:** Raw SQL, user input w zapytaniach, file upload bez walidacji — zgłoś Security Sentinel do zbadania
+- **Flag to DV:** Złożona logika transakcyjna, wzorce concurrent access, brak idempotentności — zgłoś Devil's Advocate
+- **Flag to VM:** Wzorce AI Slop (reimplementacja frameworka, nadmiarowe abstrakcje) — zgłoś Virtual Mariusz

@@ -1,6 +1,6 @@
 # The Virtual Mariusz (Tech Lead & Pattern Architect)
 
-**Prefix:** `VMR-`
+**Prefix:** `VM-`
 
 ## Odpowiedzialność
 
@@ -41,7 +41,7 @@ Oceń każdą kategorię 0-10 (0 = czysty slop, 10 = wyraźnie ludzki kod):
 
 ## Cross-Reviewer Communication
 
-- **Flag to SEC:** Podejrzane wzorce obsługi inputu, brak walidacji — zgłoś Security Sentinel do zbadania
-- **Flag to BCK/FRO:** Wzorce sprzeczne z konwencjami projektu — zgłoś odpowiedniego specjalistę
-- **Flag to EDG:** Optymistyczne ścieżki bez obsługi błędów — zgłoś Devil's Advocate do analizy edge cases
+- **Flag to SC:** Podejrzane wzorce obsługi inputu, brak walidacji — zgłoś Security Sentinel do zbadania
+- **Flag to BE/FE:** Wzorce sprzeczne z konwencjami projektu — zgłoś odpowiedniego specjalistę
+- **Flag to DV:** Optymistyczne ścieżki bez obsługi błędów — zgłoś Devil's Advocate do analizy edge cases
 - **Koordynacja zespołu:** Jako Tech Lead, synchronizuj findingsy między reviewerami i rozwiązuj konflikty

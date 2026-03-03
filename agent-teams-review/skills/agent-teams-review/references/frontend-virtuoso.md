@@ -1,6 +1,6 @@
 # The Frontend Virtuoso (Vue/Nuxt)
 
-**Prefix:** `FRO-`
+**Prefix:** `FE-`
 
 ## Odpowiedzialność
 
@@ -23,6 +23,6 @@ Ignoruj literówki w komentarzach. Skup się na stabilności i jakości kodu Vue
 
 ## Cross-Reviewer Communication
 
-- **Flag to SEC:** XSS patterns (v-html z danymi użytkownika), brakujące CSRF tokeny — zgłoś Security Sentinel
-- **Flag to EDG:** Race conditions w async operacjach, problemy z concurrent state — zgłoś Devil's Advocate
-- **Flag to BCK:** Niezgodność kontraktu API (frontend zakłada coś, czego backend nie gwarantuje) — zgłoś Backend Solidifier
+- **Flag to SC:** XSS patterns (v-html z danymi użytkownika), brakujące CSRF tokeny — zgłoś Security Sentinel
+- **Flag to DV:** Race conditions w async operacjach, problemy z concurrent state — zgłoś Devil's Advocate
+- **Flag to BE:** Niezgodność kontraktu API (frontend zakłada coś, czego backend nie gwarantuje) — zgłoś Backend Solidifier

@@ -6,12 +6,12 @@ Use reviewer-specific prefixes. NEVER use generic prefixes like `HIGH-001` or `M
 
 | Reviewer | Prefix |
 |----------|--------|
-| Virtual Mariusz (Tech Lead) | `VMR-` |
-| Backend Solidifier | `BCK-` |
-| Frontend Virtuoso | `FRO-` |
-| Quality Purist | `QAL-` |
-| Security Sentinel | `SEC-` |
-| Devil's Advocate | `EDG-` |
+| Virtual Mariusz (Tech Lead) | `VM-` |
+| Backend Solidifier | `BE-` |
+| Frontend Virtuoso | `FE-` |
+| Quality Purist | `QA-` |
+| Security Sentinel | `SC-` |
+| Devil's Advocate | `DV-` |
 
 Each reviewer has its own counter (001, 002...). Prefix = reviewer, NOT severity.
 
@@ -51,7 +51,7 @@ When multiple reviewers find overlapping issues:
 1. **Same issue, different perspectives** — keep the most detailed report, note which reviewers flagged it
 2. **Related but distinct issues** — keep both, cross-reference them
 3. **True duplicates** — merge into single entry, list all reviewers that found it
-4. **Cross-reviewer findings** — when one reviewer flags something to another (e.g., BCK flags SQL to SEC), tag inline with `↔️CROSS` and "who flagged -> who investigated" attribution. Do NOT create a separate cross-reviewer section.
+4. **Cross-reviewer findings** — when one reviewer flags something to another (e.g., BE flags SQL to SC), tag inline with `↔️CROSS` and "who flagged -> who investigated" attribution. Do NOT create a separate cross-reviewer section.
 
 ## 6. Report Template
 
@@ -72,12 +72,12 @@ When multiple reviewers find overlapping issues:
 
 | | Critical | High | Medium | Low | Total |
 |---|---|---|---|---|---|
-| VMR | X | X | X | X | X |
-| BCK | X | X | X | X | X |
-| FRO | X | X | X | X | X |
-| QAL | X | X | X | X | X |
-| SEC | X | X | X | X | X |
-| EDG | X | X | X | X | X |
+| VM | X | X | X | X | X |
+| BE | X | X | X | X | X |
+| FE | X | X | X | X | X |
+| QA | X | X | X | X | X |
+| SC | X | X | X | X | X |
+| DV | X | X | X | X | X |
 | **Sum** | **X** | **X** | **X** | **X** | **X** |
 
 ---
@@ -88,24 +88,24 @@ When multiple reviewers find overlapping issues:
 
 > Critical + High severity. These MUST be fixed.
 
-- [ ] `[BCK-001]` **Issue title** `Critical` — `file/path.php:42` _(Backend Solidifier)_
-- [ ] `[SEC-001]` **Issue title** `High` ↔️CROSS _(flagged by BCK, investigated by SEC)_ — `file/path.php:67`
-- [ ] `[VMR-001]` **Issue title** `High` — `file/path.php:52` _(Virtual Mariusz)_
+- [ ] `[BE-001]` **Issue title** `Critical` — `file/path.php:42` _(Backend Solidifier)_
+- [ ] `[SC-001]` **Issue title** `High` ↔️CROSS _(flagged by BE, investigated by SC)_ — `file/path.php:67`
+- [ ] `[VM-001]` **Issue title** `High` — `file/path.php:52` _(Virtual Mariusz)_
 
 ### :orange_circle: Before Merge — Recommended
 
 > Medium severity issues worth fixing now.
 
-- [ ] `[QAL-001]` **Issue title** `Medium` — `file/path.php:30` _(Quality Purist)_
-- [ ] `[FRO-001]` **Issue title** `Medium` — `components/File.vue:45` _(Frontend Virtuoso)_
+- [ ] `[QA-001]` **Issue title** `Medium` — `file/path.php:30` _(Quality Purist)_
+- [ ] `[FE-001]` **Issue title** `Medium` — `components/File.vue:45` _(Frontend Virtuoso)_
 
 ### :yellow_circle: Post-Merge — Optional
 
 > Medium + Low severity. Fix when convenient.
 
-- [ ] `[QAL-002]` **Issue title** `Medium` — `file/path.php:95` _(Quality Purist)_
-- [ ] `[BCK-002]` **Issue title** `Low` — `migrations/file.php:35` _(Backend Solidifier)_
-- [ ] `[FRO-002]` **Issue title** `Low` — `components/File.vue:12` _(Frontend Virtuoso)_
+- [ ] `[QA-002]` **Issue title** `Medium` — `file/path.php:95` _(Quality Purist)_
+- [ ] `[BE-002]` **Issue title** `Low` — `migrations/file.php:35` _(Backend Solidifier)_
+- [ ] `[FE-002]` **Issue title** `Low` — `components/File.vue:12` _(Frontend Virtuoso)_
 
 ---
 
@@ -113,7 +113,7 @@ When multiple reviewers find overlapping issues:
 
 ### `path/to/first-file.php`
 
-#### [BCK-001] Issue Title `Critical`
+#### [BE-001] Issue Title `Critical`
 _Backend Solidifier_
 
 Description of the problem and why it matters.
@@ -130,7 +130,7 @@ Description of the problem and why it matters.
 
 ---
 
-#### [SEC-001] Issue Title `High` ↔️CROSS
+#### [SC-001] Issue Title `High` ↔️CROSS
 _Flagged by Backend Solidifier → Investigated by Security Sentinel_
 
 Description of what was flagged and what investigation revealed.
@@ -147,17 +147,17 @@ Description of what was flagged and what investigation revealed.
 
 ---
 
-#### [QAL-001] Issue Title `Medium`
+#### [QA-001] Issue Title `Medium`
 _Quality Purist_ — Variable `$data` should be `$userSettings`. Naming convention violation.
 
 ---
 
 ### `path/to/second-file.vue`
 
-#### [FRO-001] Issue Title `Medium`
+#### [FE-001] Issue Title `Medium`
 _Frontend Virtuoso_ — Missing loading state on save button. UX issue.
 
-#### [FRO-002] Issue Title `Low`
+#### [FE-002] Issue Title `Low`
 _Frontend Virtuoso_ — Avatar preview missing alt text. Accessibility.
 
 ---

@@ -14,12 +14,12 @@
 
 | | Critical | High | Medium | Low | Total |
 |---|---|---|---|---|---|
-| VMR | 0 | 1 | 1 | 1 | 3 |
-| BCK | 0 | 2 | 1 | 1 | 4 |
-| FRO | 0 | 0 | 1 | 1 | 2 |
-| QAL | 0 | 0 | 2 | 1 | 3 |
-| SEC | 0 | 1 | 1 | 0 | 2 |
-| EDG | 0 | 0 | 0 | 0 | 0 |
+| VM | 0 | 1 | 1 | 1 | 3 |
+| BE | 0 | 2 | 1 | 1 | 4 |
+| FE | 0 | 0 | 1 | 1 | 2 |
+| QA | 0 | 0 | 2 | 1 | 3 |
+| SC | 0 | 1 | 1 | 0 | 2 |
+| DV | 0 | 0 | 0 | 0 | 0 |
 | **Sum** | **0** | **4** | **6** | **4** | **14** |
 
 ---
@@ -28,27 +28,27 @@
 
 ### :red_circle: Before Merge — Required
 
-- [ ] `[SEC-001]` **Missing rate limiting on profile update** `High` — `controllers/UserProfileController.php:34` _(Security Sentinel)_
-- [ ] `[BCK-001]` **N+1 query in settings loader** `High` — `models/UserSettings.php:67` _(Backend Solidifier)_
-- [ ] `[BCK-002]` **Missing transaction in profile+avatar update** `High` — `services/UserProfileService.php:89` _(Backend Solidifier)_
-- [ ] `[VMR-001]` **Debug var_dump left in production code** `High` — `services/UserProfileService.php:52` _(Virtual Mariusz)_
+- [ ] `[SC-001]` **Missing rate limiting on profile update** `High` — `controllers/UserProfileController.php:34` _(Security Sentinel)_
+- [ ] `[BE-001]` **N+1 query in settings loader** `High` — `models/UserSettings.php:67` _(Backend Solidifier)_
+- [ ] `[BE-002]` **Missing transaction in profile+avatar update** `High` — `services/UserProfileService.php:89` _(Backend Solidifier)_
+- [ ] `[VM-001]` **Debug var_dump left in production code** `High` — `services/UserProfileService.php:52` _(Virtual Mariusz)_
 
 ### :orange_circle: Before Merge — Recommended
 
-- [ ] `[SEC-002]` **Avatar file upload path traversal** `Medium` ↔️CROSS _(flagged by BCK, investigated by SEC)_ — `services/UserProfileService.php:110`
-- [ ] `[BCK-003]` **Missing index on user_settings.category** `Medium` — `migrations/m240228_create_user_settings.php` _(Backend Solidifier)_
-- [ ] `[QAL-001]` **Method doTheUpdate() — misleading name** `Medium` — `services/UserProfileService.php:30` _(Quality Purist)_
-- [ ] `[QAL-002]` **Magic number 5242880 without constant** `Medium` — `services/UserProfileService.php:95` _(Quality Purist)_
-- [ ] `[VMR-002]` **SettingsFormatterInterface has single impl** `Medium` — `interfaces/SettingsFormatterInterface.php` _(Virtual Mariusz)_
-- [ ] `[FRO-001]` **Missing loading state on save button** `Medium` — `components/ProfileForm.vue:45` _(Frontend Virtuoso)_
+- [ ] `[SC-002]` **Avatar file upload path traversal** `Medium` ↔️CROSS _(flagged by BE, investigated by SC)_ — `services/UserProfileService.php:110`
+- [ ] `[BE-003]` **Missing index on user_settings.category** `Medium` — `migrations/m240228_create_user_settings.php` _(Backend Solidifier)_
+- [ ] `[QA-001]` **Method doTheUpdate() — misleading name** `Medium` — `services/UserProfileService.php:30` _(Quality Purist)_
+- [ ] `[QA-002]` **Magic number 5242880 without constant** `Medium` — `services/UserProfileService.php:95` _(Quality Purist)_
+- [ ] `[VM-002]` **SettingsFormatterInterface has single impl** `Medium` — `interfaces/SettingsFormatterInterface.php` _(Virtual Mariusz)_
+- [ ] `[FE-001]` **Missing loading state on save button** `Medium` — `components/ProfileForm.vue:45` _(Frontend Virtuoso)_
 
 ### :yellow_circle: Post-Merge — Optional
 
-- [ ] `[SEC-003]` **Verbose error messages expose stack trace** `Medium` — `controllers/UserProfileController.php:70` _(Security Sentinel)_
-- [ ] `[VMR-003]` **Unused import ArrayHelper** `Low` — `controllers/UserProfileController.php:5` _(Virtual Mariusz)_
-- [ ] `[BCK-004]` **Migration down() method is empty** `Low` — `migrations/m240228_create_user_settings.php:35` _(Backend Solidifier)_
-- [ ] `[FRO-002]` **Avatar preview missing alt text** `Low` — `components/AvatarUpload.vue:12` _(Frontend Virtuoso)_
-- [ ] `[QAL-003]` **Inconsistent method visibility order** `Low` — `services/UserProfileService.php` _(Quality Purist)_
+- [ ] `[SC-003]` **Verbose error messages expose stack trace** `Medium` — `controllers/UserProfileController.php:70` _(Security Sentinel)_
+- [ ] `[VM-003]` **Unused import ArrayHelper** `Low` — `controllers/UserProfileController.php:5` _(Virtual Mariusz)_
+- [ ] `[BE-004]` **Migration down() method is empty** `Low` — `migrations/m240228_create_user_settings.php:35` _(Backend Solidifier)_
+- [ ] `[FE-002]` **Avatar preview missing alt text** `Low` — `components/AvatarUpload.vue:12` _(Frontend Virtuoso)_
+- [ ] `[QA-003]` **Inconsistent method visibility order** `Low` — `services/UserProfileService.php` _(Quality Purist)_
 
 ---
 
@@ -56,7 +56,7 @@
 
 ### `controllers/UserProfileController.php`
 
-#### [SEC-001] Missing Rate Limiting on Profile Update `High`
+#### [SC-001] Missing Rate Limiting on Profile Update `High`
 _Security Sentinel_
 
 Profile update endpoint has no rate limiting. An attacker can flood the server with update requests, potentially causing DoS or enabling brute-force attacks on profile fields.
@@ -88,17 +88,17 @@ public function behaviors()
 
 ---
 
-#### [SEC-003] Verbose Error Messages Expose Stack Trace `Medium`
+#### [SC-003] Verbose Error Messages Expose Stack Trace `Medium`
 _Security Sentinel_ — Error response at line 70 returns full exception message including internal paths. Replace with generic error in production.
 
-#### [VMR-003] Unused Import ArrayHelper `Low`
+#### [VM-003] Unused Import ArrayHelper `Low`
 _Virtual Mariusz_ — `use yii\helpers\ArrayHelper` imported but never used. Remove.
 
 ---
 
 ### `models/UserSettings.php`
 
-#### [BCK-001] N+1 Query in Settings Loader `High`
+#### [BE-001] N+1 Query in Settings Loader `High`
 _Backend Solidifier_
 
 `getUserSettings()` loads each setting category in a separate query inside a loop. For 5 categories = 5 queries instead of 1.
@@ -124,7 +124,7 @@ $grouped = ArrayHelper::index($settings, null, 'category');
 
 ### `services/UserProfileService.php`
 
-#### [BCK-002] Missing Transaction in Profile + Avatar Update `High`
+#### [BE-002] Missing Transaction in Profile + Avatar Update `High`
 _Backend Solidifier_
 
 Profile data and avatar are saved in separate operations without a transaction. If avatar save fails, profile is updated but avatar is stale — inconsistent state.
@@ -150,7 +150,7 @@ try {
 
 ---
 
-#### [VMR-001] Debug var_dump Left in Production Code `High`
+#### [VM-001] Debug var_dump Left in Production Code `High`
 _Virtual Mariusz_
 
 `var_dump($settings)` at line 52 will output raw data to the browser in non-CLI context.
@@ -159,7 +159,7 @@ _Virtual Mariusz_
 
 ---
 
-#### [SEC-002] Avatar File Upload Path Traversal `Medium` ↔️CROSS
+#### [SC-002] Avatar File Upload Path Traversal `Medium` ↔️CROSS
 _Flagged by Backend Solidifier → Investigated by Security Sentinel_
 
 Backend Solidifier noticed the avatar save uses the original filename. Security Sentinel confirmed: the filename is not sanitized, allowing path traversal (e.g., `../../etc/passwd`).
@@ -171,44 +171,44 @@ $filename = Yii::$app->security->generateRandomString(16) . '.' . $file->extensi
 
 ---
 
-#### [QAL-001] Method doTheUpdate() — Misleading Name `Medium`
+#### [QA-001] Method doTheUpdate() — Misleading Name `Medium`
 _Quality Purist_ — Method name is vague and informal. Rename to `updateProfile()` to match convention.
 
-#### [QAL-002] Magic Number 5242880 `Medium`
+#### [QA-002] Magic Number 5242880 `Medium`
 _Quality Purist_ — `5242880` should be `self::MAX_AVATAR_SIZE_BYTES` constant. Magic numbers violate readability.
 
-#### [QAL-003] Inconsistent Method Visibility Order `Low`
+#### [QA-003] Inconsistent Method Visibility Order `Low`
 _Quality Purist_ — Public methods should come before protected, then private. Currently mixed.
 
 ---
 
 ### `interfaces/SettingsFormatterInterface.php`
 
-#### [VMR-002] Single Implementation Interface `Medium`
+#### [VM-002] Single Implementation Interface `Medium`
 _Virtual Mariusz_ — `SettingsFormatterInterface` has only `JsonSettingsFormatter`. No foreseeable need for alternatives. YAGNI — remove interface, use concrete class directly.
 
 ---
 
 ### `migrations/m240228_create_user_settings.php`
 
-#### [BCK-003] Missing Index on category Column `Medium`
+#### [BE-003] Missing Index on category Column `Medium`
 _Backend Solidifier_ — `user_settings.category` is used in WHERE clauses but has no index. Add composite index on `(user_id, category)`.
 
-#### [BCK-004] Empty down() Method `Low`
+#### [BE-004] Empty down() Method `Low`
 _Backend Solidifier_ — Migration is not reversible. Add `$this->dropTable('user_settings')` to `down()`.
 
 ---
 
 ### `components/ProfileForm.vue`
 
-#### [FRO-001] Missing Loading State on Save `Medium`
+#### [FE-001] Missing Loading State on Save `Medium`
 _Frontend Virtuoso_ — Save button has no loading/disabled state during API call. User can double-submit.
 
 ---
 
 ### `components/AvatarUpload.vue`
 
-#### [FRO-002] Missing Alt Text `Low`
+#### [FE-002] Missing Alt Text `Low`
 _Frontend Virtuoso_ — Avatar preview `<img>` has no `alt` attribute. Accessibility issue.
 
 ---
