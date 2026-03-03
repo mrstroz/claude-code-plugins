@@ -41,7 +41,7 @@ Also read `CLAUDE.md` if it exists in the project root — this contains project
 | Backend Solidifier (BE-) | Files match: `*.php`, `composer.json`, `config/*.php`, `migrations/*`, `database/*` |
 | Frontend Virtuoso (FE-) | Files match: `*.vue`, `*.ts`, `*.tsx`, `*.js`, `*.jsx`, `nuxt.config.*`, `*.css`, `*.scss` |
 | Quality Purist (QA-) | When Backend Solidifier OR Frontend Virtuoso is selected |
-| Security Sentinel (SC-) | Any file content contains: `auth`, `login`, `password`, `token`, `api`, `form`, `session`, `secret`, `key`, `middleware`, `guard`, `policy` |
+| Security Sentinel (SC-) | File path matches: `**/auth/**`, `**/security/**`, `**/middleware/**`, `**/guard/**`, `**/policy/**` OR file content contains: `password`, `login`, `token`, `secret`, `session`, `csrf`, `sanitize`, `encrypt`, `hash` |
 | Devil's Advocate (DV-) | New classes/functions >30 lines, complex conditionals (>3 nesting levels), financial/payment logic detected, OR total lines changed >150 |
 
 After auto-selection, show the user which reviewers are selected and which are skipped (with reasons).
@@ -65,7 +65,7 @@ Read each selected reviewer's profile from `references/`:
 
 **CRITICAL:** This step uses the **Agent Teams** feature, NOT the Task tool with subagents.
 
-Instruct Claude to create an Agent Team with the selected reviewers. For each reviewer:
+Instruct Claude to create an Agent Team with the selected reviewers. **Use Sonnet for each teammate** to optimize token costs — code review does not require Opus-level reasoning. For each reviewer:
 
 1. Use the reviewer profile content (read in Step 4) as the **spawn prompt** for that teammate
 2. Append the following context to each teammate's prompt:
@@ -99,8 +99,25 @@ When you receive a message from a teammate:
 ```
 
 3. Spawn all teammates simultaneously so they can communicate during review
+4. Create a shared task list with review tasks:
+
+| Task | Assigned To | Depends On |
+|------|------------|------------|
+| Review: [domain-specific files] | [Reviewer Name] | — |
+| Review: [domain-specific files] | [Reviewer Name] | — |
+| ... | ... | — |
+| Aggregate & Format Report | Lead | All review tasks |
+
+Each review task should describe:
+- Which files/areas to focus on
+- The reviewer's domain (backend, frontend, security, etc.)
+- Expected deliverables (issue list, cross-reviewer flags, positive observations)
+
+Teammates claim their assigned tasks and mark them as completed when done. The aggregation task unblocks automatically when all reviews finish.
 
 ### Step 6: Wait & Collect Results
+
+**CRITICAL:** Do NOT start aggregating, formatting, or doing any review work yourself. You are the lead — your job is to coordinate, not review code. Wait for ALL teammates to complete their tasks before proceeding to Step 7.
 
 As teammates finish their reviews, collect their findings. Each teammate will produce:
 - A list of issues with their prefix (VM-, BE-, FE-, QA-, SC-, DV-)
@@ -108,7 +125,7 @@ As teammates finish their reviews, collect their findings. Each teammate will pr
 - Positive observations
 - Summary assessment
 
-Wait for all teammates to complete before proceeding.
+If a teammate appears stuck or idle without completing their task, nudge them to continue. Only proceed to Step 7 when every review task in the shared task list is marked as completed.
 
 ### Step 7: Aggregate Results
 
@@ -167,9 +184,20 @@ If "Apply suggested fixes" is selected:
 - Let the user pick which fixes to apply using `AskUserQuestion` with `multiSelect: true`
 - Apply selected fixes to the code
 
+### Step 11: Clean Up Team
+
+After all follow-up actions are complete, clean up the agent team to release shared resources.
+
+1. Ensure all teammates have finished and are idle
+2. Shut down any remaining active teammates
+3. Run team cleanup to remove shared team resources
+
+**IMPORTANT:** Only the lead (this session) should run cleanup. Never let a teammate run cleanup — their team context may not resolve correctly.
+
 ## Error Handling
 
 - If a teammate fails or times out, continue with the remaining teammates and note the failure in the report
 - If `git diff` fails, fall back to asking the user for specific file paths
 - If no code changes are found, inform the user and exit gracefully
 - If no reviewers are selected (user deselected all), warn and require at least Virtual Mariusz
+- If cleanup fails because teammates are still active, shut them down first and retry cleanup
