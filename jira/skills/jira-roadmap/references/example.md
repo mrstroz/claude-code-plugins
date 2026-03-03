@@ -32,22 +32,6 @@ This release makes checkout faster and more flexible while giving merchants bett
 
 ---
 
-## Version 4.1.0 — Inventory & Fulfillment
-**Status:** Released | **Date:** Q4 2025
-
-Focused on giving merchants complete control over inventory and order fulfillment. Introduced real-time stock tracking, automated reorder alerts, and a unified view of orders across all sales channels.
-
-**Highlights:**
-- Real-time inventory tracking across warehouses and stores
-- Automated low-stock alerts with configurable thresholds
-- Unified order management for online and in-store sales
-- Batch shipping label generation with carrier rate comparison
-- Returns and exchanges self-service portal for customers
-
-[→ Release notes](release-notes-4.1.0.md)
-
----
-
 ## Version 4.3.0 — Marketplace & Growth
 **Status:** Planned | **Target:** Q2 2026
 
@@ -61,3 +45,19 @@ Expanding ShopFlow into a marketplace platform where merchants can sell through 
 - Advanced A/B testing for storefront pages
 
 [→ Release notes](release-notes-4.3.0.md)
+
+---
+
+## Version 4.1.0 — Inventory & Fulfillment
+**Status:** Released | **Date:** Q4 2025
+
+Focused on giving merchants complete control over inventory and order fulfillment. Introduced real-time stock tracking, automated reorder alerts, and a unified view of orders across all sales channels.
+
+**Highlights:**
+- Real-time inventory tracking across warehouses and stores
+- Automated low-stock alerts with configurable thresholds
+- Unified order management for online and in-store sales
+- Batch shipping label generation with carrier rate comparison
+- Returns and exchanges self-service portal for customers
+
+[→ Release notes](release-notes-4.1.0.md)

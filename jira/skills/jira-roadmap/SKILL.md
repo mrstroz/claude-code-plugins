@@ -31,6 +31,8 @@ Before anything else, use a single `AskUserQuestion` call with two questions:
 
 If Confluence output is selected, immediately follow up with one more `AskUserQuestion` (header: "Confluence URL") asking for the target Confluence page URL (the full URL, e.g. `https://mycompany.atlassian.net/wiki/spaces/PROJ/pages/123456`).
 
+If `$ARGUMENTS` contains a project name or key (e.g., `SF`, `ShopFlow`), extract it for use in Step 2 to skip project discovery.
+
 Use the selected language for the entire document. Translate section headers according to the translations in the respective format reference file.
 
 ## Resolve JIRA Project (Step 2)
@@ -39,8 +41,9 @@ Auto-discover the JIRA project — do not ask the user for cloudId or projectKey
 
 1. Call `getAccessibleAtlassianResources` to get the available cloud instances. Use the first (or only) instance as the cloudId.
 2. Call `getVisibleJiraProjects` to list all projects in the instance.
-3. If only one project exists, use it automatically.
-4. If multiple projects exist, pick the most likely match based on context (Confluence page content if available) or present them via `AskUserQuestion` (header: "Project").
+3. If a project name or key was extracted from `$ARGUMENTS`, match it against the project list and use it directly.
+4. If only one project exists, use it automatically.
+5. If multiple projects exist, pick the most likely match based on context (Confluence page content if available) or present them via `AskUserQuestion` (header: "Project").
 
 Store the resolved cloudId and projectKey for the rest of the session.
 
@@ -51,8 +54,8 @@ Store the resolved cloudId and projectKey for the rest of the session.
 Use JQL to find all versions with issues in the project:
 
 ```
-project = {projectKey} ORDER BY fixVersion DESC
-fields: ["summary", "status", "fixVersion"]
+project = {projectKey} AND fixVersion IS NOT EMPTY ORDER BY fixVersion DESC
+fields: ["summary", "fixVersion"]
 ```
 
 Extract unique `fixVersion` values from the results. Present them to the user via `AskUserQuestion` (header: "Versions") to confirm which versions to include. Allow the user to deselect versions they want to exclude.
