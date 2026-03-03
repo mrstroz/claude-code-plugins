@@ -48,6 +48,12 @@ Version 4.2.0 focuses on making the checkout experience faster and more flexible
 - [x] **SF-502 — PCI Compliance Updates.** Payment handling now meets the latest PCI DSS 4.0 requirements. All sensitive card data is encrypted end-to-end.
 - [~] **SF-503 — Audit Log for Admin Actions.** All admin actions are logged and searchable for compliance review. Filters let you narrow results by user, date, or action type.
 
+## Bug Fixes
+- [x] **SF-601 — Checkout Failure With Discount Codes.** Orders occasionally failed during checkout when applying certain discount codes. Checkout now completes reliably with all discount types.
+- [x] **SF-602 — Incorrect Tax Calculation for EU Orders.** Tax amounts were calculated incorrectly for orders shipped to some EU countries. All EU tax rates now match current regulations.
+- [x] **SF-603 — Product Images Not Loading on Mobile.** Product gallery images sometimes failed to load on mobile devices with slow connections. Images now load progressively with optimized thumbnails.
+- [x] **SF-604 — Email Notifications Sent in Wrong Language.** Some customers received order confirmation emails in the default language instead of their preferred one. Emails now correctly match each customer's language setting.
+
 ## Key Metrics & Impact
 
 - **Checkout speed**: Express checkout reduces average completion time by 40%

@@ -24,6 +24,11 @@ Reference document defining the structure, formatting rules, and writing guideli
 - [x] **TASK-401 — Feature Name.** Summary sentence one. Summary sentence two.
 - [~] **TASK-502 — Feature Name.** Summary sentence one. Summary sentence two.
 
+## Bug Fixes
+- [x] **TASK-601 — Fix Name.** What was broken. What now works correctly.
+- [x] **TASK-602 — Fix Name.** What was broken. What now works correctly.
+- [~] **TASK-603 — Fix Name.** What was broken. What is being resolved.
+
 ## Key Metrics & Impact *(optional)*
 [Brief section highlighting measurable improvements, e.g., performance gains, new capabilities count.]
 ```
@@ -51,9 +56,34 @@ Each category contains a bulleted list. Each item follows this format:
 | `[~]` In Progress | Feature is actively being worked on | Jira status: In Progress, In Review, Testing |
 | `[ ]` Planned | Feature is scoped but not yet started | Jira status: To Do, Open, Backlog |
 
+## Bug Fixes Section
+
+The **Bug Fixes** section is a dedicated, standalone section placed after Features and before Key Metrics & Impact. Bug and Hotfix issues are never mixed into the feature categories.
+
+### Bug Fix Entry Format
+
+```
+[status] **TASK-KEY — Fix Name.** What was broken. What now works correctly.
+```
+
+| Element | Description |
+|---------|-------------|
+| **Status** | Status indicator prefix (same as features) |
+| **Task Key** | Jira issue key (e.g. PROJ-601) |
+| **Fix Name** | 3-8 words, title case, describes what was fixed |
+| **Summary** | 2 sentences: first describes the problem, second describes the resolution. Max 40 words. |
+
+### Bug Fix Writing Guidelines
+
+- Describe the **user-visible symptom**, not the technical root cause
+- First sentence: what was broken (past tense)
+- Second sentence: what now works correctly (present tense)
+- "Fixed null pointer in OrderService" → "Orders occasionally failed during checkout when applying discount codes. Checkout now completes reliably with all discount types."
+- If the version has more than 8 bug fixes, group minor ones as "Additional fixes" with a count
+
 ## Categorization Rules
 
-- Target **3-7 categories** per release notes document
+- Target **3-7 categories** per release notes document (for the Features section)
 - Each category must have **at least 2 items**
 - Each category should have **no more than 10 items**
 - Merge categories with fewer than 2 items into the nearest thematic match
@@ -99,6 +129,7 @@ When a category has **more than 10 items**:
 | Release Notes | Release Notes | Notas de la version | Informacje o wydaniu | Versionshinweise |
 | Executive Summary | Executive Summary | Resumen ejecutivo | Podsumowanie | Zusammenfassung |
 | Features | Features | Funcionalidades | Funkcjonalnosci | Funktionen |
+| Bug Fixes | Bug Fixes | Correcciones de errores | Poprawki bledow | Fehlerbehebungen |
 | Key Metrics & Impact | Key Metrics & Impact | Metricas clave e impacto | Kluczowe wskazniki i wplyw | Kennzahlen & Auswirkungen |
 | Done | Done | Completado | Gotowe | Fertig |
 | In Progress | In Progress | En progreso | W trakcie | In Bearbeitung |

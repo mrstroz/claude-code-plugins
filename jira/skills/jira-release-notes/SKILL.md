@@ -79,9 +79,10 @@ Apply these filtering rules to determine which issues appear in the release note
 | Epic, Story, Feature | Any | Always include |
 | Task | Major or higher | Include if user-facing (check summary/labels) |
 | Task | Normal or lower | Skip (unless summary suggests a user-facing feature) |
-| Bug | Critical, Blocker | Always include |
-| Bug | Major | Include if it affects a key user workflow |
-| Bug | Normal or lower | Skip |
+| Bug, Hotfix | Critical, Blocker | Always include |
+| Bug, Hotfix | Major | Always include |
+| Bug, Hotfix | Normal | Include (skip only if purely internal/technical) |
+| Bug, Hotfix | Minor, Trivial | Skip (unless it affects a visible user workflow) |
 | Sub-task, Chore | Any | Skip |
 
 **Keyword exclusion** — skip issues whose summary contains any of these terms (case-insensitive): `refactor`, `chore`, `cleanup`, `ci/cd`, `pipeline`, `dependency update`, `bump`, `internal`, `tech debt`, `lint`, `formatting`.
@@ -111,8 +112,9 @@ Assign each issue to a category based on labels, components, and keywords in the
 | security, auth, permission, access, encryption | Security & Compliance |
 | api, integration, webhook, sync, connector | Integrations |
 | report, analytics, dashboard, metrics, chart | Reporting & Analytics |
-| Bug with Critical/Blocker priority | Stability & Bug Fixes |
 | No match found | New Capabilities |
+
+**Bug Fixes category** — All issues with type Bug or Hotfix are placed into a dedicated **Bug Fixes** section, separate from the thematic feature categories above. Do not mix bugs into feature categories. The Bug Fixes section always appears after the Features section in the final document (see Step 9).
 
 ### Pass 2 — AI Refinement
 
@@ -142,6 +144,14 @@ For each issue, produce:
 - Active voice, confident tone — no hedging ("might", "should", "could")
 - Max 40 words per summary (2 sentences)
 
+### Bug Fix Transformation Rules
+
+- For bugs, describe what was broken and what now works correctly
+- "Fixed NPE in order service" → "Orders no longer fail during checkout when a discount code is applied"
+- "Fixed CSS overflow in product grid" → "Product listings now display correctly on all screen sizes"
+- "Hotfix: payment callback timeout" → "Payments are now confirmed reliably without delays or missing confirmations"
+- Focus on the user-visible symptom and resolution, not the technical root cause
+
 ## Compose Release Notes Document (Step 9)
 
 Assemble the final document following the structure defined in [references/format.md](references/format.md).
@@ -159,6 +169,10 @@ Assemble the final document following the structure defined in [references/forma
 - [x] **PROJ-101 — Feature Name.** Summary sentence one. Summary sentence two.
 - [~] **PROJ-205 — Feature Name.** Summary sentence one. Summary sentence two.
 - [ ] **PROJ-318 — Feature Name.** Summary sentence one. Summary sentence two.
+
+## Bug Fixes
+- [x] **PROJ-410 — Fix Name.** What was broken. What now works correctly.
+- [x] **PROJ-415 — Fix Name.** What was broken. What now works correctly.
 
 ## Key Metrics & Impact *(optional)*
 [Measurable improvements if available from issue data.]
