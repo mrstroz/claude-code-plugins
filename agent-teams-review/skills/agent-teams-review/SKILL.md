@@ -1,7 +1,7 @@
 ---
-name: agent-teams-review-run
-description: Run a collaborative Agent Teams code review with cross-reviewer communication, AI Slop detection, and a unified professional report. Use when the user asks to review a PR, review code changes, or run a code review. Spawns a team of independent reviewer teammates (Virtual Mariusz, Backend Solidifier, Frontend Virtuoso, Quality Purist, Security Sentinel, Devil's Advocate) that can communicate with each other and share findings. Produces a professional report with executive summary, AI Slop score, cross-reviewer findings, and verdict.
-argument-hint: "[branch-comparison or file-paths]"
+name: agent-teams-review
+description: Collaborative Agent Teams code review with cross-reviewer communication, AI Slop detection, and a unified professional report. Use when the user asks to review a PR, review code changes, or run a code review. Spawns a team of independent reviewer teammates (Virtual Mariusz, Backend Solidifier, Frontend Virtuoso, Quality Purist, Security Sentinel, Devil's Advocate) that can communicate with each other and share findings. Produces a professional report with executive summary, AI Slop score, cross-reviewer findings, and verdict.
+argument-hint: "[base-branch]"
 ---
 
 # Agent Teams Code Review Orchestrator
@@ -14,21 +14,14 @@ Run a collaborative code review using Agent Teams. Unlike subagent-based reviews
 
 Collect the review target from `$ARGUMENTS`.
 
-**Supported input modes:**
-1. **Git diff** — branch comparison (e.g. `main..HEAD`, `develop..feature/my-branch`)
-2. **Specific files** — list of file paths
-3. **Directory** — all source files in a directory
-
-If no arguments provided, use `AskUserQuestion` to ask:
-- What branch or files to review
-- The base branch to compare against (default: `main`)
+**Input:** The argument is the base branch name to compare against (e.g. `develop`, `main`). Default: `main` if no argument provided.
 
 ### Step 2: Collect Code Changes
 
 **Git diff mode:**
 ```bash
-git diff <base-branch>..HEAD --name-only  # changed file list
-git diff <base-branch>..HEAD              # full diff
+git diff <base-branch>...HEAD --name-only  # changed file list
+git diff <base-branch>...HEAD              # full diff
 ```
 
 **Specific files:** Read each file directly.
