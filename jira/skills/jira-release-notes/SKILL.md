@@ -146,6 +146,7 @@ For each issue, produce:
 
 ### Transformation Rules
 
+- Frame every summary from the client's perspective — describe how the feature benefits the end user or improves their business outcomes, not just what changed in the product
 - Rewrite technical descriptions as user outcomes
 - "Implemented caching layer" → "Faster loading times across the application"
 - "Added database index on search" → "Search results appear instantly"
@@ -171,7 +172,7 @@ Assemble the final document following the structure defined in [references/forma
 **Release:** X.Y.Z | **Target:** [quarter/date] | **Status:** [overall status]
 
 ## Executive Summary
-[2-3 sentences about the release theme and key benefits.]
+[2-3 sentences highlighting how this release improves the client's experience and business outcomes.]
 
 ## Features
 

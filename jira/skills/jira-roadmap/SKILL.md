@@ -13,12 +13,13 @@ Generate a professional, client-facing product roadmap from Jira version data. P
 1. **Initial setup** — Ask language and output format via `AskUserQuestion`
 2. **Resolve JIRA project** — Auto-discover the project via MCP tools
 3. **Discover versions** — Find all versions with issues in the project
-4. **Collect version data** — Fetch aggregate stats per version
-5. **Check for existing release notes pages** — Find links to detailed release notes
-6. **Generate version summaries** — Produce theme, summary, and highlights per version
-7. **Compose main roadmap document** — Assemble using the main roadmap format
-8. **Present draft for review** — Show the roadmap and ask for confirmation
-9. **Output** — Deliver as markdown or publish to Confluence
+4. **Collect version data** — Fetch aggregate stats per version (lightweight metadata only)
+5. **Read top issue details** — Fetch descriptions for top issues per version
+6. **Check for existing release notes pages** — Find links to detailed release notes
+7. **Generate version summaries** — Produce theme, summary, and highlights per version
+8. **Compose main roadmap document** — Assemble using the main roadmap format
+9. **Present draft for review** — Show the roadmap and ask for confirmation
+10. **Output** — Deliver as markdown or publish to Confluence
 
 ---
 
@@ -65,7 +66,7 @@ Extract unique `fixVersion` values from the results. Present them to the user vi
 
 ## Collect Version Data (Step 4)
 
-For each selected version, run a single optimized JQL query:
+For each selected version, run a single optimized JQL query with lightweight metadata fields only. Do not request `description` here — on versions with many issues the combined payload can exceed MCP size limits.
 
 ```
 project = {projectKey} AND fixVersion = "{version}" ORDER BY priority DESC
@@ -73,13 +74,34 @@ fields: ["summary", "status", "issuetype", "priority"]
 maxResults: 100
 ```
 
+If more than 100 issues exist, use the `nextPageToken` to paginate through all results.
+
 Collect aggregate stats per version:
 - **Total issues**: count of all issues
 - **By status**: count of Done/In Progress/Planned
 - **By type**: count of Epic/Story/Bug/Task
 - **Top items**: highest-priority Epics and Stories (for generating highlights)
 
-## Check for Existing Release Notes Pages (Step 5)
+## Read Top Issue Details (Step 5)
+
+Step 4 only fetched lightweight metadata. To generate accurate, client-focused version summaries, fetch full descriptions for the most impactful issues in each version.
+
+For each version, select the **top 5 issues** by priority:
+1. Epics and Stories first (highest priority)
+2. Remaining issues by priority descending
+3. If a version has 3 or fewer issues total, fetch all of them
+
+Call `getJiraIssue` for each selected issue. You MUST pass `fields: ["description"]` on every call — omitting `fields` returns the entire issue payload and can exceed MCP size limits.
+
+```
+fields: ["description"]
+```
+
+**Batching:** process all calls across all versions in batches of 10 concurrent calls.
+
+Use these descriptions in Step 7 to derive richer theme names, summaries, and highlights. Issues not fetched individually are summarized from the `summary` field collected in Step 4.
+
+## Check for Existing Release Notes Pages (Step 6)
 
 ### If output is Confluence:
 - Search Confluence for existing pages matching `[Project] Release Notes — Version {version}` pattern using `searchConfluenceUsingCql`
@@ -91,21 +113,25 @@ Collect aggregate stats per version:
 - Also check legacy path `docs/roadmaps/roadmap-{version}.md` for backward compatibility
 - Ask the user for path pattern via `AskUserQuestion` (header: "File paths") if not found
 
-## Generate Version Summaries (Step 6)
+## Generate Version Summaries (Step 7)
 
 For each version, produce:
 
 - **Theme Name**: 2-4 words capturing the release theme (e.g., "Checkout & Analytics")
 - **Status**: Released / In Progress / Planned (derived from issue status counts)
-- **Summary**: 2-3 sentences describing key focus areas and business value
+- **Summary**: 2-3 sentences describing key focus areas and client benefits
 - **Highlights**: 3-5 bullet points of the most impactful features (derived from Epics/Stories with highest priority)
 - **Link**: URL to release notes page (Confluence) or file path (markdown)
 
-Apply business-value transformation rules from the writing guidelines in references/format.md (no jargon, active voice, user-outcome focus).
+Prioritize descriptions fetched in Step 5 for generating theme names, summaries, and highlights — these provide the detail needed for accurate business-value transformation. For issues not fetched individually, use the `summary` field from Step 4.
+
+Frame every summary and highlight from the client's perspective — what problem does this solve for them? How does it make their work easier or their business better? Every highlight should answer: "What does the client gain from this?"
+
+Apply business-value transformation rules from the writing guidelines in references/format.md (no jargon, active voice, client-benefit focus).
 
 Reference format: [references/format.md](references/format.md)
 
-## Compose Main Roadmap Document (Step 7)
+## Compose Main Roadmap Document (Step 8)
 
 Assemble the document following the structure in [references/format.md](references/format.md):
 
@@ -134,7 +160,7 @@ Assemble the document following the structure in [references/format.md](referenc
 
 Full example: [references/example.md](references/example.md)
 
-## Present Draft for Review (Step 8)
+## Present Draft for Review (Step 9)
 
 Present the complete roadmap inside a clearly marked block and use `AskUserQuestion` (header: "Review"):
 
@@ -145,7 +171,7 @@ Present the complete roadmap inside a clearly marked block and use `AskUserQuest
 
 If the user asks for adjustments, apply changes and present the updated draft again. Repeat until the user confirms.
 
-## Output (Step 9)
+## Output (Step 10)
 
 ### Markdown Output
 

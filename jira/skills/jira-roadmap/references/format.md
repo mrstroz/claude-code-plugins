@@ -79,20 +79,22 @@ Each version section contains:
 ## Writing Guidelines
 
 - **Condensed** — max 3 sentences per version summary, max 5 highlights
-- **Business value** — describe what users and stakeholders gain, not technical implementation
+- **Client-benefit focus** — every summary and highlight should answer: "What does the client gain from this?" Describe how changes solve client problems, make their work easier, or improve their business outcomes
 - **Active voice** — "Merchants can now track revenue in real time" not "Real-time revenue tracking was implemented"
 - **No jargon** — replace technical terms with user-facing outcomes
 - **Confident tone** — no hedging words ("might", "should", "could possibly")
 - **No internal references** — remove story points, sprint names, assignees, component names
 - **Highlights from top priorities** — derive from Epics/Stories with highest priority
 
-### Summary Transformation
+### Client-Benefit Transformation
 
-| Technical | Business Summary |
+| Technical Description | Client-Benefit Summary |
 |-----------|------------------|
-| Implemented caching + DB indexes | Faster page loads and instant search results |
-| Migrated to OAuth 2.0 with PKCE flow | More secure sign-in with single sign-on support |
-| Added WebSocket notifications + async PDF | Real-time updates and background report generation |
+| Implemented caching + DB indexes | Your pages load faster and search results appear instantly, saving time on every interaction |
+| Migrated to OAuth 2.0 with PKCE flow | Sign in more securely with single sign-on — one login for all your tools |
+| Added WebSocket notifications + async PDF | Get notified in real time and generate reports in the background without waiting |
+| Refactored order processing pipeline | Orders process more reliably, reducing errors and manual follow-ups |
+| Added multi-tenant data isolation | Your data stays completely separate and secure from other organizations |
 
 ## Version Ordering
 

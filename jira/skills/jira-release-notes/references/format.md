@@ -11,7 +11,7 @@ Reference document defining the structure, formatting rules, and writing guideli
 **Release:** X.Y.Z | **Target:** Q1 2026 | **Status:** In Progress
 
 ## Executive Summary
-[2-3 sentences describing the release theme and key benefits for end users.]
+[2-3 sentences highlighting how this release improves the client's experience and business outcomes.]
 
 ## Features
 
@@ -92,22 +92,23 @@ The **Bug Fixes** section is a dedicated, standalone section placed after Featur
 
 ## Writing Guidelines
 
+- **Client-benefit focus** — every summary should answer: "What does the client gain from this?" Describe how features solve client problems, make their work easier, or improve their business outcomes
 - **No jargon** — replace technical terms with user-facing outcomes
 - **Active voice** — "Users can now filter by date" not "Date filtering has been implemented"
-- **User-outcome focus** — describe what the user gains, not what was built
 - **Confident tone** — no hedging words ("might", "should", "could possibly")
 - **Consistent tense** — Done items in past/present, In Progress in present, Planned in future
 - **No internal references** — remove story points, sprint names, assignees, component names
 
-### Transformation Examples
+### Client-Benefit Transformation Examples
 
-| Technical Description | Business Summary |
+| Technical Description | Client-Benefit Summary |
 |-----------------------|------------------|
-| Implemented Redis caching layer | Faster loading times across the application |
-| Added composite database index on orders table | Search results appear instantly |
-| Migrated auth to OAuth 2.0 with PKCE | More secure sign-in with single sign-on support |
-| Refactored PDF generation to async queue | Reports generate in the background without blocking your work |
-| Added WebSocket support for notifications | Real-time notifications without refreshing the page |
+| Implemented Redis caching layer | Your pages load faster, saving time on every interaction |
+| Added composite database index on orders table | Find what you need instantly — search results appear without delay |
+| Migrated auth to OAuth 2.0 with PKCE | Sign in more securely with single sign-on across all your tools |
+| Refactored PDF generation to async queue | Generate reports in the background and keep working — no more waiting |
+| Added WebSocket support for notifications | Stay informed in real time without refreshing the page |
+| Added bulk import for product catalog | Upload your entire catalog at once instead of adding items one by one |
 
 ## Condensation Rules
 
