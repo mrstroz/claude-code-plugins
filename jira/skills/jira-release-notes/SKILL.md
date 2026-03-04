@@ -13,9 +13,9 @@ Generate professional, client-facing release notes from Jira version data. Produ
 1. **Initial setup** — Ask language and output format via `AskUserQuestion`
 2. **Resolve JIRA project** — Auto-discover the project via MCP tools
 3. **Collect version info** — Determine which version to include
-4. **Search Jira issues by version** — Fetch issues using optimized JQL with expanded fields
+4. **Search Jira issues by version** — Lightweight metadata only
 5. **Filter issues** — Remove internal, technical-only, and low-priority items
-6. **Read issue details** — Fetch full descriptions only where needed
+6. **Read full issue details** — Fetch descriptions and comments individually
 7. **Categorize into themes** — Group issues into 3-7 business-facing categories
 8. **Generate business-value summaries** — Transform technical descriptions into user-outcome language
 9. **Compose release notes document** — Assemble the final document using the reference format
@@ -61,17 +61,17 @@ If no version was provided:
 
 ## Search Jira Issues by Version (Step 4)
 
-Use the available MCP tool for JQL search with expanded fields to minimize follow-up calls:
+Use the available MCP tool for JQL search with lightweight metadata fields only. Do not request `description` here — on versions with many issues the combined payload can exceed MCP size limits, causing the search to fail.
 
 ```
 project = {projectKey} AND fixVersion = "{version}" ORDER BY priority DESC, issuetype ASC
-fields: ["summary", "description", "status", "issuetype", "priority", "labels", "components"]
+fields: ["summary", "status", "issuetype", "priority", "labels", "components"]
 maxResults: 100
 ```
 
 If more than 100 issues exist, use the `nextPageToken` to paginate through all results.
 
-From each result, collect: `key`, `summary`, `description`, `issuetype`, `priority`, `status`, `labels`, `components`.
+From each result, collect: `key`, `summary`, `issuetype`, `priority`, `status`, `labels`, `components`.
 
 ## Filter Issues (Step 5)
 
@@ -90,15 +90,22 @@ Apply these filtering rules to determine which issues appear in the release note
 
 **Keyword exclusion** — skip issues whose summary contains any of these terms (case-insensitive): `refactor`, `chore`, `cleanup`, `ci/cd`, `pipeline`, `dependency update`, `bump`, `internal`, `tech debt`, `lint`, `formatting`.
 
-## Read Issue Details (Step 6)
+## Read Full Issue Details (Step 6)
 
-Only call `getJiraIssue` for issues where the description was truncated in the search results or where comments are needed for context. Most issues should have sufficient data from the expanded fields in Step 4.
+Call `getJiraIssue` for **every** issue that passed filtering in Step 5. Step 4 only fetched lightweight metadata, so descriptions and comments must be retrieved individually here.
 
-For issues that do need full details, use the `getJiraIssue` MCP tool with the issueKey from the search results.
+You MUST pass `fields: ["comment", "description"]` on every `getJiraIssue` call. Omitting `fields` returns the entire issue payload and can exceed MCP size limits.
 
-Collect: description, comments, labels, components.
+**Batching:** process in batches of 10 concurrent calls.
 
-**Batching:** if there are more than 30 issues needing detail fetches, process them in batches of 10 to avoid overloading context.
+**Prioritization (more than 30 filtered issues):**
+
+If more than 30 issues passed filtering, fetch full details for the top 30 only, prioritized as follows:
+1. Epic / Story / Feature (all priorities)
+2. Blocker / Critical bugs
+3. Remaining issues by priority descending
+
+For issues beyond the 30-issue cap, skip the `getJiraIssue` call and generate summaries from the `summary` field collected in Step 4 alone.
 
 ## Categorize into Themes (Step 7)
 
@@ -106,7 +113,7 @@ Use a two-pass approach:
 
 ### Pass 1 — Automatic Categorization
 
-Assign each issue to a category based on labels, components, and keywords in the summary/description:
+Assign each issue to a category based on labels, components, and keywords in the summary and description (if available from Step 6 — for overflow issues beyond the 30-cap, use summary alone):
 
 | Keywords / Labels | Category |
 |-------------------|----------|
