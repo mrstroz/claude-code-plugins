@@ -16,7 +16,7 @@ This defines the table structure, column rules, and writing guidelines for the d
 ## Action Needed ({count})
 | Task |   | Info | Title | Summary |
 |------|---|------|-------|---------|
-| [PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123) | A | 2.1.0<br>Jan<br>🔵 In Progress | Fix payment timeout | Blocker — team waiting on hotfix. Deploy to staging for QA. |
+| [PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123) | A | 2.1.0 · Jan · 🔵 In Progress | Fix payment timeout | Blocker — team waiting on hotfix. Deploy to staging for QA. |
 
 ## Ready to Proceed ({count})
 | Task |   | Info | Title | Summary |
@@ -35,7 +35,7 @@ This defines the table structure, column rules, and writing guidelines for the d
 |--------|---------|--------|
 | Task | Clickable JIRA link | `[PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123)` |
 |   | Priority letter | Single character: A, B, C, D, or E |
-| Info | Release + assignee + status | `{fixVersion}<br>{assignee}<br>{status}` with status color: ⚪ for To Do, 🔵 for in-progress, 🟢 for done |
+| Info | Release + assignee + status | `{fixVersion} · {assignee} · {status}` with status color: ⚪ for To Do, 🔵 for in-progress, 🟢 for done |
 | Title | Issue summary | Truncate with `...` if over 70 characters |
 | Summary | Situation + proposed action | ~20-30 words (see writing rules below) |
 

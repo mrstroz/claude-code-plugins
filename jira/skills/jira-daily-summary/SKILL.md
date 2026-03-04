@@ -26,7 +26,7 @@ Generate a prioritized daily summary of JIRA tasks with intelligent triage into 
 Use a single `AskUserQuestion` call with two questions:
 
 - **Language** (header: "Language"): English (Recommended) | Spanish | Polish | German
-- **Time frame** (header: "Time frame"): Active sprint tasks assigned to me (Recommended) | All tasks updated or commented today | All tasks updated or commented yesterday | All tasks updated or commented in last 3 days
+- **Time frame** (header: "Time frame"): Active sprint tasks assigned to me (Recommended) | All tasks updated or commented today | All tasks updated or commented yesterday or today | All tasks updated or commented in last 3 days
 
 Use the selected language for the entire output. Translate section headers according to the translations in [references/format.md](references/format.md).
 
@@ -53,7 +53,7 @@ Map the selected time frame to a JQL query. Always include the project filter.
 |------------|-----|
 | Active sprint assigned to me | `project = {projectKey} AND sprint in openSprints() AND assignee = currentUser() ORDER BY priority DESC` |
 | Updated/commented today | `project = {projectKey} AND updated >= startOfDay() ORDER BY updated DESC` |
-| Updated/commented yesterday | `project = {projectKey} AND updated >= startOfDay(-1d) ORDER BY updated DESC` |
+| Updated/commented yesterday + today | `project = {projectKey} AND updated >= startOfDay(-1d) ORDER BY updated DESC` |
 | Last 3 days | `project = {projectKey} AND updated >= startOfDay(-3d) ORDER BY updated DESC` |
 
 This step is purely a discovery phase — collect the list of issue keys and lightweight metadata. Do NOT request `comment` or `description` fields here because they cause the response to exceed MCP size limits on active projects.
@@ -224,11 +224,11 @@ Call `getJiraIssue` for the current task's issue key to get fresh, complete data
 
 ### 9b. Display Task Card
 
-Present the task in a clearly marked block:
+Present the task as a heading with the expanded summary below it:
 
-> **[PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123) — {title}**
->
-> {expanded summary}
+**[PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123) — {title}**
+
+{expanded summary}
 
 The expanded summary should be 2-3x more detailed than the table summary (~60-90 words). Include:
 - Current situation and status
@@ -256,13 +256,13 @@ Adapt options based on what the task actually needs — these are examples, not 
 
 ### 9d. Propose JIRA Comment
 
-Based on the user's chosen action, draft a JIRA comment in the language selected in Step 1. Present the draft in a marked block:
+Based on the user's chosen action, draft a JIRA comment in the language selected in Step 1. Present the draft as plain text:
 
-> **JIRA Comment Draft — please review:**
->
-> {comment content}
->
-> Confirm to send, or let me know what to change.
+**JIRA Comment Draft — please review:**
+
+{comment content}
+
+Confirm to send, or let me know what to change.
 
 Writing rules:
 - Use the language selected in Step 1 for the entire comment

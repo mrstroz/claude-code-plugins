@@ -1,7 +1,7 @@
 {
   "name": "jira",
   "description": "JIRA integration for task creation, feedback, release notes, product roadmaps, and daily summaries",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "author": {
     "name": "mrstroz"
   }
