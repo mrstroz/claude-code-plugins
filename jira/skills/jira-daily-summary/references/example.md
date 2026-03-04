@@ -57,3 +57,34 @@ If the user selects "Create todos for Action Needed", two todos are created:
 - Subject: `B — SF-289: Order API rate limiting`
 - Description: `Maria asked for review of rate limit config in comments 2h ago. Review and respond. Re-read the full JIRA task via getJiraIssue before starting work.`
 - ActiveForm: `Working on SF-289`
+
+---
+
+## Example Task Processing (Step 9)
+
+Processing starts with the first todo (SF-234):
+
+### Task Card
+
+> **[SF-234](https://shopflow.atlassian.net/browse/SF-234) — Fix payment callback timeout**
+>
+> The payment callback from Stripe is timing out after 30 seconds on high-traffic orders. This has been a Blocker since yesterday — the QA team (Anna, Piotr) cannot complete checkout regression testing for release 4.2.0. Jan investigated and confirmed the issue is in the webhook handler's retry logic. Maria commented 3h ago: "QA is fully blocked on this, can you deploy the fix to staging today?" The fix branch `fix/SF-234-callback-timeout` is ready but needs your review before merge.
+
+### AskUserQuestion — Action
+
+- Review the fix branch and approve for merge (Recommended)
+- Request changes on the fix branch
+- Reassign to Jan to deploy directly
+- Skip — handle later
+
+*User selects: "Review the fix branch and approve for merge"*
+
+### JIRA Comment Draft
+
+> **JIRA Comment Draft — please review:**
+>
+> Reviewed the fix in `fix/SF-234-callback-timeout`. The retry logic change looks correct — increasing the timeout to 60s and adding exponential backoff should resolve the issue. Merging to main and deploying to staging now. QA can resume checkout testing within the hour.
+>
+> Confirm to send, or let me know what to change.
+
+*User confirms → comment sent via `addJiraComment` → todo marked completed → move to SF-289*

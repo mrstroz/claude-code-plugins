@@ -17,6 +17,7 @@ Generate a prioritized daily summary of JIRA tasks with intelligent triage into 
 6. **ABCDE classification** — Assign priority letter A-E to each task and sort within groups
 7. **Generate summary** — Produce text overview and three prioritized tables
 8. **Todo list creation** — Optionally create Claude Code todos for follow-up
+9. **Process tasks** — Work through todos one by one: re-read from JIRA, show expanded summary, ask for action, propose and send a JIRA comment
 
 ---
 
@@ -209,4 +210,72 @@ If the user selects a group, use `TaskCreate` for each task in the selected grou
 
 The re-read instruction matters because the daily summary intentionally condenses information for quick scanning. When actually working on a task, the full JIRA issue with all comments, description, and history provides essential context.
 
-After creating todos, confirm how many were created and for which group(s).
+After creating todos, confirm how many were created and for which group(s). Then proceed to Step 9.
+
+---
+
+## Process Tasks (Step 9)
+
+Work through the todo list one task at a time. For each task, repeat the following cycle:
+
+### 9a. Re-read from JIRA
+
+Call `getJiraIssue` for the current task's issue key to get fresh, complete data — description, all comments, status, and history. The triage summary from Step 7 is intentionally condensed; processing a task requires the full picture.
+
+### 9b. Display Task Card
+
+Present the task in a clearly marked block:
+
+> **[PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123) — {title}**
+>
+> {expanded summary}
+
+The expanded summary should be 2-3x more detailed than the table summary (~60-90 words). Include:
+- Current situation and status
+- Key recent comments (who said what, when)
+- Blockers or dependencies if any
+- Context from the description that is relevant to the next action
+
+### 9c. Ask for Action
+
+Use `AskUserQuestion` (header: "Action") with options contextual to the task's triage group and status. Examples:
+
+**Action Needed tasks:**
+- Review and respond to the team's question
+- Unblock — provide the requested input
+- Reassign to someone better suited
+- Skip — handle later
+
+**Ready to Proceed tasks:**
+- Approve and move forward (merge, deploy, close)
+- Request changes before proceeding
+- Reassign to someone else
+- Skip — handle later
+
+Adapt options based on what the task actually needs — these are examples, not a fixed list.
+
+### 9d. Propose JIRA Comment
+
+Based on the user's chosen action, draft a JIRA comment in the language selected in Step 1. Present the draft in a marked block:
+
+> **JIRA Comment Draft — please review:**
+>
+> {comment content}
+>
+> Confirm to send, or let me know what to change.
+
+Writing rules:
+- Use the language selected in Step 1 for the entire comment
+- Be direct — state the decision or response, not the process of arriving at it
+- Use domain terminology from the JIRA issue
+- Match tone to context — urgent issues get direct language, discussions get collaborative tone
+
+### 9e. Send Comment and Advance
+
+After the user confirms (or edits and confirms) the comment:
+
+1. Use `addJiraComment` MCP tool with `cloudId` (resolved in Step 2), `issueKey`, and `body`
+2. Mark the current todo as completed via `TaskUpdate` (status: `completed`)
+3. Move to the next task in the todo list and repeat from Step 9a
+
+If the user chose "Skip" in Step 9c, mark the todo as completed without sending a comment and move to the next task.
