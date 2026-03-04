@@ -14,17 +14,17 @@ This defines the table structure, column rules, and writing guidelines for the d
 {2-4 sentences: counts per group, overall focus recommendation}
 
 ## Action Needed ({count})
-| Task |   | Info | Title | Summary |
-|------|---|------|-------|---------|
-| [PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123) | A | 2.1.0 · Jan · 🔵 In Progress | Fix payment timeout | Blocker since yesterday — Anna and Piotr on QA are blocked on checkout testing, waiting for your hotfix. Deploy to staging so QA can resume. |
+| Task |   | Ver | Assignee | Status | Title | Summary |
+|------|---|-----|----------|--------|-------|---------|
+| [PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123) | A | 2.1.0 | Jan | 🔵 In Progress | Fix payment timeout | Blocker since yesterday — Anna and Piotr on QA are blocked on checkout testing, waiting for your hotfix. Deploy to staging so QA can resume. |
 
 ## Ready to Proceed ({count})
-| Task |   | Info | Title | Summary |
-|------|---|------|-------|---------|
+| Task |   | Ver | Assignee | Status | Title | Summary |
+|------|---|-----|----------|--------|-------|---------|
 
 ## Info ({count})
-| Task |   | Info | Title | Summary |
-|------|---|------|-------|---------|
+| Task |   | Ver | Assignee | Status | Title | Summary |
+|------|---|-----|----------|--------|-------|---------|
 ```
 
 ---
@@ -35,7 +35,9 @@ This defines the table structure, column rules, and writing guidelines for the d
 |--------|---------|--------|
 | Task | Clickable JIRA link | `[PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123)` |
 |   | Priority letter | Single character: A, B, C, D, or E |
-| Info | Release + assignee + status | `{fixVersion} · {assignee} · {status}` with status color: ⚪ for To Do, 🔵 for in-progress, 🟢 for done |
+| Ver | Fix version | `{fixVersion}` or `—` if missing |
+| Assignee | Person assigned | First name |
+| Status | Current status | Color emoji + status name: ⚪ for To Do, 🔵 for in-progress, 🟢 for done |
 | Title | Issue summary | Truncate with `...` if over 70 characters |
 | Summary | Situation + proposed action | ~30-50 words (see writing rules below) |
 
@@ -85,7 +87,7 @@ The Overview section gives a quick morning-briefing snapshot. Follow these rules
 For large result sets, keep the output scannable:
 
 - If any group has **more than 15 tasks**, show individual rows only for A and B items
-- Summarize C/D/E items as a single row: `| — | C-E | — | {count} additional tasks | No immediate action required. |`
+- Summarize C/D/E items as a single row: `| — | C-E | — | — | — | {count} additional tasks | No immediate action required. |`
 - If the total summary exceeds **80 table rows** across all groups, apply condensation to Info first, then Ready to Proceed
 - Action Needed is never condensed — every item there deserves individual attention
 
@@ -104,6 +106,8 @@ Use the selected language for all section headers. Translate using this table:
 | Info | Info | Información | Informacje | Info |
 | Task | Task | Tarea | Zadanie | Aufgabe |
 | (empty) | (empty) | (empty) | (empty) | (empty) |
-| Info | Info | Info | Info | Info |
+| Ver | Ver | Ver | Ver | Ver |
+| Assignee | Assignee | Responsable | Osoba | Zuständig |
+| Status | Status | Estado | Status | Status |
 | Title | Title | Título | Tytuł | Titel |
 | Summary | Summary | Resumen | Podsumowanie | Zusammenfassung |
