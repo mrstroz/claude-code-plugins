@@ -44,7 +44,7 @@ Store the resolved `cloudId`, `projectKey`, and the cloud base URL (e.g., `https
 
 ---
 
-## Fetch Tasks (Step 3)
+## Fetch Task List (Step 3)
 
 Map the selected time frame to a JQL query. Always include the project filter.
 
@@ -55,33 +55,37 @@ Map the selected time frame to a JQL query. Always include the project filter.
 | Updated/commented yesterday | `project = {projectKey} AND updated >= startOfDay(-1d) AND updated < startOfDay() ORDER BY updated DESC` |
 | Last 3 days | `project = {projectKey} AND updated >= startOfDay(-3d) ORDER BY updated DESC` |
 
-Use the MCP JQL search tool with expanded fields to minimize follow-up calls:
+This step is purely a discovery phase — collect the list of issue keys and lightweight metadata. Do NOT request `comment` or `description` fields here because they cause the response to exceed MCP size limits on active projects.
 
 ```
-fields: ["summary", "description", "status", "issuetype", "priority", "fixVersions", "labels", "components", "assignee", "reporter", "comment"]
-maxResults: 100
+fields: ["summary", "status", "issuetype", "priority", "fixVersions", "assignee", "reporter"]
+maxResults: 50
 ```
 
-If more than 100 issues exist, use `nextPageToken` to paginate through all results.
-
-From each result, collect: `key`, `summary`, `description`, `status`, `issuetype`, `priority`, `fixVersions`, `labels`, `components`, `assignee`, `reporter`, and recent comments.
+If more than 50 issues exist, use `nextPageToken` to paginate. From each result, collect: `key`, `summary`, `status`, `issuetype`, `priority`, `fixVersions`, `assignee`, `reporter`.
 
 ---
 
-## Read Issue Details (Step 4)
+## Read Full Issue Details (Step 4)
 
-Only call `getJiraIssue` for tasks where:
-- The comment data from the search results is incomplete or truncated
-- The description was truncated and context is needed for triage
-- The task appears to be in Action Needed but you need to verify by reading full comments
+For every task returned by the JQL search, call `getJiraIssue` individually to get the full `description` and `comments`. This is the main data-fetching step — comments are the strongest triage signal (mentions, questions, blockers) and skipping them risks misclassifying urgent tasks into Info.
 
-Most tasks should have sufficient data from the expanded fields in Step 3. For tasks that do need full details, batch requests in groups of 10 to avoid overloading context.
+Process in batches of 10 to avoid context overload.
+
+If the JQL returned more than 30 tasks, prioritize individual fetches in this order:
+1. Blocker/Critical priority tasks (always fetch — likely Action Needed)
+2. Tasks assigned to me (potential Action Needed or Ready to Proceed)
+3. Remaining tasks by priority descending
+
+Skip individual fetches beyond the 30 cap — triage those tasks using metadata only from Step 3 and classify them into Info unless metadata clearly indicates otherwise (e.g., Blocker priority assigned to me).
 
 ---
 
 ## Triage into 3 Groups (Step 5)
 
 Classify every task into exactly one of three groups. The groups represent different levels of urgency — getting this right matters because it determines what the user focuses on first.
+
+Tasks with full details from Step 4 (description + comments) get the most accurate triage. Tasks beyond the 30-fetch cap are triaged from metadata only — classify these into Info unless metadata clearly indicates Action Needed (e.g., Blocker priority assigned to me).
 
 ### Action Needed
 
