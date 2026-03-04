@@ -1,6 +1,7 @@
 ---
 name: claude-md
-description: Analyze session changes and propose CLAUDE.md updates. Use when the user says "update claude.md", "sync claude.md", "document this in claude.md", after finishing a task that introduced new patterns or conventions, when new tools/commands/dependencies were added, or when project architecture changed. Do NOT trigger for simple questions about CLAUDE.md content, reading CLAUDE.md, or general project questions.
+description: Analyze changes and propose CLAUDE.md updates. Accepts an optional argument describing what changed (e.g., `/claude-md we switched from Jest to Vitest`). Use when the user says "update claude.md", "sync claude.md", "document this in claude.md", after finishing a task that introduced new patterns or conventions, when new tools/commands/dependencies were added, or when project architecture changed. Do NOT trigger for simple questions about CLAUDE.md content, reading CLAUDE.md, or general project questions.
+argument-hint: "[description of what changed]"
 ---
 
 # CLAUDE.md Updater
@@ -19,21 +20,24 @@ Analyze session changes and propose targeted CLAUDE.md updates following Anthrop
 
 ## Workflow
 
-### Step 1 — Gather session changes
+### Step 1 — Determine what changed
 
-Run these commands to understand what changed during the session:
+Gather information from three sources, in priority order:
+
+**A. User-provided description** — If `$ARGUMENTS` is non-empty, treat it as the primary input describing what changed. Use it to frame the update. You may still run selective git commands from (B) to corroborate details, but the user's framing takes precedence.
+
+**B. Git session changes** — When `$ARGUMENTS` is empty, or as a supplement to (A), run these commands (skip if not a git repo):
 
 - `git branch --show-current` — current branch
 - `git diff HEAD` — unstaged changes
 - `git diff --staged` — staged changes
 - `git log --oneline -10` — recent commits
-
-Then determine the merge-base to capture the full session scope (committed + uncommitted work):
-
 - `git merge-base HEAD main` (or the default branch) — find where the branch diverged
 - `git diff <merge-base>..HEAD` — all committed changes in this session
 
-If not a git repo, fall back to reviewing the conversation tool history for files created, edited, or written during this session.
+**C. Conversation context** — Always review the conversation for discussed decisions, patterns, tooling choices, or conventions that may not appear in diffs (e.g., "we decided to use Zod for validation", "prefer named exports").
+
+Merge all sources. When the user description (A) conflicts with git (B), prefer the user's framing.
 
 ### Step 2 — Read existing CLAUDE.md
 
