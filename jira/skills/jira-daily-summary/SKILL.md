@@ -171,14 +171,14 @@ Generate one table per triage group: Action Needed, Ready to Proceed, Info.
 All tables use the same columns:
 
 ```
-| Task | ABCDE | Release | Title | Summary |
+| Task |   | Info | Title | Summary |
 ```
 
 Column rules:
 - **Task**: clickable JIRA link — `[PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123)`
-- **ABCDE**: single letter A-E
-- **Release**: fixVersion value or `—` if none assigned
-- **Title**: issue summary, truncated with `...` if over 50 characters
+- (empty header): single letter A-E
+- **Info**: three lines combined with `<br>` — `{fixVersion}<br>{assignee}<br>{status}`. Use `—` if fixVersion is missing. Prefix status with color emoji: ⚪ for To Do/Open/Backlog/New, 🔵 for In Progress/In Review/Testing/QA/Code Review/In Development, 🟢 for Done/Ready to Deploy/Deployed/Closed/Resolved/Released.
+- **Title**: issue summary, truncated with `...` if over 70 characters
 - **Summary**: situation + proposed action in ~20-30 words. This is the most important column — it tells the user what is happening and what to do. Be specific and actionable, not vague.
 
 ### Condensation

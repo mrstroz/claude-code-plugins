@@ -14,17 +14,17 @@ This defines the table structure, column rules, and writing guidelines for the d
 {2-4 sentences: counts per group, overall focus recommendation}
 
 ## Action Needed ({count})
-| Task | ABCDE | Release | Title | Summary |
-|------|-------|---------|-------|---------|
-| [PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123) | A | 2.1.0 | Fix payment timeout | Blocker — team waiting on hotfix. Deploy to staging for QA. |
+| Task |   | Info | Title | Summary |
+|------|---|------|-------|---------|
+| [PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123) | A | 2.1.0<br>Jan<br>🔵 In Progress | Fix payment timeout | Blocker — team waiting on hotfix. Deploy to staging for QA. |
 
 ## Ready to Proceed ({count})
-| Task | ABCDE | Release | Title | Summary |
-|------|-------|---------|-------|---------|
+| Task |   | Info | Title | Summary |
+|------|---|------|-------|---------|
 
 ## Info ({count})
-| Task | ABCDE | Release | Title | Summary |
-|------|-------|---------|-------|---------|
+| Task |   | Info | Title | Summary |
+|------|---|------|-------|---------|
 ```
 
 ---
@@ -34,9 +34,9 @@ This defines the table structure, column rules, and writing guidelines for the d
 | Column | Content | Format |
 |--------|---------|--------|
 | Task | Clickable JIRA link | `[PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123)` |
-| ABCDE | Priority letter | Single character: A, B, C, D, or E |
-| Release | fixVersion value | Version string or `—` if unassigned |
-| Title | Issue summary | Truncate with `...` if over 50 characters |
+|   | Priority letter | Single character: A, B, C, D, or E |
+| Info | Release + assignee + status | `{fixVersion}<br>{assignee}<br>{status}` with status color: ⚪ for To Do, 🔵 for in-progress, 🟢 for done |
+| Title | Issue summary | Truncate with `...` if over 70 characters |
 | Summary | Situation + proposed action | ~20-30 words (see writing rules below) |
 
 ---
@@ -100,7 +100,7 @@ Use the selected language for all section headers. Translate using this table:
 | Ready to Proceed | Ready to Proceed | Listo para avanzar | Gotowe do realizacji | Bereit zum Fortfahren |
 | Info | Info | Información | Informacje | Info |
 | Task | Task | Tarea | Zadanie | Aufgabe |
-| ABCDE | ABCDE | ABCDE | ABCDE | ABCDE |
-| Release | Release | Versión | Wydanie | Version |
+| (empty) | (empty) | (empty) | (empty) | (empty) |
+| Info | Info | Info | Info | Info |
 | Title | Title | Título | Tytuł | Titel |
 | Summary | Summary | Resumen | Podsumowanie | Zusammenfassung |
