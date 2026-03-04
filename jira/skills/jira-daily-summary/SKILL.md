@@ -71,6 +71,12 @@ If more than 50 issues exist, use `nextPageToken` to paginate. From each result,
 
 For every task returned by the JQL search, call `getJiraIssue` individually to get the full `description` and `comments`. This is the main data-fetching step — comments are the strongest triage signal (mentions, questions, blockers) and skipping them risks misclassifying urgent tasks into Info.
 
+```
+fields: ["comment"]
+```
+
+**You MUST pass `fields: ["comment"]` on every `getJiraIssue` call.** The API does not return comments by default — without this parameter, all comments are silently missing and triage degrades to guesswork because comments are the single strongest signal for classifying tasks.
+
 Process in batches of 10 to avoid context overload.
 
 If the JQL returned more than 30 tasks, prioritize individual fetches in this order:
@@ -231,6 +237,12 @@ Work through the todo list one task at a time. For each task, repeat the followi
 ### 9a. Re-read from JIRA
 
 Call `getJiraIssue` for the current task's issue key to get fresh, complete data — description, all comments, status, and history. The triage summary from Step 7 is intentionally condensed; processing a task requires the full picture.
+
+```
+fields: ["comment"]
+```
+
+**You MUST include `fields: ["comment"]`** — without it, comments are silently omitted and you lose the strongest triage signal.
 
 ### 9b. Display Task Card
 
