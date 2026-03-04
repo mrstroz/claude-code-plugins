@@ -53,7 +53,7 @@ Map the selected time frame to a JQL query. Always include the project filter.
 |------------|-----|
 | Active sprint assigned to me | `project = {projectKey} AND sprint in openSprints() AND assignee = currentUser() ORDER BY priority DESC` |
 | Updated/commented today | `project = {projectKey} AND updated >= startOfDay() ORDER BY updated DESC` |
-| Updated/commented yesterday | `project = {projectKey} AND updated >= startOfDay(-1d) AND updated < startOfDay() ORDER BY updated DESC` |
+| Updated/commented yesterday | `project = {projectKey} AND updated >= startOfDay(-1d) ORDER BY updated DESC` |
 | Last 3 days | `project = {projectKey} AND updated >= startOfDay(-3d) ORDER BY updated DESC` |
 
 This step is purely a discovery phase — collect the list of issue keys and lightweight metadata. Do NOT request `comment` or `description` fields here because they cause the response to exceed MCP size limits on active projects.

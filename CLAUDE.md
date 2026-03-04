@@ -48,3 +48,4 @@ This repo demonstrates two distinct patterns for multi-agent code review:
 - Select reviewers/agents conditionally based on file patterns and content keywords, then confirm with the user via `AskUserQuestion`
 - JIRA skills depend on MCP tools (`createJiraIssue`, `searchJiraIssues`, etc.) being available at runtime
 - Use single-line conventional commit format with auto-detected task numbers from branch names
+- Bump `version` in `<plugin>/.claude-plugin/plugin.json` after each change — patch for bug fixes and small tweaks, minor for new features or significant behavior changes
