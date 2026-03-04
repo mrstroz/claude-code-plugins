@@ -66,7 +66,7 @@ Signals:
 
 Ordered by importance — when factors conflict, the higher-ranked factor wins.
 
-1. **Team obligations from comments** — if someone is waiting for my input, that is the strongest signal. A person blocked on my response makes the task at least B, often A. Read recent comments carefully for phrases like "waiting for", "need input from", "blocked by", "can you review", or direct @-mentions.
+1. **Team obligations from comments directed at me** — if someone is waiting for my input, that is the strongest signal. A person blocked on my response makes the task at least B, often A. Read recent comments carefully for phrases like "waiting for", "need input from", "blocked by", "can you review", or direct @-mentions — but only count these when **I am the named or tagged target** of the request. Comments directing action at another person (e.g., "@jan can you review") do not create an obligation for me.
 
 2. **Release proximity** — tasks in the nearest unreleased fixVersion outrank tasks in future versions. A task in the current sprint's target release is more urgent than one scheduled for next quarter. No fixVersion means lower urgency unless other signals override.
 
@@ -89,7 +89,7 @@ These overrides take precedence over the factor-based classification:
 
 - A task with **Blocker priority** is always **A** regardless of other factors
 - A **Hotfix** issue type is always **A** regardless of priority field
-- A task where someone is **explicitly blocked on me** (detected in comments) is at least **B**, even if priority is Minor
+- A task where someone is **explicitly blocked waiting for my response** (in comments addressed to me, not another team member) is at least **B**, even if priority is Minor
 - If a task qualifies for both an upgrade and a downgrade, keep the **higher letter** (err on the side of urgency)
 
 ---

@@ -16,7 +16,7 @@ This defines the table structure, column rules, and writing guidelines for the d
 ## Action Needed ({count})
 | Task |   | Info | Title | Summary |
 |------|---|------|-------|---------|
-| [PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123) | A | 2.1.0 · Jan · 🔵 In Progress | Fix payment timeout | Blocker — team waiting on hotfix. Deploy to staging for QA. |
+| [PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123) | A | 2.1.0 · Jan · 🔵 In Progress | Fix payment timeout | Blocker since yesterday — Anna and Piotr on QA are blocked on checkout testing, waiting for your hotfix. Deploy to staging so QA can resume. |
 
 ## Ready to Proceed ({count})
 | Task |   | Info | Title | Summary |
@@ -37,7 +37,7 @@ This defines the table structure, column rules, and writing guidelines for the d
 |   | Priority letter | Single character: A, B, C, D, or E |
 | Info | Release + assignee + status | `{fixVersion} · {assignee} · {status}` with status color: ⚪ for To Do, 🔵 for in-progress, 🟢 for done |
 | Title | Issue summary | Truncate with `...` if over 70 characters |
-| Summary | Situation + proposed action | ~20-30 words (see writing rules below) |
+| Summary | Situation + proposed action | ~30-50 words (see writing rules below) |
 
 ---
 
@@ -45,10 +45,12 @@ This defines the table structure, column rules, and writing guidelines for the d
 
 The Summary column is the most valuable part of the table — it tells the user what is happening and what to do next. Structure each summary as:
 
-**`{situation}. {proposed action}.`**
+**`{situation with actors}. {proposed action}.`**
 
-- **Situation**: what happened or what state the task is in (1 sentence)
+- **Situation with actors**: what happened, naming specific people and who-to-whom dynamics (1-2 sentences)
 - **Proposed action**: a concrete next step the user should take (1 sentence)
+
+Always name specific people rather than using passive voice — passive hides directionality and makes it unclear who is waiting on whom. Write "Maria asked Jan to review" not "a review was requested".
 
 Keep summaries factual and actionable. Do not hedge with "maybe" or "consider" — state what should be done.
 
@@ -56,12 +58,13 @@ Keep summaries factual and actionable. Do not hedge with "maybe" or "consider" �
 
 | Triage Group | Raw JIRA Data | Summary |
 |-------------|---------------|---------|
-| Action Needed | Blocker priority, 2 comments asking for fix, QA team mentioned | Blocker since yesterday — QA blocked on checkout testing. Deploy hotfix to staging. |
-| Action Needed | Comment: "@me can you review the rate limit config?" | Maria asked for rate limit config review 2h ago. Review and respond. |
-| Ready to Proceed | Status: In Review, code review approved | Code review approved by Jan. Merge to main and deploy to staging. |
-| Ready to Proceed | Status: Done in QA, bug fix verified | Fix verified in QA. Move to Done and schedule for next production deploy. |
-| Info | Teammate pushed UI fixes, normal progress | Maria pushed UI fixes for the storefront. On track, no action needed. |
-| Info | Task assigned to me, outside my domain | Compliance review assigned to you but better suited for security team. Consider reassigning. |
+| Action Needed | Blocker priority, 2 comments asking for fix, QA team mentioned | Blocker since yesterday — Anna and Piotr on the QA team are blocked on checkout regression testing, waiting for your hotfix. Deploy fix branch to staging so QA can resume. |
+| Action Needed | Comment: "@me can you review the rate limit config?" | Maria asked you to review the rate limit config changes 2h ago in comments. She needs your sign-off before merging to main. Review and respond. |
+| Ready to Proceed | Status: In Review, code review approved | Jan approved your code review on the mobile optimization PR. No blockers remain. Merge to main and deploy to staging. |
+| Ready to Proceed | Status: Done in QA, bug fix verified | Anna verified the CSV date formatting fix in QA — all test cases pass. Move to Done and schedule for next production deploy. |
+| Info | Comment: "@jan can you review this", task not assigned to me | Maria asked Jan to review the search indexing changes. Not directed at you — Jan is the reviewer. No action needed. |
+| Info | Teammate pushed UI fixes, normal progress | Maria pushed storefront UI fixes for the product grid layout. On track for 4.2.0 release, no action needed from you. |
+| Info | Task assigned to me, outside my domain | PCI compliance review assigned to you but Anna on the security team has more context. Consider reassigning to Anna. |
 
 ---
 

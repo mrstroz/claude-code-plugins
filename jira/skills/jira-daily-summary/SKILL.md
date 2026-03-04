@@ -92,12 +92,19 @@ Tasks with full details from Step 4 (description + comments) get the most accura
 
 Tasks requiring my immediate action. These represent blocked work or situations where the team is waiting on me. Delaying these has a multiplier effect because other people cannot proceed.
 
+Before classifying, perform a directionality analysis on each comment: identify (1) who is speaking, (2) who is being asked to act (the target — tagged person, named person, or implied addressee), and (3) what action is requested. Only classify as Action Needed when **I am the target** of the request, not merely mentioned as context.
+
 Classify a task as Action Needed when any of these apply:
-- Recent comments mention or tag me directly
-- Task has Blocker status or is flagged as blocked
-- Task is assigned to me and recent comments contain unresolved questions from team members
-- Comments include phrases like "waiting for", "need input from", "blocked by", "can you review", or similar requests directed at me
+- Recent comments tag or mention me directly **as the person asked to act**
+- Task has Blocker status or is flagged as blocked **and** is assigned to me
+- Task is assigned to me and recent comments contain unresolved questions from team members **addressed to me**
+- Comments include phrases like "waiting for", "need input from", "blocked by", "can you review" **where I am the named/tagged target of the request**
 - Team explicitly cannot proceed without my action
+
+Do NOT classify as Action Needed when:
+- A comment tags or names **another person** as the requested actor (e.g., "@jan can you review this" — Jan is the target, not me)
+- Generic status phrases mention a role or team without naming me (e.g., "waiting for QA", "blocked by backend" — unless I am specifically the QA person or backend owner in context)
+- I am mentioned as background context but not as the person expected to act (e.g., "Mariusz implemented this last sprint, Jan please verify")
 
 ### Ready to Proceed
 
@@ -115,6 +122,7 @@ Everything that does not fit Action Needed or Ready to Proceed. This is context 
 
 - Tasks worked on by team members where I am not mentioned in comments
 - General progress updates and status changes
+- Comments where another person (not me) is tagged or named as the action target — these are someone else's Action Needed, not mine
 - All remaining tasks not matching the above two groups
 
 When in doubt between groups, classify into Info rather than Action Needed — false urgency is worse than missing a low-priority item.
@@ -135,7 +143,7 @@ Assign each task a priority letter A through E using the Brian Tracy method. The
 
 ### Classification Factors (in priority order)
 
-1. **Comments and team obligations** — if someone is waiting for my input, that is the strongest signal. A person blocked on my response makes the task at least B, often A.
+1. **Comments and team obligations directed at me** — if someone is waiting for my input in comments addressed to me, that is the strongest signal. A person blocked on my response makes the task at least B, often A.
 2. **Release proximity** — tasks in the nearest unreleased fixVersion outrank tasks in future versions. No fixVersion means lower urgency unless other signals override.
 3. **Task priority field** — Blocker/Critical → A, Major → B, Normal → C, Minor → C or below.
 4. **Task type** — Hotfix → always A. Bug → B-C depending on severity. Story/Task → neutral.
@@ -145,7 +153,7 @@ Assign each task a priority letter A through E using the Brian Tracy method. The
 
 - Blocker priority → always A
 - Hotfix type → always A
-- Someone explicitly blocked on me → at least B
+- Someone explicitly blocked waiting for my response (in comments addressed to me) → at least B
 
 For the full methodology with edge cases and sorting rules, see [references/abcde-methodology.md](references/abcde-methodology.md).
 
@@ -177,9 +185,9 @@ All tables use the same columns:
 Column rules:
 - **Task**: clickable JIRA link — `[PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123)`
 - (empty header): single letter A-E
-- **Info**: three lines combined with `<br>` — `{fixVersion}<br>{assignee}<br>{status}`. Use `—` if fixVersion is missing. Prefix status with color emoji: ⚪ for To Do/Open/Backlog/New, 🔵 for In Progress/In Review/Testing/QA/Code Review/In Development, 🟢 for Done/Ready to Deploy/Deployed/Closed/Resolved/Released.
+- **Info**: release, assignee, and status on one line separated by `·` — `{fixVersion} · {assignee} · {status}`. Use `—` if fixVersion is missing. Prefix status with color emoji: ⚪ for To Do/Open/Backlog/New, 🔵 for In Progress/In Review/Testing/QA/Code Review/In Development, 🟢 for Done/Ready to Deploy/Deployed/Closed/Resolved/Released.
 - **Title**: issue summary, truncated with `...` if over 70 characters
-- **Summary**: situation + proposed action in ~20-30 words. This is the most important column — it tells the user what is happening and what to do. Be specific and actionable, not vague.
+- **Summary**: situation with named actors + proposed action in ~30-50 words. This is the most important column — it tells the user what is happening and what to do. Name specific people and who-to-whom dynamics rather than using passive voice.
 
 ### Condensation
 
