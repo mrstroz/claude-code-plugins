@@ -185,24 +185,21 @@ Generate one table per triage group: Action Needed, Ready to Proceed, Info.
 All tables use the same columns:
 
 ```
-| Task |   | Ver | Assignee | Status | Title | Summary |
+| Task |   | Title | Summary |
 ```
 
 Column rules:
 - **Task**: clickable JIRA link — `[PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123)`
 - (empty header): single letter A-E
-- **Ver**: fixVersion or `—` if missing
-- **Assignee**: assigned person's first name
-- **Status**: color emoji prefix (⚪ for To Do/Open/Backlog/New, 🔵 for In Progress/In Review/Testing/QA/Code Review/In Development, 🟢 for Done/Ready to Deploy/Deployed/Closed/Resolved/Released) + status name
 - **Title**: issue summary, truncated with `...` if over 70 characters
-- **Summary**: situation with named actors + proposed action in ~30-50 words. This is the most important column — it tells the user what is happening and what to do. Name specific people and who-to-whom dynamics rather than using passive voice.
+- **Summary**: starts with metadata prefix `{Ver} · {Status} · {Assignee} —` followed by narrative summary (~30-50 words). Ver is fixVersion or `—` if missing. Status uses color emoji prefix (⚪ To Do/Open/Backlog/New, 🔵 In Progress/In Review/Testing/QA/Code Review/In Development, 🟢 Done/Ready to Deploy/Deployed/Closed/Resolved/Released). Assignee is the person's first name. The narrative portion names specific people and who-to-whom dynamics rather than using passive voice.
 
 ### Condensation
 
 If any group has more than 15 tasks, show individual rows only for A and B items. Summarize C/D/E as a single row:
 
 ```
-| — | C-E | — | — | — | {count} additional tasks | No immediate action required. |
+| — | C-E | {count} additional tasks | No immediate action required. |
 ```
 
 Action Needed is never condensed — every item there deserves individual attention.
