@@ -55,7 +55,7 @@ All users are unable to log in on production. JWT token generation fails during 
 - [ ] Root cause identified and documented in post-mortem
 
 ### Technical Details
-- `backend-api/src/modules/auth/auth.controller.ts` — check `login()` token generation logic
-- `backend-api/src/config/auth.config.ts` — verify JWT secret key and expiration config
-- Check recent deployment diff for changes to auth-related files
+- Check the auth configuration for JWT secret and expiration — a recent deploy likely changed or removed an environment variable
+- Review the deployment diff for changes to auth-related configuration or dependencies
+- If the secret was rotated, ensure all service instances have the new value
 ```

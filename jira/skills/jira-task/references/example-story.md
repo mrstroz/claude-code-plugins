@@ -74,8 +74,8 @@ As a user, I want to add text notes with optional file attachments to customer p
 - [ ] Only the note author can edit or delete their own notes
 
 ### Technical Details
-- `backend-api/src/modules/customer/` — new `Note` model + `NoteController` in customer module
-- `backend-api/src/modules/upload/upload.service.ts` — reuse existing file upload logic for attachments
-- `web-app/src/pages/customers/CustomerDetail.tsx` — add notes tab/section to customer detail page
-- `web-app/src/hooks/useCustomerNotes.ts` — new hook for notes CRUD
+- Create a new `Note` model in the customer module with a one-to-many relationship to `Customer`
+- Reuse the existing file upload service for attachments — it already handles size limits and storage
+- Notes should follow the same soft-delete pattern used by other entities in the project
+- Frontend: add a new tab/section to the customer detail page; use the existing CRUD hook pattern (see `useCustomerOrders` for reference)
 ```

@@ -56,6 +56,6 @@ When saving a user with an email address that includes a `+` alias (e.g., `john+
 - [ ] Existing users with incorrectly stored emails are not affected (no migration)
 
 ### Technical Details
-- `backend-api/src/modules/user/user.service.ts` — review `normalizeEmail()` method, likely strips characters after `+` as part of normalization
-- `backend-api/src/modules/user/user.model.ts` — verify email field validation allows `+` in local part
+- Root cause is in the email normalization logic in the user service — the regex strips characters after `+` which is valid per RFC 5321
+- Fix the normalization to preserve the local part including `+` aliases; ensure the email validation schema also accepts `+`
 ```

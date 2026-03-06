@@ -67,6 +67,8 @@ Before drafting, search the affected subsystem(s) to understand:
 
 Use findings to write accurate **Technical Details** in the task. Keep searches focused — find the specific files and patterns, not exhaustive code reviews.
 
+**Important:** The codebase analysis informs your architectural understanding, but Technical Details should describe *approaches and patterns*, not specific file changes. See the Technical Details Guidelines below.
+
 ## Task Formats
 
 Every task MUST be written in the **language chosen in Step 1**. The structure varies by type. After selecting the type in Step 1, read the corresponding example file for a full reference.
@@ -88,7 +90,7 @@ Standard format for general development work.
 - [ ] [3-5 non-obvious checkpoints]
 
 ### Technical Details *(optional)*
-- `path/to/file` — one-line hint
+- [Architectural hint, pattern suggestion, or implementation approach]
 
 ### Links *(optional)*
 ```
@@ -117,7 +119,7 @@ Same as Task but with an optional **Steps to Reproduce** section between Descrip
 - [ ] [3-5 non-obvious checkpoints]
 
 ### Technical Details *(optional)*
-- `path/to/file` — one-line hint
+- [Architectural hint, pattern suggestion, or implementation approach]
 
 ### Links *(optional)*
 ```
@@ -154,18 +156,35 @@ More descriptive format. Stories group related functionality into numbered **Fea
 - [ ] [High-level criteria covering the whole story, 3-5 items]
 
 ### Technical Details *(optional)*
-- `path/to/file` — one-line hint
+- [Architectural hint, pattern suggestion, or implementation approach]
 
 ### Links *(optional)*
 ```
 
 Example: [references/example-story.md](references/example-story.md)
 
+## Technical Details Guidelines
+
+Technical Details provide **architectural guidance**, not implementation-level changes. The task is a planning artifact — specific code modifications belong to the implementation phase.
+
+**Include:**
+- **Architecture & patterns** — which existing pattern to follow, which layer/module handles the logic (e.g., "use the event-driven pattern from the notifications module")
+- **Data modeling** — schema approach, relationship types, index considerations (e.g., "add a one-to-many relationship to the existing attachments system")
+- **Integration points** — which existing services or modules to reuse or extend, external APIs involved
+- **Key constraints** — performance, security, backward compatibility, migration considerations
+- **Affected areas** (high-level) — mention modules or subsystems, not specific files with line numbers (e.g., "customer module in backend-api", not `backend-api/src/modules/customer/customer.service.ts:142`)
+
+**Avoid:**
+- Specific file paths with line numbers
+- Method-level changes (e.g., "modify `normalizeEmail()` at line 42")
+- Ready-made code snippets or step-by-step implementation instructions
+- Exception: a file path is acceptable when referring to a reusable utility or existing pattern worth following (e.g., "reuse the upload service" or "follow the pattern in `useCustomerOrders` hook")
+
 ## Writing Rules
 
 - Description: 1-2 sentences, WHAT and WHY, use the project's domain language
 - Acceptance Criteria: 3-5 items, non-obvious checkpoints only, checkbox format `- [ ]`
-- Technical Details: only from codebase analysis, format `path/to/file` — short hint, skip if trivial
+- Technical Details: architectural guidance only — patterns, data modeling, integration points, constraints; skip if trivial
 - Links: only if user provides them, never fabricate
 - Prefer concrete over abstract (say "product listing page" not "the relevant page")
 

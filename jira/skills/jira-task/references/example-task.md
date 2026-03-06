@@ -48,7 +48,6 @@ Add the ability to sort products by creation date (newest/oldest first) on the m
 - [ ] Default sort order is newest first
 
 ### Technical Details
-- `backend-api/src/modules/product/product.controller.ts` — add `createdAt` to allowed sort fields in list endpoint
-- `web-app/src/pages/products/ProductList.tsx` — add sort option to the existing sort dropdown component
-- `web-app/src/hooks/useProducts.ts` — pass sort param to API request
+- Extend the existing sort mechanism in the product list API — the current implementation supports price and name, add `createdAt` as another allowed sort field following the same pattern
+- Frontend: add the new option to the existing sort dropdown component, no new UI elements needed
 ```
