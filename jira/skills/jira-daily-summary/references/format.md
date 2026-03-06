@@ -48,7 +48,7 @@ The Summary column is the most valuable part of the table — it tells the user 
 
 Metadata prefix rules:
 - **Ver**: fixVersion or `—` if missing
-- **Status**: color emoji + status name (⚪ for To Do/Open/Backlog/New, 🔵 for In Progress/In Review/Testing/QA/Code Review/In Development, 🟢 for Done/Ready to Deploy/Deployed/Closed/Resolved/Released)
+- **Status**: color emoji + status name (⚪ for To Do/Open/Backlog/New, 🔵 for In Progress/In Review/Reviewed/Testing/QA/Code Review/In Development, 🟢 for Done/Ready to Deploy/Deployed/Closed/Resolved/Released)
 - **Assignee**: assigned person's first name
 - Use middle dot (·) between metadata items; use em dash (—) to separate metadata from narrative
 

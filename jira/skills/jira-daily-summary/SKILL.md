@@ -192,7 +192,7 @@ Column rules:
 - **Task**: clickable JIRA link — `[PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123)`
 - (empty header): single letter A-E
 - **Title**: issue summary, truncated with `...` if over 70 characters
-- **Summary**: starts with metadata prefix `{Ver} · {Status} · {Assignee} —` followed by narrative summary (~30-50 words). Ver is fixVersion or `—` if missing. Status uses color emoji prefix (⚪ To Do/Open/Backlog/New, 🔵 In Progress/In Review/Testing/QA/Code Review/In Development, 🟢 Done/Ready to Deploy/Deployed/Closed/Resolved/Released). Assignee is the person's first name. The narrative portion names specific people and who-to-whom dynamics rather than using passive voice.
+- **Summary**: starts with metadata prefix `{Ver} · {Status} · {Assignee} —` followed by narrative summary (~30-50 words). Ver is fixVersion or `—` if missing. Status uses color emoji prefix (⚪ To Do/Open/Backlog/New, 🔵 In Progress/In Review/Reviewed/Testing/QA/Code Review/In Development, 🟢 Done/Ready to Deploy/Deployed/Closed/Resolved/Released). Assignee is the person's first name. The narrative portion names specific people and who-to-whom dynamics rather than using passive voice.
 
 ### Condensation
 
