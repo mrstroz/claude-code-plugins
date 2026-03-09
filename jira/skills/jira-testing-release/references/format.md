@@ -13,10 +13,12 @@ Reference document defining the structure, formatting rules, and writing guideli
 
 ## Testing Scenarios
 
-| Task | Title | Testing Scenario |
-|------|-------|-----------------|
-| [PROJ-101](url) | Feature title | Scenario description with bullet points. |
-| [PROJ-205](url) | Bug fix title | Scenario description with bullet points. |
+| Task | Testing Scenario |
+|------|-----------------|
+| [PROJ-101](url) | **Feature title** |
+| Story · High · In Progress | Scenario description with bullet points. |
+| [PROJ-205](url) | **Bug fix title** |
+| Bug · Major · Done | Scenario description with bullet points. |
 
 ## High Risk Areas *(if applicable)*
 - **Frontend / UI** — 12 files changed across 3 components. Pay extra attention to layout and responsiveness.
@@ -29,13 +31,12 @@ Reference document defining the structure, formatting rules, and writing guideli
 
 ## Table Format
 
-The main testing scenarios table uses three columns:
+The main testing scenarios table uses two columns. Each task occupies **two rows** — a header row and a detail row:
 
-| Column | Description |
-|--------|-------------|
-| **Task** | Clickable JIRA link — `[PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123)` |
-| **Title** | Issue summary, truncated with `...` if over 50 characters |
-| **Testing Scenario** | Descriptive scenario — what changed, what to verify, edge cases to consider. Max 60 words. Use `•` for inline bullet points within the cell. |
+| Row | Task column | Testing Scenario column |
+|-----|-------------|------------------------|
+| **Header** | Clickable JIRA link — `[PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123)` | **Bold title** — issue summary in bold, truncated with `...` if over 50 characters |
+| **Detail** | `{Type} · {Priority} · {Status}` — e.g., `Story · High · In Progress` | Descriptive scenario — what changed, what to verify, edge cases. Max 60 words. Use `•` for inline bullets. |
 
 ### Inline Bullet Format
 
@@ -94,13 +95,14 @@ This section exists as a safety net — it flags code changes that might otherwi
 
 When a version has **more than 20 tasks**:
 
-- Show individual rows only for Epic, Story, Feature, and Major+ priority bugs
-- Group remaining tasks into a summary row:
+- Show individual row pairs only for Epic, Story, Feature, and Major+ priority bugs
+- Group remaining tasks into a summary row pair:
   ```
-  | — | {count} additional minor changes | Routine fixes and minor adjustments across {areas}. Spot-check for regressions. |
+  | — | **{count} additional minor changes** |
+  | Minor tasks | Routine fixes and minor adjustments across {areas}. Spot-check for regressions. |
   ```
 - Limit each scenario to 1-2 sentences (max 40 words)
-- Target no more than 25 visible rows total
+- Target no more than 25 visible row pairs total
 
 ## Section Header Translations
 
@@ -111,5 +113,4 @@ When a version has **more than 20 tasks**:
 | High Risk Areas | High Risk Areas | Áreas de alto riesgo | Obszary wysokiego ryzyka | Hochrisikobereiche |
 | Uncovered Changes | Uncovered Changes | Cambios sin cobertura | Niezakryte zmiany | Nicht abgedeckte Änderungen |
 | Task | Task | Tarea | Zadanie | Aufgabe |
-| Title | Title | Título | Tytuł | Titel |
 | Testing Scenario | Testing Scenario | Escenario de prueba | Scenariusz testowy | Testszenario |

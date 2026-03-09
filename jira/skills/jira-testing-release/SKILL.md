@@ -196,10 +196,12 @@ Assemble the final document following the structure defined in [references/forma
 
 ## Testing Scenarios
 
-| Task | Title | Testing Scenario |
-|------|-------|-----------------|
-| [PROJ-123](url) | Order date filtering | Verify that the new date range filter... |
-| [PROJ-124](url) | Payment flow update | Check that the updated payment flow... |
+| Task | Testing Scenario |
+|------|-----------------|
+| [PROJ-123](url) | **Order date filtering** |
+| Story · High · In Progress | Verify that the new date range filter... |
+| [PROJ-124](url) | **Payment flow update** |
+| Bug · Critical · Done | Check that the updated payment flow... |
 
 ## High Risk Areas *(if applicable)*
 [Areas with many file changes that deserve extra attention]
@@ -213,10 +215,12 @@ Full example: [references/example.md](references/example.md)
 ### Condensation
 
 If a version has more than 20 tasks:
-- Group Sub-tasks, Minor/Trivial bugs, and Chores into a single "Additional minor changes" row with a count and brief area summary
-- Keep individual scenario rows for Epic, Story, Feature, and Major+ bugs only
+- Group Sub-tasks, Minor/Trivial bugs, and Chores into a single "Additional minor changes" row pair:
+  `| — | **{count} additional minor changes** |`
+  `| Minor tasks | Routine fixes across {areas}. Spot-check for regressions. |`
+- Keep individual scenario row pairs for Epic, Story, Feature, and Major+ bugs only
 - Limit each scenario to 1-2 sentences (max 40 words)
-- Target: no more than 25 visible rows in the table
+- Target: no more than 25 visible row pairs in the table
 
 ---
 
