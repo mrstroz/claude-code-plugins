@@ -1,12 +1,12 @@
 ---
 name: jira-release-notes
-description: Generate detailed release notes for a single Jira version. Transforms technical issues into a professional, business-facing feature overview with categorized items and status tracking. Use when the user wants release notes, a version summary, a release plan, or a feature overview for a specific version. Triggers on any request mentioning release notes, version summary, release plan, or feature overview.
+description: Generate detailed release notes for a single Jira version. Transforms technical issues into a professional, business-facing feature overview with categorized items. Use when the user wants release notes, a version summary, a release plan, or a feature overview for a specific version. Triggers on any request mentioning release notes, version summary, release plan, or feature overview.
 argument-hint: "[version number]"
 ---
 
 # JIRA Release Notes Generator
 
-Generate professional, client-facing release notes from Jira version data. Produces a detailed feature-by-feature overview for a single release version with categorized items and status tracking.
+Generate professional, client-facing release notes from Jira version data. Produces a detailed feature-by-feature overview for a single release version with categorized items.
 
 ## Workflow
 
@@ -65,13 +65,13 @@ Use the available MCP tool for JQL search with lightweight metadata fields only.
 
 ```
 project = {projectKey} AND fixVersion = "{version}" ORDER BY priority DESC, issuetype ASC
-fields: ["summary", "status", "issuetype", "priority", "labels", "components"]
+fields: ["summary", "issuetype", "priority", "labels", "components"]
 maxResults: 100
 ```
 
 If more than 100 issues exist, use the `nextPageToken` to paginate through all results.
 
-From each result, collect: `key`, `summary`, `issuetype`, `priority`, `status`, `labels`, `components`.
+From each result, collect: `key`, `summary`, `issuetype`, `priority`, `labels`, `components`.
 
 ## Filter Issues (Step 5)
 
@@ -139,7 +139,6 @@ Review the automatic categorization and adjust:
 
 For each issue, produce:
 
-- **Status**: mapped from Jira status — `[x]` Done | `[~]` In Progress | `[ ]` Planned
 - **Task number**: Jira issue key (e.g. PROJ-142)
 - **Name**: 3-8 words, title case, no technical jargon
 - **Summary**: 2 sentences focused on user/business value, max 40 words
@@ -177,13 +176,13 @@ Assemble the final document following the structure defined in [references/forma
 ## Features
 
 ### [Category Name]
-- [x] **PROJ-101 — Feature Name.** Summary sentence one. Summary sentence two.
-- [~] **PROJ-205 — Feature Name.** Summary sentence one. Summary sentence two.
-- [ ] **PROJ-318 — Feature Name.** Summary sentence one. Summary sentence two.
+- **PROJ-101 — Feature Name.** Summary sentence one. Summary sentence two.
+- **PROJ-205 — Feature Name.** Summary sentence one. Summary sentence two.
+- **PROJ-318 — Feature Name.** Summary sentence one. Summary sentence two.
 
 ## Bug Fixes
-- [x] **PROJ-410 — Fix Name.** What was broken. What now works correctly.
-- [x] **PROJ-415 — Fix Name.** What was broken. What now works correctly.
+- **PROJ-410 — Fix Name.** What was broken. What now works correctly.
+- **PROJ-415 — Fix Name.** What was broken. What now works correctly.
 
 ## Key Metrics & Impact *(optional)*
 [Measurable improvements if available from issue data.]

@@ -16,18 +16,18 @@ Reference document defining the structure, formatting rules, and writing guideli
 ## Features
 
 ### [Category Name]
-- [x] **TASK-101 — Feature Name.** Summary sentence one. Summary sentence two.
-- [~] **TASK-205 — Feature Name.** Summary sentence one. Summary sentence two.
-- [ ] **TASK-318 — Feature Name.** Summary sentence one. Summary sentence two.
+- **TASK-101 — Feature Name.** Summary sentence one. Summary sentence two.
+- **TASK-205 — Feature Name.** Summary sentence one. Summary sentence two.
+- **TASK-318 — Feature Name.** Summary sentence one. Summary sentence two.
 
 ### [Category Name]
-- [x] **TASK-401 — Feature Name.** Summary sentence one. Summary sentence two.
-- [~] **TASK-502 — Feature Name.** Summary sentence one. Summary sentence two.
+- **TASK-401 — Feature Name.** Summary sentence one. Summary sentence two.
+- **TASK-502 — Feature Name.** Summary sentence one. Summary sentence two.
 
 ## Bug Fixes
-- [x] **TASK-601 — Fix Name.** What was broken. What now works correctly.
-- [x] **TASK-602 — Fix Name.** What was broken. What now works correctly.
-- [~] **TASK-603 — Fix Name.** What was broken. What is being resolved.
+- **TASK-601 — Fix Name.** What was broken. What now works correctly.
+- **TASK-602 — Fix Name.** What was broken. What now works correctly.
+- **TASK-603 — Fix Name.** What was broken. What now works correctly.
 
 ## Key Metrics & Impact *(optional)*
 [Brief section highlighting measurable improvements, e.g., performance gains, new capabilities count.]
@@ -38,23 +38,14 @@ Reference document defining the structure, formatting rules, and writing guideli
 Each category contains a bulleted list. Each item follows this format:
 
 ```
-[status] **TASK-KEY — Feature Name.** Summary sentence one. Summary sentence two.
+**TASK-KEY — Feature Name.** Summary sentence one. Summary sentence two.
 ```
 
 | Element | Description |
 |---------|-------------|
-| **Status** | Status indicator prefix (see below) |
 | **Task Key** | Jira issue key (e.g. PROJ-142) |
 | **Feature Name** | 3-8 words, title case, no technical jargon |
 | **Summary** | 2 sentences, user-outcome focused, max 40 words |
-
-## Status Indicators
-
-| Indicator | Meaning | Mapping |
-|-----------|---------|---------|
-| `[x]` Done | Feature is complete and verified | Jira status: Done, Closed, Resolved |
-| `[~]` In Progress | Feature is actively being worked on | Jira status: In Progress, In Review, Testing |
-| `[ ]` Planned | Feature is scoped but not yet started | Jira status: To Do, Open, Backlog |
 
 ## Bug Fixes Section
 
@@ -63,12 +54,11 @@ The **Bug Fixes** section is a dedicated, standalone section placed after Featur
 ### Bug Fix Entry Format
 
 ```
-[status] **TASK-KEY — Fix Name.** What was broken. What now works correctly.
+**TASK-KEY — Fix Name.** What was broken. What now works correctly.
 ```
 
 | Element | Description |
 |---------|-------------|
-| **Status** | Status indicator prefix (same as features) |
 | **Task Key** | Jira issue key (e.g. PROJ-601) |
 | **Fix Name** | 3-8 words, title case, describes what was fixed |
 | **Summary** | 2 sentences: first describes the problem, second describes the resolution. Max 40 words. |
@@ -96,7 +86,6 @@ The **Bug Fixes** section is a dedicated, standalone section placed after Featur
 - **No jargon** — replace technical terms with user-facing outcomes
 - **Active voice** — "Users can now filter by date" not "Date filtering has been implemented"
 - **Confident tone** — no hedging words ("might", "should", "could possibly")
-- **Consistent tense** — Done items in past/present, In Progress in present, Planned in future
 - **No internal references** — remove story points, sprint names, assignees, component names
 
 ### Client-Benefit Transformation Examples
@@ -132,6 +121,3 @@ When a category has **more than 10 items**:
 | Features | Features | Funcionalidades | Funkcjonalności | Funktionen |
 | Bug Fixes | Bug Fixes | Correcciones de errores | Poprawki błędów | Fehlerbehebungen |
 | Key Metrics & Impact | Key Metrics & Impact | Métricas clave e impacto | Kluczowe wskaźniki i wpływ | Kennzahlen & Auswirkungen |
-| Done | Done | Completado | Gotowe | Fertig |
-| In Progress | In Progress | En progreso | W trakcie | In Bearbeitung |
-| Planned | Planned | Planificado | Planowane | Geplant |
