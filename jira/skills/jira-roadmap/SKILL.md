@@ -14,7 +14,7 @@ Generate a professional, client-facing product roadmap from Jira version data. P
 2. **Resolve JIRA project** — Auto-discover the project via MCP tools
 3. **Discover versions** — Find all versions with issues in the project
 4. **Collect version data** — Fetch aggregate stats per version (lightweight metadata only)
-5. **Read top issue details** — Fetch descriptions for top issues per version
+5. **Extract top issue data** — Fetch and condense descriptions for top issues via subagents
 6. **Check for existing release notes pages** — Find links to detailed release notes
 7. **Generate version summaries** — Produce theme, summary, and highlights per version
 8. **Compose main roadmap document** — Assemble using the main roadmap format
@@ -82,24 +82,38 @@ Collect aggregate stats per version:
 - **By type**: count of Epic/Story/Bug/Task
 - **Top items**: highest-priority Epics and Stories (for generating highlights)
 
-## Read Top Issue Details (Step 5)
+## Extract Top Issue Data via Subagents (Step 5)
 
-Step 4 only fetched lightweight metadata. To generate accurate, client-focused version summaries, fetch full descriptions for the most impactful issues in each version.
+Step 4 only fetched lightweight metadata. To generate accurate, client-focused version summaries, fetch descriptions for the most impactful issues. Instead of fetching them into the main context, delegate extraction to subagents that return condensed goal summaries.
+
+### Issue Selection
 
 For each version, select the **top 5 issues** by priority:
 1. Epics and Stories first (highest priority)
 2. Remaining issues by priority descending
-3. If a version has 3 or fewer issues total, fetch all of them
+3. If a version has 3 or fewer issues total, select all of them
 
-Call `getJiraIssue` for each selected issue. You MUST pass `fields: ["description"]` on every call — omitting `fields` returns the entire issue payload and can exceed MCP size limits.
+Pool all selected issues across all versions into a single flat list for batching (e.g., 6 versions x 5 issues = 30 issues).
+
+### Subagent Extraction
+
+Follow the orchestration pattern in [extraction pattern](../_shared/extraction-pattern.md) to batch the pooled issue keys and spawn `jira:issue-extractor` subagents.
+
+Use this skill-specific extraction template in each agent prompt:
 
 ```
-fields: ["description"]
+Fields to fetch: ["description"]
+
+For each issue, determine the goal or purpose — what it achieves for the end user.
+Frame from the client's perspective: what problem does this solve? How does it make their work easier?
+
+Return format (one line per issue):
+{KEY}: {one-sentence goal summary focused on business value}
 ```
 
-**Batching:** process all calls across all versions in batches of 10 concurrent calls.
+### Using Extracted Data
 
-Use these descriptions in Step 7 to derive richer theme names, summaries, and highlights. Issues not fetched individually are summarized from the `summary` field collected in Step 4.
+The subagents return condensed goal summaries — one line per issue. Re-group these by version using the version metadata from Step 4. Use the condensed summaries in Step 7 to derive theme names, version summaries, and highlights. Issues not selected for extraction are summarized from the `summary` field collected in Step 4.
 
 ## Check for Existing Release Notes Pages (Step 6)
 
@@ -123,7 +137,7 @@ For each version, produce:
 - **Highlights**: 3-5 bullet points of the most impactful features (derived from Epics/Stories with highest priority)
 - **Link**: URL to release notes page (Confluence) or file path (markdown)
 
-Prioritize descriptions fetched in Step 5 for generating theme names, summaries, and highlights — these provide the detail needed for accurate business-value transformation. For issues not fetched individually, use the `summary` field from Step 4.
+Prioritize the condensed goal summaries extracted in Step 5 for generating theme names, summaries, and highlights — these provide the detail needed for accurate business-value transformation. For issues not extracted individually, use the `summary` field from Step 4.
 
 Frame every summary and highlight from the client's perspective — what problem does this solve for them? How does it make their work easier or their business better? Every highlight should answer: "What does the client gain from this?"
 

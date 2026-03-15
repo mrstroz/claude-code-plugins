@@ -14,7 +14,7 @@ Generate a concise testing guide for a release version by combining Jira issue d
 2. **Resolve JIRA project** — Auto-discover the project via MCP tools
 3. **Collect version info** — Determine which version to generate scenarios for
 4. **Search Jira issues by version** — Lightweight metadata only
-5. **Read full issue details** — Fetch descriptions individually
+5. **Extract issue details** — Fetch and condense descriptions via subagents
 6. **Analyze git diff** — Compare feature branch vs main branch to identify changed files
 7. **Correlate and generate scenarios** — Match file changes to issues and produce testing scenarios
 8. **Compose testing document** — Assemble the final table with optional risk sections
@@ -71,26 +71,40 @@ If more than 100 issues exist, use the `nextPageToken` to paginate through all r
 
 From each result, collect: `key`, `summary`, `issuetype`, `priority`, `status`, `labels`, `components`.
 
-## Read Full Issue Details (Step 5)
+## Extract Issue Details via Subagents (Step 5)
 
-Call `getJiraIssue` for every issue returned in Step 4. Descriptions are essential for understanding what each task does and generating accurate testing scenarios.
+Descriptions are essential for understanding what each task does and generating accurate testing scenarios. Instead of fetching them into the main context, delegate extraction to subagents that return only condensed testing-relevant summaries. Comments are not needed — we care about what was built, not the discussion.
 
-```
-fields: ["description"]
-```
+### Prioritization Cap
 
-You MUST pass `fields: ["description"]` on every `getJiraIssue` call. Omitting `fields` returns the entire issue payload and can exceed MCP size limits. Comments are not needed for this skill — we care about what was built, not the discussion.
-
-**Batching:** process in batches of 10 concurrent calls.
-
-**Prioritization (more than 30 issues):**
-
-If more than 30 issues exist, fetch full details for the top 30 only, prioritized as follows:
+If more than 30 issues exist, select the top 30 for extraction:
 1. Epic / Story / Feature (all priorities)
 2. Blocker / Critical bugs
 3. Remaining issues by priority descending
 
 For issues beyond the 30-issue cap, generate scenarios from the `summary` field collected in Step 4 alone.
+
+### Subagent Extraction
+
+Follow the orchestration pattern in [extraction pattern](../_shared/extraction-pattern.md) to batch issue keys and spawn `jira:issue-extractor` subagents.
+
+Use this skill-specific extraction template in each agent prompt:
+
+```
+Fields to fetch: ["description"]
+
+For each issue, determine:
+1. What was built or changed? (the core functionality)
+2. What should be tested from a user's perspective? (key verification points)
+3. What are edge cases or risk areas? (max 3 items)
+
+Return format (one line per issue):
+{KEY}: {what-changed} | {what-to-test} | {edge-cases, max 3 comma-separated items}
+```
+
+### Using Extracted Data
+
+The subagents return condensed testing signals — one line per issue. Use these together with the metadata from Step 4 and the git diff analysis from Step 6 to generate scenarios in Step 7.
 
 ---
 

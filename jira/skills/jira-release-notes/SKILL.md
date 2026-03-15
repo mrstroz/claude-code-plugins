@@ -15,7 +15,7 @@ Generate professional, client-facing release notes from Jira version data. Produ
 3. **Collect version info** — Determine which version to include
 4. **Search Jira issues by version** — Lightweight metadata only
 5. **Filter issues** — Remove internal, technical-only, and low-priority items
-6. **Read full issue details** — Fetch descriptions and comments individually
+6. **Extract issue data** — Fetch and condense descriptions and comments via subagents
 7. **Categorize into themes** — Group issues into 3-7 business-facing categories
 8. **Generate business-value summaries** — Transform technical descriptions into user-outcome language
 9. **Compose release notes document** — Assemble the final document using the reference format
@@ -90,22 +90,40 @@ Apply these filtering rules to determine which issues appear in the release note
 
 **Keyword exclusion** — skip issues whose summary contains any of these terms (case-insensitive): `refactor`, `chore`, `cleanup`, `ci/cd`, `pipeline`, `dependency update`, `bump`, `internal`, `tech debt`, `lint`, `formatting`.
 
-## Read Full Issue Details (Step 6)
+## Extract Issue Data via Subagents (Step 6)
 
-Call `getJiraIssue` for **every** issue that passed filtering in Step 5. Step 4 only fetched lightweight metadata, so descriptions and comments must be retrieved individually here.
+Step 4 only fetched lightweight metadata. Descriptions and comments are needed to transform technical issues into business-value summaries. Instead of fetching them into the main context, delegate extraction to subagents that return only condensed business-value summaries.
 
-You MUST pass `fields: ["comment", "description"]` on every `getJiraIssue` call. Omitting `fields` returns the entire issue payload and can exceed MCP size limits.
+### Prioritization Cap
 
-**Batching:** process in batches of 10 concurrent calls.
-
-**Prioritization (more than 30 filtered issues):**
-
-If more than 30 issues passed filtering, fetch full details for the top 30 only, prioritized as follows:
+If more than 30 issues passed filtering, select the top 30 for extraction:
 1. Epic / Story / Feature (all priorities)
 2. Blocker / Critical bugs
 3. Remaining issues by priority descending
 
-For issues beyond the 30-issue cap, skip the `getJiraIssue` call and generate summaries from the `summary` field collected in Step 4 alone.
+For issues beyond the 30-issue cap, generate summaries from the `summary` field collected in Step 4 alone.
+
+### Subagent Extraction
+
+Follow the orchestration pattern in [extraction pattern](../_shared/extraction-pattern.md) to batch issue keys and spawn `jira:issue-extractor` subagents.
+
+Use this skill-specific extraction template in each agent prompt:
+
+```
+Fields to fetch: ["comment", "description"]
+
+For each issue, determine the user-facing value it delivers.
+Read the description and comments to understand what changed from the user's perspective.
+Transform technical language into business-value language — describe how the feature benefits the end user, not what was implemented internally.
+For bugs: describe what was broken and what now works correctly.
+
+Return format (one line per issue):
+{KEY}: {one-sentence business-value summary — what the user gains, max 40 words}
+```
+
+### Using Extracted Data
+
+The subagents return condensed business-value summaries — one line per issue. Use these together with the metadata from Step 4 for categorization in Step 7 and final summary generation in Step 8.
 
 ## Categorize into Themes (Step 7)
 
@@ -113,7 +131,7 @@ Use a two-pass approach:
 
 ### Pass 1 — Automatic Categorization
 
-Assign each issue to a category based on labels, components, and keywords in the summary and description (if available from Step 6 — for overflow issues beyond the 30-cap, use summary alone):
+Assign each issue to a category based on labels, components, and keywords in the summary and business-value extraction (if available from Step 6 — for overflow issues beyond the 30-cap, use summary alone):
 
 | Keywords / Labels | Category |
 |-------------------|----------|

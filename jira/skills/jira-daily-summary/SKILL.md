@@ -12,7 +12,7 @@ Generate a prioritized daily summary of JIRA tasks with intelligent triage into 
 1. **Initial setup** — Ask language and time frame via `AskUserQuestion`
 2. **Resolve JIRA project** — Auto-discover the project via MCP tools
 3. **Fetch tasks** — Search JIRA issues using optimized JQL based on selected time frame
-4. **Read issue details** — Fetch full details for tasks needing comment context
+4. **Extract comment data** — Fetch and condense comment data via subagents
 5. **Triage into 3 groups** — Classify each task as Action Needed, Ready to Proceed, or Info
 6. **ABCDE classification** — Assign priority letter A-E to each task and sort within groups
 7. **Generate summary** — Produce text overview and three prioritized tables
@@ -67,24 +67,35 @@ If more than 50 issues exist, use `nextPageToken` to paginate. From each result,
 
 ---
 
-## Read Full Issue Details (Step 4)
+## Extract Comment Data via Subagents (Step 4)
 
-For every task returned by the JQL search, call `getJiraIssue` individually to get the full `description` and `comments`. This is the main data-fetching step — comments are the strongest triage signal (mentions, questions, blockers) and skipping them risks misclassifying urgent tasks into Info.
+Comments are the strongest triage signal (mentions, questions, blockers) — skipping them risks misclassifying urgent tasks into Info. Instead of fetching comments into the main context, delegate extraction to subagents that return only condensed triage signals.
+
+### Subagent Extraction
+
+Extract data for **every** task returned by the JQL search — do not skip any. Accurate triage requires comment data for all tasks, not just a subset. If there are many tasks, the orchestration pattern handles this by spawning more subagent batches.
+
+Follow the orchestration pattern in [extraction pattern](../_shared/extraction-pattern.md) to batch all issue keys and spawn `jira:issue-extractor` subagents.
+
+Use this skill-specific extraction template in each agent prompt:
 
 ```
-fields: ["comment"]
+Fields to fetch: ["comment", "description"]
+
+For each issue, analyze the description and ALL comments to determine:
+1. What is this task about? (one-sentence summary from description)
+2. Are there unresolved questions or requests directed at me (the current Jira user)?
+3. Who is asking whom to do what? Identify the speaker, the target (tagged/named person or implied addressee), and the requested action.
+4. What is the latest comment about?
+5. Is there a blocker or impediment mentioned?
+
+Return format (one line per issue):
+{KEY}: {DIRECTED_AT_ME|NOT_DIRECTED|NO_COMMENTS} | {one-sentence task summary from description} | {one-sentence summary of latest relevant comment activity, or "no comments"} | blocker: {yes/no} | {who asked whom to do what, or "n/a"}
 ```
 
-**You MUST pass `fields: ["comment"]` on every `getJiraIssue` call.** The API does not return comments by default — without this parameter, all comments are silently missing and triage degrades to guesswork because comments are the single strongest signal for classifying tasks.
+### Using Extracted Data
 
-Process in batches of 10 to avoid context overload.
-
-If the JQL returned more than 30 tasks, prioritize individual fetches in this order:
-1. Blocker/Critical priority tasks (always fetch — likely Action Needed)
-2. Tasks assigned to me (potential Action Needed or Ready to Proceed)
-3. Remaining tasks by priority descending
-
-Skip individual fetches beyond the 30 cap — triage those tasks using metadata only from Step 3 and classify them into Info unless metadata clearly indicates otherwise (e.g., Blocker priority assigned to me).
+The subagents return condensed triage signals — one line per issue with task summary, comment activity, directionality, and blocker status. Use these signals together with the metadata from Step 3 for triage in Step 5 and ABCDE classification in Step 6. The `DIRECTED_AT_ME` flag and `who→whom` information are the primary inputs for Action Needed classification. The task summary from description provides context for the narrative summaries in Step 7.
 
 ---
 
@@ -92,7 +103,7 @@ Skip individual fetches beyond the 30 cap — triage those tasks using metadata 
 
 Classify every task into exactly one of three groups. The groups represent different levels of urgency — getting this right matters because it determines what the user focuses on first.
 
-Tasks with full details from Step 4 (description + comments) get the most accurate triage. Tasks beyond the 30-fetch cap are triaged from metadata only — classify these into Info unless metadata clearly indicates Action Needed (e.g., Blocker priority assigned to me).
+Use the extraction data from Step 4 (condensed comment signals: directionality, blocker status, who→whom, task summary) together with metadata from Step 3 for accurate triage.
 
 ### Action Needed
 
