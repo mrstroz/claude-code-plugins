@@ -107,7 +107,7 @@ After grouping, number the groups sequentially across all three categories for e
 
 ### Step 6: Output the Triage
 
-Present the triage result to the user using the format below. Do not save to a file — display directly.
+Present the triage result to the user using the format below. Display directly.
 
 ```markdown
 ## Triage
@@ -149,7 +149,20 @@ Present the triage result to the user using the format below. Do not save to a f
 - Skip items use flat bullets (no numbered groups) since they need less structure.
 - If reviewers had conflicting recommendations (e.g., VM says "extract to class" while DV says "too abstract"), flag the conflict and propose a resolution in the blockquote.
 
-### Step 7: Answer Follow-up Questions
+### Step 7: Offer to Save the Triage
+
+After displaying the triage, use `AskUserQuestion` to ask the user whether to save the triage output to a file. Derive the filename from the source review report path by stripping `.md` and appending `-triage.md`:
+
+```
+docs/reviews/{branch-name}-{YYYY-MM-DD}.md → docs/reviews/{branch-name}-{YYYY-MM-DD}-triage.md
+```
+
+Example question:
+> Save this triage to `docs/reviews/feature-auth-2026-03-16-triage.md`?
+
+If the user confirms, write the full triage output (the markdown displayed in Step 6) to that file. If the user declines, proceed to Step 8.
+
+### Step 8: Answer Follow-up Questions
 
 After presenting the triage, the user may ask follow-up questions or disagree with classifications. Adjust the triage based on their feedback and re-display the affected sections. Typical follow-ups:
 - "Move BE-002 to Fix Now"
