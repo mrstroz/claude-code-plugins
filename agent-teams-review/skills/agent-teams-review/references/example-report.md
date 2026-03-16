@@ -4,7 +4,7 @@
 **Date:** 2026-02-28
 **Team:** Virtual Mariusz, Backend Solidifier, Frontend Virtuoso, Quality Purist, Security Sentinel
 
-**Verdict:** CHANGES REQUESTED
+**Verdict:** APPROVED WITH COMMENTS _(was: CHANGES REQUESTED, updated after triage)_
 **AI Slop:** 6/10 — Light Slop
 
 | | Critical | High | Medium | Low | Total |
@@ -14,7 +14,8 @@
 | FE | 0 | 0 | 1 | 1 | 2 |
 | QA | 0 | 0 | 2 | 1 | 3 |
 | SC | 0 | 1 | 1 | 0 | 2 |
-| **Sum** | **0** | **4** | **6** | **4** | **14** |
+| **Sum** | **0** | **3** | **5** | **4** | **12** |
+| ~~WI~~ | ~~0~~ | ~~1~~ | ~~1~~ | ~~0~~ | ~~2~~ |
 
 ---
 
@@ -24,23 +25,21 @@
 
 (none)
 
-### High (4)
+### High (3)
 
-- [ ] `[SC-001]` **Missing rate limiting on profile update** — `controllers/UserProfileController.php:34` _(Security Sentinel)_
 - [ ] `[BE-001]` **N+1 query in settings loader** — `models/UserSettings.php:67` _(Backend Solidifier)_
 - [ ] `[BE-002]` **Missing transaction in profile+avatar update** — `services/UserProfileService.php:89` _(Backend Solidifier)_
 - [ ] `[VM-001]` **Debug var_dump left in production code** — `services/UserProfileService.php:52` _(Virtual Mariusz)_
 
-### Medium (6)
+### Medium (5)
 
 - [ ] `[SC-002]` **Avatar file upload path traversal** CROSS _(flagged by BE -> SC)_ — `services/UserProfileService.php:110`
 - [ ] `[BE-003]` **Missing index on user_settings.category** — `migrations/m240228_create_user_settings.php` _(Backend Solidifier)_
 - [ ] `[QA-001]` **Method doTheUpdate() — misleading name** — `services/UserProfileService.php:30` _(Quality Purist)_
 - [ ] `[QA-002]` **Magic number 5242880 without constant** — `services/UserProfileService.php:95` _(Quality Purist)_
-- [ ] `[VM-002]` **SettingsFormatterInterface has single impl** — `interfaces/SettingsFormatterInterface.php` _(Virtual Mariusz)_
 - [ ] `[FE-001]` **Missing loading state on save button** — `components/ProfileForm.vue:45` _(Frontend Virtuoso)_
 
-### Low (4)
+### Low (5)
 
 - [ ] `[SC-003]` **Verbose error messages expose stack trace** — `controllers/UserProfileController.php:70` _(Security Sentinel)_
 - [ ] `[VM-003]` **Unused import ArrayHelper** — `controllers/UserProfileController.php:5` _(Virtual Mariusz)_
@@ -57,38 +56,6 @@
 (none)
 
 ### High
-
-#### `controllers/UserProfileController.php`
-
-##### [SC-001] Missing Rate Limiting on Profile Update
-_Security Sentinel_
-
-Profile update endpoint has no rate limiting. An attacker can flood the server with update requests, potentially causing DoS or enabling brute-force attacks on profile fields.
-
-**Current:**
-```php
-public function actionUpdate()
-{
-    // No rate limiting — accepts unlimited requests
-    $model = $this->findModel(Yii::$app->user->id);
-    $model->load(Yii::$app->request->post());
-    $model->save();
-}
-```
-
-**Fix:**
-```php
-public function behaviors()
-{
-    return array_merge(parent::behaviors(), [
-        'rateLimiter' => [
-            'class' => RateLimiter::class,
-            'maxRequests' => 10,
-            'perSeconds' => 60,
-        ],
-    ]);
-}
-```
 
 #### `models/UserSettings.php`
 
@@ -167,11 +134,6 @@ _Quality Purist_ — Method name is vague and informal. Rename to `updateProfile
 ##### [QA-002] Magic Number 5242880
 _Quality Purist_ — `5242880` should be `self::MAX_AVATAR_SIZE_BYTES` constant. Magic numbers violate readability.
 
-#### `interfaces/SettingsFormatterInterface.php`
-
-##### [VM-002] Single Implementation Interface
-_Virtual Mariusz_ — `SettingsFormatterInterface` has only `JsonSettingsFormatter`. No foreseeable need for alternatives. YAGNI — remove interface, use concrete class directly.
-
 #### `migrations/m240228_create_user_settings.php`
 
 ##### [BE-003] Missing Index on category Column
@@ -226,6 +188,15 @@ _Quality Purist_ — Public methods should come before protected, then private. 
 Notable examples:
 - `UserProfileService.php:45` — `// Get the user` above `$user = User::findOne($id)`. Remove.
 - `UserProfileService.php:78-82` — Four consecutive null checks on typed properties that cannot be null.
+
+---
+
+## Won't Implement
+
+> Triaged on 2026-02-28. These findings were evaluated and intentionally excluded.
+
+- `[SC-001]` **Missing rate limiting on profile update** — `controllers/UserProfileController.php:34` _(Security Sentinel)_ — Will address in follow-up
+- `[VM-002]` **SettingsFormatterInterface has single impl** — `interfaces/SettingsFormatterInterface.php` _(Virtual Mariusz)_ — Disagree with finding
 
 ---
 

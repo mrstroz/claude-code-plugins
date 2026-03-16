@@ -186,6 +186,14 @@ Notable examples (if score <= 7):
 
 ---
 
+## Won't Implement
+
+> _(This section appears only after triage. See Section 7 for rules.)_
+
+- `[XX-NNN]` **Issue title** — `file/path.php:42` _(Reviewer Name)_ — Triage reason
+
+---
+
 ## What's Good
 
 - [Positive observation from Reviewer A]
@@ -207,6 +215,33 @@ Full detail: description + code example + fix. Show the problem and the solution
 ### Cross-Reviewer Findings
 Inline with the file they belong to, tagged with `CROSS` and attribution (`flagged by X -> investigated by Y`). NOT a separate section.
 
+## 7. Won't Implement — Triage Rules
+
+When the user triages findings as "won't implement", the report is updated in place. The Won't Implement section sits between AI Slop Report and What's Good.
+
+### Won't Implement Format
+
+```markdown
+## Won't Implement
+
+> Triaged on YYYY-MM-DD. These findings were evaluated and intentionally excluded.
+
+- `[XX-NNN]` **Issue title** — `file/path.php:42` _(Reviewer Name)_ — Triage reason
+```
+
+Uses the same bullet list format as Action Items for consistency.
+
+### Report Update Rules
+
+Apply all of these when items are triaged:
+
+1. **Action Items** — remove triaged items from their severity group. Update the heading count (e.g., `### High (4)` becomes `### High (3)`). If a severity group becomes empty after removal, show `(none)` under it.
+2. **Findings** — remove the detailed finding block for each triaged item. If a file heading (`#### path/to/file`) has no remaining findings under it within that severity group, remove the file heading too.
+3. **Severity counts table** — the `**Sum**` row counts only active (non-triaged) findings. Add a `~~WI~~` row below Sum showing triaged counts with strikethrough styling. Per-reviewer rows stay unchanged — they reflect what each reviewer actually found.
+4. **Verdict** — recalculate using the decision matrix (Section 2) based on remaining active Critical/High counts. If the verdict changes, annotate it: `**Verdict:** NEW_VERDICT _(was: OLD_VERDICT, updated after triage)_`.
+5. **AI Slop Score** — not recalculated. It reflects code quality assessment, not triage decisions.
+6. **Won't Implement list** — append triaged items as bullet points. If the section does not exist yet, create it between AI Slop Report and What's Good.
+
 ## Example
 
-See [example-report.md](example-report.md) for a complete example report.
+See [example-report.md](example-report.md) for a complete example report showing post-triage state.

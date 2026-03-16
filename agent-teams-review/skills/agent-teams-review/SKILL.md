@@ -172,15 +172,33 @@ Display the executive summary to the user:
 - Top 3 key findings
 - Path to saved report
 
+**Action Loop** — repeat until the user selects "Done":
+
 Use `AskUserQuestion` to offer:
 1. **View full report** — display the complete report
-2. **Apply suggested fixes** — for Critical/High issues with code fixes
-3. **Done** — no further action
+2. **Triage findings** — mark findings as "won't implement"
+3. **Apply suggested fixes** — for Critical/High issues with code fixes
+4. **Done** — no further action
 
-If "Apply suggested fixes" is selected:
-- Show each Critical/High issue with its suggested fix
-- Let the user pick which fixes to apply using `AskUserQuestion` with `multiSelect: true`
-- Apply selected fixes to the code
+#### If "Triage findings" is selected:
+
+1. Ask the user which findings to exclude from implementation. The user provides a list — by IDs (e.g., "SC-001, VM-002"), by description, or however they prefer. Match the user's response to active findings.
+2. Update the saved report file following the rules in [references/output-format.md](references/output-format.md) Section 7:
+   - Remove triaged items from Action Items (update heading counts)
+   - Remove triaged finding detail blocks from Findings
+   - Add or append to the Won't Implement list (between AI Slop Report and What's Good)
+   - Update the severity counts table: decrement Sum row, add/update WI row
+   - Recalculate the verdict using the decision matrix based on remaining active Critical/High counts. If the verdict changes, annotate: `VERDICT _(was: OLD_VERDICT, updated after triage)_`
+3. Display updated summary (new verdict, updated counts, number of items triaged).
+4. Return to the action loop.
+
+#### If "Apply suggested fixes" is selected:
+
+Show each Critical/High issue with its suggested fix. Let the user pick which fixes to apply using `AskUserQuestion` with `multiSelect: true`. Apply selected fixes to the code.
+
+#### If "View full report" is selected:
+
+Display the complete report.
 
 ### Step 11: Clean Up Team
 
