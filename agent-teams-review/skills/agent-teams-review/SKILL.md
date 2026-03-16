@@ -131,13 +131,13 @@ If a teammate appears stuck or idle without completing their task, nudge them to
 
 1. Collect all findings from all completed reviewers
 2. Apply deduplication rules from [references/output-format.md](references/output-format.md)
-3. Group findings by file path (for "Why — Findings By File" section)
-4. Within each file, sort by severity: Critical -> High -> Medium -> Low
-5. Tag cross-reviewer findings inline with `↔️CROSS` and attribution (do NOT create a separate section)
+3. Group findings by severity (Critical -> High -> Medium -> Low)
+4. Within each severity group, organize by file path
+5. Tag cross-reviewer findings inline with `CROSS` and attribution (do NOT create a separate section)
 6. Extract the AI Slop Score from Virtual Mariusz's assessment
 7. Determine verdict using the decision matrix from [references/output-format.md](references/output-format.md)
 8. Apply AI Slop Score impact on verdict (score 0-3 adds Critical, 4-5 adds High)
-9. Build the action checklist sorted by urgency (Required -> Recommended -> Optional)
+9. Build the action checklist sorted by severity (Critical -> High -> Medium -> Low)
 
 ### Step 8: Format Report
 
@@ -146,11 +146,10 @@ Format the aggregated findings using the **Action-First** report template from [
 See [references/example-report.md](references/example-report.md) for a complete example of the expected output.
 
 Key sections (in order):
-- **Verdict & Score** — compact block with verdict, risk, AI Slop score, severity counts table
-- **What You Need To Do** — action checklist grouped by urgency (Before Merge Required, Before Merge Recommended, Post-Merge Optional). Each item: checkbox, [ID], description, severity badge, CROSS tag if applicable, location, reviewer
-- **Why — Findings By File** — all issues grouped by file path. Critical/High: full description + code example + fix. Medium/Low: 1-2 line summary. Cross-reviewer findings inline with ↔️CROSS tag
+- **Verdict** — compact block with verdict, AI Slop score, severity counts table
+- **Action Items** — checklist grouped by severity (Critical, High, Medium, Low). Each item: checkbox, [ID], description, CROSS tag if applicable, location, reviewer
+- **Findings** — detailed issues grouped by severity, then by file path within each severity. Critical/High: full description + code example + fix. Medium: 1-2 line summary. Low: 1 line summary. Cross-reviewer findings inline with CROSS tag
 - **AI Slop Report** — score table + notable examples
-- **Reviewer Verdicts** — compact table: Reviewer, Verdict, Issues count, Summary
 - **What's Good** — bullet list of positive observations
 
 ### Step 9: Save Report
@@ -167,8 +166,7 @@ If the branch name contains slashes (e.g. `feature/user-auth`), replace them wit
 ### Step 10: Present Results and Offer Actions
 
 Display the executive summary to the user:
-- Overall verdict with emoji
-- Risk level
+- Overall verdict
 - AI Slop Score
 - Issue counts by severity
 - Top 3 key findings

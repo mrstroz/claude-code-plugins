@@ -1,4 +1,4 @@
-# Agent Teams Review — Output Format (Action-First)
+# Agent Teams Review — Output Format
 
 ## 1. Issue ID Prefixes
 
@@ -19,19 +19,19 @@ Each reviewer has its own counter (001, 002...). Prefix = reviewer, NOT severity
 
 | Critical | High | Verdict |
 |----------|------|---------|
-| > 0 | any | :x: Blocked |
-| 0 | > 3 | :large_orange_diamond: Changes Requested |
-| 0 | 1-3 | :warning: Approved with Comments |
-| 0 | 0 | :white_check_mark: Approved (with medium/low noted) |
+| > 0 | any | BLOCKED |
+| 0 | > 3 | CHANGES REQUESTED |
+| 0 | 1-3 | APPROVED WITH COMMENTS |
+| 0 | 0 | APPROVED |
 
 ## 3. Severity Mapping
 
-| Severity | Merge Impact | Description |
-|----------|--------------|-------------|
-| Critical | :x: Blocked | Security vulnerability, data loss risk, breaking bug, financial incorrectness |
-| High | :large_orange_diamond: Changes Requested | Significant issue that should be fixed, race condition with real impact |
-| Medium | :warning: Approved with Comments | Notable issue, fix recommended |
-| Low | :white_check_mark: Approved | Minor suggestion, optional fix |
+| Severity | Description |
+|----------|-------------|
+| Critical | Security vulnerability, data loss risk, breaking bug, financial incorrectness |
+| High | Significant issue that should be fixed, race condition with real impact |
+| Medium | Notable issue, fix recommended |
+| Low | Minor suggestion, optional fix |
 
 ## 4. AI Slop Score Integration
 
@@ -51,7 +51,7 @@ When multiple reviewers find overlapping issues:
 1. **Same issue, different perspectives** — keep the most detailed report, note which reviewers flagged it
 2. **Related but distinct issues** — keep both, cross-reference them
 3. **True duplicates** — merge into single entry, list all reviewers that found it
-4. **Cross-reviewer findings** — when one reviewer flags something to another (e.g., BE flags SQL to SC), tag inline with `↔️CROSS` and "who flagged -> who investigated" attribution. Do NOT create a separate cross-reviewer section.
+4. **Cross-reviewer findings** — when one reviewer flags something to another (e.g., BE flags SQL to SC), tag inline with `CROSS` and "who flagged -> who investigated" attribution. Do NOT create a separate cross-reviewer section.
 
 ## 6. Report Template
 
@@ -62,12 +62,7 @@ When multiple reviewers find overlapping issues:
 **Date:** [YYYY-MM-DD]
 **Team:** [List of active reviewers]
 
----
-
-## Verdict & Score
-
-**Verdict:** :x: Blocked | :large_orange_diamond: Changes Requested | :warning: Approved with Comments | :white_check_mark: Approved
-**Risk:** :red_circle: Critical | :orange_circle: High | :yellow_circle: Medium | :green_circle: Low
+**Verdict:** BLOCKED | CHANGES REQUESTED | APPROVED WITH COMMENTS | APPROVED
 **AI Slop:** X/10 — [Heavy Slop / Moderate Slop / Light Slop / Clean]
 
 | | Critical | High | Medium | Low | Total |
@@ -82,38 +77,55 @@ When multiple reviewers find overlapping issues:
 
 ---
 
-## What You Need To Do
+## Action Items
 
-### :red_circle: Before Merge — Required
+### Critical
 
-> Critical + High severity. These MUST be fixed.
+- [ ] `[SC-001]` **Issue title** — `file/path.php:42` _(Security Sentinel)_
 
-- [ ] `[BE-001]` **Issue title** `Critical` — `file/path.php:42` _(Backend Solidifier)_
-- [ ] `[SC-001]` **Issue title** `High` ↔️CROSS _(flagged by BE, investigated by SC)_ — `file/path.php:67`
-- [ ] `[VM-001]` **Issue title** `High` — `file/path.php:52` _(Virtual Mariusz)_
+### High (N)
 
-### :orange_circle: Before Merge — Recommended
+- [ ] `[BE-001]` **Issue title** — `file/path.php:67` _(Backend Solidifier)_
+- [ ] `[VM-001]` **Issue title** CROSS _(flagged by BE -> VM)_ — `file/path.php:52`
 
-> Medium severity issues worth fixing now.
+### Medium (N)
 
-- [ ] `[QA-001]` **Issue title** `Medium` — `file/path.php:30` _(Quality Purist)_
-- [ ] `[FE-001]` **Issue title** `Medium` — `components/File.vue:45` _(Frontend Virtuoso)_
+- [ ] `[QA-001]` **Issue title** — `file/path.php:30` _(Quality Purist)_
+- [ ] `[FE-001]` **Issue title** — `components/File.vue:45` _(Frontend Virtuoso)_
 
-### :yellow_circle: Post-Merge — Optional
+### Low (N)
 
-> Medium + Low severity. Fix when convenient.
-
-- [ ] `[QA-002]` **Issue title** `Medium` — `file/path.php:95` _(Quality Purist)_
-- [ ] `[BE-002]` **Issue title** `Low` — `migrations/file.php:35` _(Backend Solidifier)_
-- [ ] `[FE-002]` **Issue title** `Low` — `components/File.vue:12` _(Frontend Virtuoso)_
+- [ ] `[QA-002]` **Issue title** — `file/path.php:95` _(Quality Purist)_
+- [ ] `[BE-002]` **Issue title** — `migrations/file.php:35` _(Backend Solidifier)_
 
 ---
 
-## Why — Findings By File
+## Findings
 
-### `path/to/first-file.php`
+### Critical
 
-#### [BE-001] Issue Title `Critical`
+#### `path/to/file.php`
+
+##### [SC-001] Issue Title
+_Security Sentinel_
+
+Description of the problem and why it matters.
+
+**Current:**
+```php
+// problematic code
+```
+
+**Fix:**
+```php
+// corrected code
+```
+
+### High
+
+#### `path/to/first-file.php`
+
+##### [BE-001] Issue Title
 _Backend Solidifier_
 
 Description of the problem and why it matters.
@@ -128,36 +140,28 @@ Description of the problem and why it matters.
 // corrected code
 ```
 
----
-
-#### [SC-001] Issue Title `High` ↔️CROSS
-_Flagged by Backend Solidifier → Investigated by Security Sentinel_
+##### [VM-001] Issue Title — CROSS
+_Flagged by Backend Solidifier -> Investigated by Virtual Mariusz_
 
 Description of what was flagged and what investigation revealed.
 
-**Vulnerable:**
-```php
-// vulnerable code
-```
+### Medium
 
-**Secure:**
-```php
-// secure implementation
-```
+#### `path/to/first-file.php`
 
----
-
-#### [QA-001] Issue Title `Medium`
+##### [QA-001] Issue Title
 _Quality Purist_ — Variable `$data` should be `$userSettings`. Naming convention violation.
 
----
+#### `path/to/second-file.vue`
 
-### `path/to/second-file.vue`
-
-#### [FE-001] Issue Title `Medium`
+##### [FE-001] Issue Title
 _Frontend Virtuoso_ — Missing loading state on save button. UX issue.
 
-#### [FE-002] Issue Title `Low`
+### Low
+
+#### `path/to/second-file.vue`
+
+##### [FE-002] Issue Title
 _Frontend Virtuoso_ — Avatar preview missing alt text. Accessibility.
 
 ---
@@ -182,29 +186,16 @@ Notable examples (if score <= 7):
 
 ---
 
-## Reviewer Verdicts
-
-| Reviewer | Verdict | Issues | Summary |
-|----------|---------|--------|---------|
-| Virtual Mariusz | :large_orange_diamond: | X | One-line summary |
-| Backend Solidifier | :large_orange_diamond: | X | One-line summary |
-| Frontend Virtuoso | :white_check_mark: | X | One-line summary |
-| Quality Purist | :warning: | X | One-line summary |
-| Security Sentinel | :large_orange_diamond: | X | One-line summary |
-| Devil's Advocate | :white_check_mark: | X | One-line summary |
-
----
-
 ## What's Good
 
-- :white_check_mark: [Positive observation from Reviewer A]
-- :white_check_mark: [Positive observation from Reviewer B]
-- :white_check_mark: [Positive observation from Reviewer C]
+- [Positive observation from Reviewer A]
+- [Positive observation from Reviewer B]
+- [Positive observation from Reviewer C]
 ```
 
 ## Formatting Rules
 
-### Critical/High Issues (in "Why — Findings By File")
+### Critical/High Issues (in "Findings")
 Full detail: description + code example + fix. Show the problem and the solution.
 
 ### Medium Issues
@@ -214,7 +205,7 @@ Full detail: description + code example + fix. Show the problem and the solution
 1 line summary. Just the what and where.
 
 ### Cross-Reviewer Findings
-Inline with the file they belong to, tagged with `↔️CROSS` and attribution (`flagged by X → investigated by Y`). NOT a separate section.
+Inline with the file they belong to, tagged with `CROSS` and attribution (`flagged by X -> investigated by Y`). NOT a separate section.
 
 ## Example
 
