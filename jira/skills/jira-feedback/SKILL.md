@@ -1,6 +1,6 @@
 ---
 name: jira-feedback
-description: Add comments, feedback, review notes, or replies to existing JIRA issues. Use when the user wants to post a comment, reply to a discussion, leave review feedback, or add notes on a JIRA ticket. Transforms raw input into clear, well-structured comments. Triggers on any request to comment on, reply to, or add feedback to a JIRA issue.
+description: Add comments, feedback, review notes, or replies to existing JIRA issues. Use when the user wants to post a comment, reply to a discussion, leave review feedback, or add notes on a JIRA ticket. Transforms raw input into clear, well-structured comments. Also use when the user wants to post code review findings or PR review results to a JIRA ticket. Triggers on any request to comment on, reply to, or add feedback to a JIRA issue.
 argument-hint: "[feedback content]"
 ---
 
@@ -23,7 +23,7 @@ Add comments and feedback to existing JIRA issues. Transforms raw input into cle
 Before anything else, use `AskUserQuestion` with two questions:
 
 - **Language** (header: "Language"): English (Recommended) | Spanish | Polish | German
-- **Feedback type** (header: "Format"): Comment — direct reply or note | Feedback list — structured list of review points
+- **Feedback type** (header: "Format"): Comment — direct reply or note | Feedback list — structured list of review points | PR Review — code review findings (from agent-teams-review)
 
 Use the selected language for the entire draft.
 
@@ -37,6 +37,21 @@ Examples:
 - `TES-1234 I think the API regression also happens on staging` → key: `TES-1234`, content: the full text
 - `there are five things wrong with the export feature` → no key, content: the full text
 
+**PR Review format — additional parsing:**
+
+When PR Review format is selected, determine the input source. The expected input is a **triage report** (output of the triage skill, with Fix Now / Fix Later / Skip groups), but raw review reports also work as a fallback.
+
+- If `$ARGUMENTS` contains a file path (matches `*.md` or a recognizable path like `docs/reviews/...`) — read the file. If it contains Fix Now / Fix Later / Skip sections, treat it as a triage report. If it contains Action Items / Findings by severity, treat it as a raw review report.
+- If `$ARGUMENTS` contains reviewer-prefixed IDs (`VM-`, `BE-`, `FE-`, `QA-`, `SC-`, `DV-` followed by digits) — parse as pasted review findings
+- If the input has neither a file path nor recognizable finding IDs — ask the user via `AskUserQuestion` (header: "Review source") to provide the triage/review report path or paste the findings
+
+Still extract a JIRA issue key if present (same as above).
+
+Examples:
+- `TES-1234 docs/reviews/feature-auth-2026-03-15-triage.md` → key: `TES-1234`, source: triage file
+- `TES-1234 docs/reviews/feature-auth-2026-03-15.md` → key: `TES-1234`, source: raw review file
+- `TES-1234 BE-001 N+1 query in settings loader Critical ...` → key: `TES-1234`, source: pasted findings
+
 ## Reading the JIRA Issue (Step 3 — optional)
 
 If an issue key was found in Step 2, use the `getJiraIssue` MCP tool to fetch the issue:
@@ -45,6 +60,15 @@ If an issue key was found in Step 2, use the `getJiraIssue` MCP tool to fetch th
 - **issueKey**: extracted in Step 2
 
 Read the issue summary, description, and existing comments to understand the context. Use the issue's domain terminology in your draft.
+
+**Thread analysis** — when comments exist on the issue, analyze the last 3-5 comments to understand the conversation dynamics:
+
+- **Thread tone:** Identify whether the discussion is technical (code references, stack traces), casual (brief updates), formal (stakeholder-facing), or urgent (blockers, deadlines). Match this tone in the draft — a technical thread gets precise language, an urgent thread gets direct, no-preamble answers.
+- **Open questions:** If the most recent comment asks a question or requests information, frame the draft as a direct answer. The reader should immediately recognize this as a response to what they asked, not a standalone observation.
+- **Terminology consistency:** Use the exact names, abbreviations, and phrasing from the thread — not synonyms. If the thread says "settings loader" do not write "configuration fetcher."
+- **Conversation momentum:** In heated or urgent threads (multiple comments in short succession, language signaling frustration or deadline pressure), match the directness and pace. Skip preamble, lead with the answer or status.
+
+Example with thread context: [references/example-comment-with-context.md](references/example-comment-with-context.md)
 
 If no issue key was provided, skip this step entirely.
 
@@ -91,6 +115,45 @@ Rules:
 
 Example: [references/example-feedback-list.md](references/example-feedback-list.md)
 
+### Format: PR Review
+
+Structured code review findings condensed for a JIRA comment. Expects input from a **triaged** review — after the triage skill has classified findings into Fix Now / Fix Later / Skip groups. Transforms the triage output into an actionable, scannable summary that developers can work through as a checklist.
+
+```
+**Code Review: {branch-name}** | {date} | Verdict: {verdict}
+{reviewer-list} | {finding-count} findings | ~{total-effort}
+{AI Slop: X/10 — only if score <= 6}
+
+### Fix Now ({group-count} groups, ~{effort})
+
+**{Group Name}**
+- [ ] `[BE-001]` **Issue title** — `file:line` — description + fix
+- [ ] `[SC-002]` **Issue title** ↔️CROSS — `file:line` — description + fix
+> {Why fix now — copied from triage reasoning}
+
+**{Group Name}**
+- [ ] `[VM-001]` **Issue title** — `file:line` — description + fix
+
+### Fix Later ({count} findings)
+- `[QA-001]` Issue title — `file:line`
+- `[FE-001]` Issue title — `file:line`
+
+{Skip: N findings omitted} | Full report: `{report-path}`
+```
+
+Rules:
+- **Fix Now groups** are the focus — preserve the triage group names and execution order. Each finding gets full detail: ID, title, file:line, one-sentence description, and inline fix suggestion. Include the triage reasoning blockquote (`>`) so the developer knows why this is urgent.
+- **Fix Later** findings get a single-line summary: ID, title, file:line. No grouping needed — just a flat list for awareness.
+- **Skip** findings are collapsed into a count. The developer doesn't need to see them — they were intentionally excluded.
+- Won't Implement items (from previous triage rounds) are omitted entirely.
+- Preserve reviewer-prefixed issue IDs (`VM-`, `BE-`, `FE-`, `QA-`, `SC-`, `DV-`) for traceability back to the full report
+- Keep `↔️CROSS` tags with reviewer attribution on cross-reviewer findings
+- Keep the entire comment under ~50 lines — JIRA comments lose readability when they are too long
+- AI Slop score: include as a one-line note in the header only if the score is 6 or below; omit the full category breakdown
+- If the source is a raw review report (not triaged), fall back to severity grouping: Critical/High get full detail, Medium get one-liners, Low get collapsed count
+
+Example: [references/example-pr-review.md](references/example-pr-review.md)
+
 ## Writing Rules
 
 - Be direct — state observations and conclusions, not the process of arriving at them
@@ -98,6 +161,7 @@ Example: [references/example-feedback-list.md](references/example-feedback-list.
 - Never fabricate information — only include facts from the user's input or the JIRA issue
 - Match the tone to the context — urgent issues get direct language, discussions get collaborative tone
 - Prefer concrete over abstract (say "the CSV export endpoint" not "the relevant endpoint")
+- For PR Review format — keep language factual and terse; review findings are reference material, not prose. Use the finding's own wording rather than paraphrasing
 
 ## Presentation (Step 5)
 
@@ -108,6 +172,10 @@ Always present the draft inside a clearly marked block and ask:
 > [comment content]
 >
 > Confirm to send, or let me know what to change.
+
+When thread context was used (comments existed on the issue), include a brief context note above the draft so the user knows what influenced the tone and framing:
+
+> **Thread context:** Last 3 comments discuss staging regression. Most recent (Anna, 2h ago) asks for confirmation on the date filter. Draft framed as a direct answer.
 
 Do NOT send to JIRA until the user explicitly confirms.
 
