@@ -83,7 +83,15 @@ Construct the message:
 
 ### Step 6 — Confirm and commit
 
-Present the commit message to the user and wait for explicit confirmation. Then execute:
+Use `AskUserQuestion` to confirm the commit:
+
+- **Header:** The generated commit message (e.g. `feat: PROJ-123 add user avatar upload endpoint`)
+- **Options (in this order):**
+  1. "Yes, commit" ← default, user just presses Enter
+  2. "Edit message" — ask the user for a corrected message, then re-confirm
+  3. "Abort" — stop without committing
+
+If confirmed, execute:
 
 ```
 git commit -m "the commit message"

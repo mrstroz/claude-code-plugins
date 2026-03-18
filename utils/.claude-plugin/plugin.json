@@ -1,7 +1,7 @@
 {
   "name": "utils",
   "description": "Utility helpers for common development workflows",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "author": {
     "name": "mrstroz"
   }
