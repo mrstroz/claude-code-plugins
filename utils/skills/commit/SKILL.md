@@ -1,6 +1,7 @@
 ---
 name: commit
 description: Create clean conventional commits. Use when the user wants to commit changes, make a commit, save progress, or says "commit". Enforces single-line conventional commit format with automatic task number detection from branch names. Never adds Co-Authored-By lines.
+model: haiku
 ---
 
 # Commit

@@ -1,6 +1,7 @@
 ---
 name: jira-daily-summary
 description: Generate a daily JIRA summary with intelligent triage and ABCDE priority classification. Groups tasks into Action Needed, Ready to Proceed, and Info categories with actionable summaries. Creates optional Claude Code todo lists for follow-up. Use when the user wants a daily standup summary, task triage, daily review, morning briefing, sprint check-in, or wants to know what needs attention in JIRA today. Triggers on any request mentioning daily summary, standup prep, triage, daily review, morning briefing, what needs my attention, sprint status check, or daily JIRA report.
+model: sonnet
 ---
 
 # JIRA Daily Summary & Triage
