@@ -18,7 +18,7 @@ const MAX_COMMENTS = 50;
 const ISSUE_FIELDS = [
   'summary', 'status', 'assignee', 'priority',
   'issuetype', 'labels', 'fixVersions', 'description',
-  'created', 'updated',
+  'created', 'updated', 'reporter',
 ];
 
 // ---------------------------------------------------------------------------
@@ -189,6 +189,7 @@ async function fetchIssue(baseUrl, key, auth) {
     status: f.status?.name || '',
     priority: f.priority?.name || '',
     assignee: f.assignee?.displayName || '',
+    reporter: f.reporter?.displayName || '',
     labels: f.labels || [],
     fixVersions: (f.fixVersions || []).map((v) => v.name),
     summary: f.summary || '',

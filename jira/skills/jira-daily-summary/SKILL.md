@@ -1,24 +1,23 @@
 ---
 name: jira-daily-summary
 description: Generate a daily JIRA summary with intelligent triage and ABCDE priority classification. Groups tasks into Action Needed, Ready to Proceed, and Info categories with actionable summaries. Creates optional Claude Code todo lists for follow-up. Use when the user wants a daily standup summary, task triage, daily review, morning briefing, sprint check-in, or wants to know what needs attention in JIRA today. Triggers on any request mentioning daily summary, standup prep, triage, daily review, morning briefing, what needs my attention, sprint status check, or daily JIRA report.
-model: sonnet
+model: opus
 ---
 
 # JIRA Daily Summary & Triage
 
-Generate a prioritized daily summary of JIRA tasks with intelligent triage into three action groups and Brian Tracy ABCDE classification.
+Generate a prioritized daily summary of JIRA tasks with intelligent triage into three action groups and Brian Tracy ABCDE classification. Uses the `jira-fetch` script to pull all data via REST API in one call — no MCP overhead, no subagents, no token waste.
 
 ## Workflow
 
 1. **Initial setup** — Ask language and time frame via `AskUserQuestion`
-2. **Resolve JIRA project** — Auto-discover the project via MCP tools
-3. **Fetch tasks** — Search JIRA issues using optimized JQL based on selected time frame
-4. **Extract comment data** — Fetch and condense comment data via subagents
-5. **Triage into 3 groups** — Classify each task as Action Needed, Ready to Proceed, or Info
-6. **ABCDE classification** — Assign priority letter A-E to each task and sort within groups
-7. **Generate summary** — Produce text overview and three prioritized tables
-8. **Todo list creation** — Optionally create Claude Code todos for follow-up
-9. **Process tasks** — Work through todos one by one: re-read from JIRA, show expanded summary, ask for action, propose and send a JIRA comment
+2. **Resolve JIRA project** — Get domain and project key from CLAUDE.md or ask user
+3. **Fetch data** — Run `jira-fetch` script to get all issues with descriptions and comments
+4. **Triage into 3 groups** — Classify each task as Action Needed, Ready to Proceed, or Info
+5. **ABCDE classification** — Assign priority letter A-E to each task and sort within groups
+6. **Generate summary** — Produce text overview and three prioritized tables
+7. **Todo list creation** — Optionally create Claude Code todos for follow-up
+8. **Process tasks** — Work through todos one by one: show expanded summary, ask for action, propose and send a JIRA comment
 
 ---
 
@@ -35,20 +34,29 @@ Use the selected language for the entire output. Translate section headers accor
 
 ## Resolve JIRA Project (Step 2)
 
-Auto-discover the JIRA project — do not ask the user for cloudId or projectKey.
+Look for a JIRA configuration block in the project's CLAUDE.md:
 
-1. Call `getAccessibleAtlassianResources` to get the available cloud instances. Use the first (or only) instance as the cloudId.
-2. Call `getVisibleJiraProjects` to list all projects in the instance.
-3. If only one project exists, use it automatically.
-4. If multiple projects exist, pick the most likely match based on context or present them via `AskUserQuestion` (header: "Project").
+```
+## JIRA
+- Domain: mycompany.atlassian.net
+- Project key: PROJ
+```
 
-Store the resolved `cloudId`, `projectKey`, and the cloud base URL (e.g., `https://mycompany.atlassian.net`) for the rest of the session. The base URL is needed for clickable task links in the output.
+If found, use that domain and project key. If not found, ask via `AskUserQuestion` (header: "JIRA Configuration"):
+- Domain (e.g., mycompany.atlassian.net)
+- Project key (e.g., PROJ)
+
+Store the resolved `domain`, `projectKey`, and base URL (`https://{domain}`) for the rest of the session. The base URL is needed for clickable task links in the output.
 
 ---
 
-## Fetch Task List (Step 3)
+## Fetch Data (Step 3)
 
-Map the selected time frame to a JQL query. Always include the project filter.
+This single step replaces the old search + subagent extraction pattern. The `jira-fetch` script fetches all issues with full descriptions and comments in one call, returning a minimal JSON file with plaintext data ready for triage.
+
+### Build JQL
+
+Map the selected time frame to a JQL query:
 
 | Time Frame | JQL |
 |------------|-----|
@@ -57,54 +65,38 @@ Map the selected time frame to a JQL query. Always include the project filter.
 | Updated/commented yesterday + today | `project = {projectKey} AND updated >= startOfDay(-1d) ORDER BY updated DESC` |
 | Last 3 days | `project = {projectKey} AND updated >= startOfDay(-3d) ORDER BY updated DESC` |
 
-This step is purely a discovery phase — collect the list of issue keys and lightweight metadata. Do NOT request `comment` or `description` fields here because they cause the response to exceed MCP size limits on active projects.
+### Locate and Run Script
+
+Find the fetch script via Glob:
 
 ```
-fields: ["summary", "status", "issuetype", "priority", "fixVersions", "assignee", "reporter"]
-maxResults: 50
+pattern: **/jira-fetch/scripts/fetch-issues.mjs
 ```
 
-If more than 50 issues exist, use `nextPageToken` to paginate. From each result, collect: `key`, `summary`, `status`, `issuetype`, `priority`, `fixVersions`, `assignee`, `reporter`.
+Run the script:
+
+```bash
+node "${SCRIPT_PATH}" \
+  --domain "${DOMAIN}" \
+  --jql "${JQL}" \
+  --output "/tmp/jira-daily-summary-$(date +%Y%m%d-%H%M%S).json"
+```
+
+If the script fails, show the error and stop. Common issues: missing `JIRA_EMAIL` or `JIRA_API_TOKEN` env vars.
+
+### Read and Parse
+
+Read the output JSON file. The data contains per issue: `key`, `type`, `status`, `priority`, `assignee`, `reporter`, `labels`, `fixVersions`, `summary`, `created`, `updated`, `description` (plaintext), `comments[]` (with `author`, `created`, `body` as plaintext).
+
+Store the file path — it will be used again in Step 8 for task processing.
 
 ---
 
-## Extract Comment Data via Subagents (Step 4)
-
-Comments are the strongest triage signal (mentions, questions, blockers) — skipping them risks misclassifying urgent tasks into Info. Instead of fetching comments into the main context, delegate extraction to subagents that return only condensed triage signals.
-
-### Subagent Extraction
-
-Extract data for **every** task returned by the JQL search — do not skip any. Accurate triage requires comment data for all tasks, not just a subset. If there are many tasks, the orchestration pattern handles this by spawning more subagent batches.
-
-Follow the orchestration pattern in [extraction pattern](../_shared/extraction-pattern.md) to batch all issue keys and spawn `jira:issue-extractor` subagents.
-
-Use this skill-specific extraction template in each agent prompt:
-
-```
-Fields to fetch: ["comment", "description"]
-
-For each issue, analyze the description and ALL comments to determine:
-1. What is this task about? (one-sentence summary from description)
-2. Are there unresolved questions or requests directed at me (the current Jira user)?
-3. Who is asking whom to do what? Identify the speaker, the target (tagged/named person or implied addressee), and the requested action.
-4. What is the latest comment about?
-5. Is there a blocker or impediment mentioned?
-
-Return format (one line per issue):
-{KEY}: {DIRECTED_AT_ME|NOT_DIRECTED|NO_COMMENTS} | {one-sentence task summary from description} | {one-sentence summary of latest relevant comment activity, or "no comments"} | blocker: {yes/no} | {who asked whom to do what, or "n/a"}
-```
-
-### Using Extracted Data
-
-The subagents return condensed triage signals — one line per issue with task summary, comment activity, directionality, and blocker status. Use these signals together with the metadata from Step 3 for triage in Step 5 and ABCDE classification in Step 6. The `DIRECTED_AT_ME` flag and `who→whom` information are the primary inputs for Action Needed classification. The task summary from description provides context for the narrative summaries in Step 7.
-
----
-
-## Triage into 3 Groups (Step 5)
+## Triage into 3 Groups (Step 4)
 
 Classify every task into exactly one of three groups. The groups represent different levels of urgency — getting this right matters because it determines what the user focuses on first.
 
-Use the extraction data from Step 4 (condensed comment signals: directionality, blocker status, who→whom, task summary) together with metadata from Step 3 for accurate triage.
+Use the full issue data from the JSON file (description, comments with author and dates, assignee, reporter, status, priority) for accurate triage.
 
 ### Action Needed
 
@@ -147,7 +139,7 @@ When in doubt between groups, classify into Info rather than Action Needed — f
 
 ---
 
-## ABCDE Classification (Step 6)
+## ABCDE Classification (Step 5)
 
 Assign each task a priority letter A through E using the Brian Tracy method. The letter determines the order in which tasks appear within their triage group (A first, E last).
 
@@ -179,7 +171,7 @@ Sort tasks within each triage group: A first, then B, C, D, E. Within the same l
 
 ---
 
-## Generate Summary (Step 7)
+## Generate Summary (Step 6)
 
 Produce the summary following the format defined in [references/format.md](references/format.md). Full example: [references/example.md](references/example.md).
 
@@ -201,7 +193,7 @@ All tables use the same columns:
 ```
 
 Column rules:
-- **Task**: clickable JIRA link — `[PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123)`
+- **Task**: clickable JIRA link — `[PROJ-123](https://{domain}/browse/PROJ-123)`
 - (empty header): single letter A-E
 - **Title**: issue summary, truncated with `...` if over 70 characters
 - **Summary**: starts with metadata prefix `{Ver} · {Status} · {Assignee} —` followed by narrative summary (~30-50 words). Ver is fixVersion or `—` if missing. Status uses color emoji prefix (⚪ To Do/Open/Backlog/New, 🔵 In Progress/In Review/Reviewed/Testing/QA/Code Review/In Development, 🟢 Done/Ready to Deploy/Deployed/Closed/Resolved/Released). Assignee is the person's first name. The narrative portion names specific people and who-to-whom dynamics rather than using passive voice.
@@ -218,7 +210,7 @@ Action Needed is never condensed — every item there deserves individual attent
 
 ---
 
-## Todo List Creation (Step 8)
+## Todo List Creation (Step 7)
 
 After presenting the summary, use `AskUserQuestion` with header "Todo list":
 
@@ -230,34 +222,28 @@ After presenting the summary, use `AskUserQuestion` with header "Todo list":
 If the user selects a group, use `TaskCreate` for each task in the selected group(s):
 
 - **subject**: `{ABCDE} — {PROJ-KEY}: {title}` (e.g., `A — SF-234: Fix payment callback timeout`)
-- **description**: Include the task key, title, full summary from the table, and: "Re-read the full JIRA task via getJiraIssue before starting work — the summary above is a triage snapshot, not the complete picture."
+- **description**: Include the task key, title, full summary from the table, and: "Full issue data (description + comments) is available in the fetched JSON file — no need to re-fetch from JIRA."
 - **activeForm**: `Working on {PROJ-KEY}` (e.g., `Working on SF-234`)
 
-The re-read instruction matters because the daily summary intentionally condenses information for quick scanning. When actually working on a task, the full JIRA issue with all comments, description, and history provides essential context.
-
-After creating todos, confirm how many were created and for which group(s). Then proceed to Step 9.
+After creating todos, confirm how many were created and for which group(s). Then proceed to Step 8.
 
 ---
 
-## Process Tasks (Step 9)
+## Process Tasks (Step 8)
 
 Work through the todo list one task at a time. For each task, repeat the following cycle:
 
-### 9a. Re-read from JIRA
+### 8a. Load Issue Data
 
-Call `getJiraIssue` for the current task's issue key to get fresh, complete data — description, all comments, status, and history. The triage summary from Step 7 is intentionally condensed; processing a task requires the full picture.
+Read the issue data from the JSON file fetched in Step 3. The file contains full description and up to 50 comments in plaintext — sufficient for task processing without additional API calls.
 
-```
-fields: ["comment"]
-```
+Find the issue by its `key` in the `issues` array.
 
-**You MUST include `fields: ["comment"]`** — without it, comments are silently omitted and you lose the strongest triage signal.
-
-### 9b. Display Task Card
+### 8b. Display Task Card
 
 Present the task as a heading with the expanded summary below it:
 
-**[PROJ-123](https://{cloudBaseUrl}/browse/PROJ-123) — {title}**
+**[PROJ-123](https://{domain}/browse/PROJ-123) — {title}**
 
 {expanded summary}
 
@@ -267,7 +253,7 @@ The expanded summary should be 2-3x more detailed than the table summary (~60-90
 - Blockers or dependencies if any
 - Context from the description that is relevant to the next action
 
-### 9c. Ask for Action
+### 8c. Ask for Action
 
 Use `AskUserQuestion` (header: "Action") with options contextual to the task's triage group and status. Examples:
 
@@ -285,7 +271,7 @@ Use `AskUserQuestion` (header: "Action") with options contextual to the task's t
 
 Adapt options based on what the task actually needs — these are examples, not a fixed list.
 
-### 9d. Propose JIRA Comment
+### 8d. Propose JIRA Comment
 
 Based on the user's chosen action, draft a JIRA comment in the language selected in Step 1. Present the draft as plain text:
 
@@ -301,12 +287,13 @@ Writing rules:
 - Use domain terminology from the JIRA issue
 - Match tone to context — urgent issues get direct language, discussions get collaborative tone
 
-### 9e. Send Comment and Advance
+### 8e. Send Comment and Advance
 
 After the user confirms (or edits and confirms) the comment:
 
-1. Use `addJiraComment` MCP tool with `cloudId` (resolved in Step 2), `issueKey`, and `body`
-2. Mark the current todo as completed via `TaskUpdate` (status: `completed`)
-3. Move to the next task in the todo list and repeat from Step 9a
+1. Resolve `cloudId` if not yet known — call `getAccessibleAtlassianResources` MCP tool once per session to get the cloud instance ID. Cache it for subsequent comments.
+2. Use `addCommentToJiraIssue` MCP tool with `cloudId`, `issueKey`, and `body` to post the comment.
+3. Mark the current todo as completed via `TaskUpdate` (status: `completed`)
+4. Move to the next task in the todo list and repeat from Step 8a
 
-If the user chose "Skip" in Step 9c, mark the todo as completed without sending a comment and move to the next task.
+If the user chose "Skip" in Step 8c, mark the todo as completed without sending a comment and move to the next task.

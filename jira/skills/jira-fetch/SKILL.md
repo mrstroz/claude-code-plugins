@@ -10,7 +10,7 @@ argument-hint: describe what to fetch, e.g. "sprint 5 of project PROJ" or "all b
 
 Fetch JIRA issues via REST API v3 and save as minimal extracted JSON. Uses a zero-dependency Node.js script that calls JIRA directly — no MCP tools, no subagents, no token overhead.
 
-**Output per issue:** key, type, status, priority, assignee, labels, fixVersions, summary, created, updated, description (plaintext), comments (up to 50, plaintext with author/datetime). All nested objects flattened, all HTML stripped.
+**Output per issue:** key, type, status, priority, assignee, reporter, labels, fixVersions, summary, created, updated, description (plaintext), comments (up to 50, plaintext with author/datetime). All nested objects flattened, all HTML stripped.
 
 ## Prerequisites
 

@@ -46,7 +46,7 @@ This repo demonstrates two distinct patterns for multi-agent code review:
 - Save review reports to `docs/pr-reviews/` or `docs/reviews/` as `{branch}-{YYYY-MM-DD}.md`, replacing branch slashes with hyphens
 - Prefix reviewer issue IDs by role: VM-, BE-, FE-, QA-, SC-, DV-
 - Select reviewers/agents conditionally based on file patterns and content keywords, then confirm with the user via `AskUserQuestion`
-- Most JIRA skills depend on MCP tools (`createJiraIssue`, `searchJiraIssues`, etc.) at runtime; `jira-fetch` bypasses MCP and calls JIRA REST API v3 directly via a bundled Node.js script
+- Most JIRA skills depend on MCP tools at runtime; `jira-fetch` provides a shared REST API v3 script (`fetch-issues.mjs`) that other skills like `jira-daily-summary` use for data retrieval — MCP is only needed for write operations (`addCommentToJiraIssue`)
 - `jira-fetch` requires `JIRA_EMAIL` and `JIRA_API_TOKEN` env vars for JIRA REST API authentication
 - Use single-line conventional commit format with auto-detected task numbers from branch names
 - Bump `version` in `<plugin>/.claude-plugin/plugin.json` after each change — patch for bug fixes and small tweaks, minor for new features or significant behavior changes
