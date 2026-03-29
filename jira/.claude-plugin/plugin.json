@@ -1,7 +1,7 @@
 {
   "name": "jira",
-  "description": "JIRA integration for task creation, feedback, release notes, product roadmaps, daily summaries, and release testing scenarios",
-  "version": "1.13.0",
+  "description": "JIRA integration for task creation, feedback, release notes, product roadmaps, daily summaries, release testing scenarios, and direct API data fetching",
+  "version": "1.14.0",
   "author": {
     "name": "mrstroz"
   }
