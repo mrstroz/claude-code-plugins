@@ -6,21 +6,19 @@ argument-hint: "[version number]"
 
 # JIRA Release Notes Generator
 
-Generate professional, client-facing release notes from Jira version data. Produces a detailed feature-by-feature overview for a single release version with categorized items.
+Generate professional, client-facing release notes from Jira version data. Produces a detailed feature-by-feature overview for a single release version with categorized items. Uses the `jira-fetch` script to pull all issue data via REST API in one call — no MCP overhead, no subagents, no token waste.
 
 ## Workflow
 
 1. **Initial setup** — Ask language and output format via `AskUserQuestion`
-2. **Resolve JIRA project** — Auto-discover the project via MCP tools
-3. **Collect version info** — Determine which version to include
-4. **Search Jira issues by version** — Lightweight metadata only
-5. **Filter issues** — Remove internal, technical-only, and low-priority items
-6. **Extract issue data** — Fetch and condense descriptions and comments via subagents
-7. **Categorize into themes** — Group issues into 3-7 business-facing categories
-8. **Generate business-value summaries** — Transform technical descriptions into user-outcome language
-9. **Compose release notes document** — Assemble the final document using the reference format
-10. **Present draft for review** — Show the release notes and ask for confirmation
-11. **Output** — Deliver as markdown or publish to Confluence
+2. **Resolve JIRA project** — Get domain and project key from CLAUDE.md or ask user
+3. **Fetch issue data** — Run `jira-fetch` script to get all issues for the version
+4. **Filter issues** — Remove internal, technical-only, and low-priority items
+5. **Categorize into themes** — Group issues into 3-7 business-facing categories
+6. **Generate business-value summaries** — Transform technical descriptions into user-outcome language
+7. **Compose release notes document** — Assemble the final document using the reference format
+8. **Present draft for review** — Show the release notes and ask for confirmation
+9. **Output** — Deliver as markdown or publish to Confluence
 
 ---
 
@@ -39,41 +37,69 @@ Use the selected language for the entire document. Translate section headers acc
 
 ## Resolve JIRA Project (Step 2)
 
-Auto-discover the JIRA project — do not ask the user for cloudId or projectKey.
+Look for a JIRA configuration block in the project's CLAUDE.md:
 
-1. Call `getAccessibleAtlassianResources` to get the available cloud instances. Use the first (or only) instance as the cloudId.
-2. Call `getVisibleJiraProjects` to list all projects in the instance.
-3. If only one project exists, use it automatically.
-4. If multiple projects exist, pick the most likely match based on context (version numbers from `$ARGUMENTS`, Confluence page content if available) or present them via `AskUserQuestion` (header: "Project").
+```
+## JIRA
+- Domain: mycompany.atlassian.net
+- Project key: PROJ
+```
 
-Store the resolved cloudId and projectKey for the rest of the session.
+If found, use that domain and project key. If not found, ask via `AskUserQuestion` (header: "JIRA Configuration"):
+- Domain (e.g., mycompany.atlassian.net)
+- Project key (e.g., PROJ)
+
+Store the resolved `domain`, `projectKey`, and base URL (`https://{domain}`) for the rest of the session. The base URL is needed for clickable task links in the output.
 
 ---
 
-## Collect Version Info (Step 3)
+## Fetch Issue Data (Step 3)
 
-If a version was extracted from `$ARGUMENTS`, use it directly.
+This single step replaces the old search + subagent extraction pattern. The `jira-fetch` script fetches all issues with full descriptions and comments in one call, returning a minimal JSON file with plaintext data ready for transformation into release notes.
 
-If no version was provided:
-1. Use JQL to discover versions with issues: `project = {projectKey} AND fixVersion IS NOT EMPTY ORDER BY fixVersion DESC` (fields: `["summary", "fixVersion"]`). Extract unique fixVersion values.
-2. Present discovered versions to the user via `AskUserQuestion` (header: "Version") as selectable options.
-3. Allow free text input for a version not in the list.
+### Locate Script
 
-## Search Jira Issues by Version (Step 4)
-
-Use the available MCP tool for JQL search with lightweight metadata fields only. Do not request `description` here — on versions with many issues the combined payload can exceed MCP size limits, causing the search to fail.
+Find the fetch script via Glob:
 
 ```
-project = {projectKey} AND fixVersion = "{version}" ORDER BY priority DESC, issuetype ASC
-fields: ["summary", "issuetype", "priority", "labels", "components"]
-maxResults: 100
+pattern: **/jira-fetch/scripts/fetch-issues.mjs
 ```
 
-If more than 100 issues exist, use the `nextPageToken` to paginate through all results.
+### Determine Version and Fetch
 
-From each result, collect: `key`, `summary`, `issuetype`, `priority`, `labels`, `components`.
+**If a version was extracted from `$ARGUMENTS`**, run a targeted fetch:
 
-## Filter Issues (Step 5)
+```bash
+node "${SCRIPT_PATH}" \
+  --domain "${DOMAIN}" \
+  --jql "project = ${PROJECT_KEY} AND fixVersion = \"${VERSION}\" ORDER BY priority DESC, issuetype ASC" \
+  --output "/tmp/jira-release-notes-${VERSION}-$(date +%Y%m%d-%H%M%S).json"
+```
+
+**If no version was provided**, discover available versions first:
+
+```bash
+node "${SCRIPT_PATH}" \
+  --domain "${DOMAIN}" \
+  --jql "project = ${PROJECT_KEY} AND fixVersion IS NOT EMPTY ORDER BY fixVersion DESC" \
+  --output "/tmp/jira-release-versions-$(date +%Y%m%d-%H%M%S).json"
+```
+
+Read the JSON output and extract unique version names from the `fixVersions` field across all issues. Present discovered versions to the user via `AskUserQuestion` (header: "Version") as selectable options. Allow free text input for a version not in the list.
+
+After the user selects a version, filter the already-fetched data to keep only issues where `fixVersions` includes the selected version. No second fetch needed — the discovery data already contains full issue details.
+
+If the script fails, show the error and stop. Common issues: missing `JIRA_EMAIL` or `JIRA_API_TOKEN` env vars.
+
+### Read and Parse
+
+The JSON output contains per issue: `key`, `type`, `status`, `priority`, `assignee`, `reporter`, `labels`, `fixVersions`, `components`, `summary`, `created`, `updated`, `description` (plaintext), `comments[]` (with `author`, `created`, `body` as plaintext).
+
+Descriptions and comments are the key inputs for transforming technical issues into business-value summaries in Steps 5-6. Having them available directly (instead of via subagent extraction) enables better cross-issue reasoning — detecting duplicate features, identifying themes, and producing more consistent language.
+
+---
+
+## Filter Issues (Step 4)
 
 Apply these filtering rules to determine which issues appear in the release notes:
 
@@ -90,48 +116,13 @@ Apply these filtering rules to determine which issues appear in the release note
 
 **Keyword exclusion** — skip issues whose summary contains any of these terms (case-insensitive): `refactor`, `chore`, `cleanup`, `ci/cd`, `pipeline`, `dependency update`, `bump`, `internal`, `tech debt`, `lint`, `formatting`.
 
-## Extract Issue Data via Subagents (Step 6)
-
-Step 4 only fetched lightweight metadata. Descriptions and comments are needed to transform technical issues into business-value summaries. Instead of fetching them into the main context, delegate extraction to subagents that return only condensed business-value summaries.
-
-### Prioritization Cap
-
-If more than 30 issues passed filtering, select the top 30 for extraction:
-1. Epic / Story / Feature (all priorities)
-2. Blocker / Critical bugs
-3. Remaining issues by priority descending
-
-For issues beyond the 30-issue cap, generate summaries from the `summary` field collected in Step 4 alone.
-
-### Subagent Extraction
-
-Follow the orchestration pattern in [extraction pattern](../_shared/extraction-pattern.md) to batch issue keys and spawn `jira:issue-extractor` subagents.
-
-Use this skill-specific extraction template in each agent prompt:
-
-```
-Fields to fetch: ["comment", "description"]
-
-For each issue, determine the user-facing value it delivers.
-Read the description and comments to understand what changed from the user's perspective.
-Transform technical language into business-value language — describe how the feature benefits the end user, not what was implemented internally.
-For bugs: describe what was broken and what now works correctly.
-
-Return format (one line per issue):
-{KEY}: {one-sentence business-value summary — what the user gains, max 40 words}
-```
-
-### Using Extracted Data
-
-The subagents return condensed business-value summaries — one line per issue. Use these together with the metadata from Step 4 for categorization in Step 7 and final summary generation in Step 8.
-
-## Categorize into Themes (Step 7)
+## Categorize into Themes (Step 5)
 
 Use a two-pass approach:
 
 ### Pass 1 — Automatic Categorization
 
-Assign each issue to a category based on labels, components, and keywords in the summary and business-value extraction (if available from Step 6 — for overflow issues beyond the 30-cap, use summary alone):
+Assign each issue to a category based on labels, components, and keywords in the summary and description:
 
 | Keywords / Labels | Category |
 |-------------------|----------|
@@ -142,7 +133,7 @@ Assign each issue to a category based on labels, components, and keywords in the
 | report, analytics, dashboard, metrics, chart | Reporting & Analytics |
 | No match found | New Capabilities |
 
-**Bug Fixes category** — All issues with type Bug or Hotfix are placed into a dedicated **Bug Fixes** section, separate from the thematic feature categories above. Do not mix bugs into feature categories. The Bug Fixes section always appears after the Features section in the final document (see Step 9).
+**Bug Fixes category** — All issues with type Bug or Hotfix are placed into a dedicated **Bug Fixes** section, separate from the thematic feature categories above. Do not mix bugs into feature categories. The Bug Fixes section always appears after the Features section in the final document (see Step 7).
 
 ### Pass 2 — AI Refinement
 
@@ -153,13 +144,15 @@ Review the automatic categorization and adjust:
 - **Target**: 3-7 final categories, max 10 items per category
 - **Order**: highest business-impact categories first
 
-## Generate Business-Value Summaries (Step 8)
+## Generate Business-Value Summaries (Step 6)
 
 For each issue, produce:
 
 - **Task number**: Jira issue key (e.g. PROJ-142)
 - **Name**: 3-8 words, title case, no technical jargon
 - **Summary**: 2 sentences focused on user/business value, max 40 words
+
+Use the `description` and `comments` fields from the JSON data to understand what changed from the user's perspective. Having full issue data available enables more accurate business-value transformation than working from summaries alone.
 
 ### Transformation Rules
 
@@ -180,7 +173,7 @@ For each issue, produce:
 - "Hotfix: payment callback timeout" → "Payments are now confirmed reliably without delays or missing confirmations"
 - Focus on the user-visible symptom and resolution, not the technical root cause
 
-## Compose Release Notes Document (Step 9)
+## Compose Release Notes Document (Step 7)
 
 Assemble the final document following the structure defined in [references/format.md](references/format.md).
 
@@ -215,7 +208,7 @@ If a version has more than 20 features:
 - Merge minor features into grouped items
 - Keep total visible items under 25
 
-## Present Draft for Review (Step 10)
+## Present Draft for Review (Step 8)
 
 Present the complete release notes inside a clearly marked block and use `AskUserQuestion` (header: "Review"):
 
@@ -226,7 +219,7 @@ Present the complete release notes inside a clearly marked block and use `AskUse
 
 If the user asks for adjustments, apply changes and present the updated draft again. Repeat until the user confirms.
 
-## Output (Step 11)
+## Output (Step 9)
 
 ### Markdown Output
 
@@ -237,6 +230,8 @@ Present the final release notes in a code block and suggest saving to a file:
 If the user confirms, write the file.
 
 ### Confluence Output
+
+Confluence publishing requires a `cloudId`. Resolve it now by calling `getAccessibleAtlassianResources` MCP tool — this is the only MCP call in this skill, and only when Confluence output was selected.
 
 Use the available Confluence MCP tools to publish:
 

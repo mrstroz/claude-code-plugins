@@ -6,20 +6,18 @@ argument-hint: "[version number]"
 
 # JIRA Testing Release — Scenario Generator
 
-Generate a concise testing guide for a release version by combining Jira issue data with git diff analysis. Produces a table of what changed and what to verify — descriptive scenarios, not step-by-step scripts.
+Generate a concise testing guide for a release version by combining Jira issue data with git diff analysis. Produces a table of what changed and what to verify — descriptive scenarios, not step-by-step scripts. Uses the `jira-fetch` script to pull all issue data via REST API in one call — no MCP overhead, no subagents, no token waste.
 
 ## Workflow
 
 1. **Initial setup** — Ask language and branch configuration via `AskUserQuestion`
-2. **Resolve JIRA project** — Auto-discover the project via MCP tools
-3. **Collect version info** — Determine which version to generate scenarios for
-4. **Search Jira issues by version** — Lightweight metadata only
-5. **Extract issue details** — Fetch and condense descriptions via subagents
-6. **Analyze git diff** — Compare feature branch vs main branch to identify changed files
-7. **Correlate and generate scenarios** — Match file changes to issues and produce testing scenarios
-8. **Compose testing document** — Assemble the final table with optional risk sections
-9. **Present draft for review** — Show the document and ask for confirmation
-10. **Output** — Deliver as markdown
+2. **Resolve JIRA project** — Get domain and project key from CLAUDE.md or ask user
+3. **Fetch issue data** — Run `jira-fetch` script to get all issues for the version
+4. **Analyze git diff** — Compare feature branch vs main branch to identify changed files
+5. **Correlate and generate scenarios** — Match file changes to issues and produce testing scenarios
+6. **Compose testing document** — Assemble the final table with optional risk sections
+7. **Present draft for review** — Show the document and ask for confirmation
+8. **Output** — Deliver as markdown
 
 ---
 
@@ -37,82 +35,73 @@ Use the selected language for the entire document. Translate section headers acc
 
 ## Resolve JIRA Project (Step 2)
 
-Auto-discover the JIRA project — do not ask the user for cloudId or projectKey.
+Look for a JIRA configuration block in the project's CLAUDE.md:
 
-1. Call `getAccessibleAtlassianResources` to get the available cloud instances. Use the first (or only) instance as the cloudId.
-2. Call `getVisibleJiraProjects` to list all projects in the instance.
-3. If only one project exists, use it automatically.
-4. If multiple projects exist, pick the most likely match based on context (version numbers from `$ARGUMENTS`, current git repo name) or present them via `AskUserQuestion` (header: "Project").
+```
+## JIRA
+- Domain: mycompany.atlassian.net
+- Project key: PROJ
+```
 
-Store the resolved `cloudId`, `projectKey`, and the cloud base URL (e.g., `https://mycompany.atlassian.net`) for the rest of the session.
+If found, use that domain and project key. If not found, ask via `AskUserQuestion` (header: "JIRA Configuration"):
+- Domain (e.g., mycompany.atlassian.net)
+- Project key (e.g., PROJ)
+
+Store the resolved `domain`, `projectKey`, and base URL (`https://{domain}`) for the rest of the session. The base URL is needed for clickable task links in the output.
 
 ---
 
-## Collect Version Info (Step 3)
+## Fetch Issue Data (Step 3)
 
-If a version was extracted from `$ARGUMENTS`, use it directly.
+This single step replaces the old search + subagent extraction pattern. The `jira-fetch` script fetches all issues with full descriptions and comments in one call, returning a minimal JSON file with plaintext data ready for scenario generation.
 
-If no version was provided:
-1. Use JQL to discover versions with issues: `project = {projectKey} AND fixVersion IS NOT EMPTY ORDER BY fixVersion DESC` (fields: `["summary", "fixVersion"]`). Extract unique fixVersion values.
-2. Present discovered versions to the user via `AskUserQuestion` (header: "Version") as selectable options.
-3. Allow free text input for a version not in the list.
+### Locate Script
 
-## Search Jira Issues by Version (Step 4)
-
-Use the available MCP tool for JQL search with lightweight metadata fields only. Do not request `description` here — on versions with many issues the combined payload can exceed MCP size limits.
+Find the fetch script via Glob:
 
 ```
-project = {projectKey} AND fixVersion = "{version}" ORDER BY priority DESC, issuetype ASC
-fields: ["summary", "status", "issuetype", "priority", "labels", "components"]
-maxResults: 100
+pattern: **/jira-fetch/scripts/fetch-issues.mjs
 ```
 
-If more than 100 issues exist, use the `nextPageToken` to paginate through all results.
+### Determine Version and Fetch
 
-From each result, collect: `key`, `summary`, `issuetype`, `priority`, `status`, `labels`, `components`.
+**If a version was extracted from `$ARGUMENTS`**, run a targeted fetch:
 
-## Extract Issue Details via Subagents (Step 5)
-
-Descriptions are essential for understanding what each task does and generating accurate testing scenarios. Instead of fetching them into the main context, delegate extraction to subagents that return only condensed testing-relevant summaries. Comments are not needed — we care about what was built, not the discussion.
-
-### Prioritization Cap
-
-If more than 30 issues exist, select the top 30 for extraction:
-1. Epic / Story / Feature (all priorities)
-2. Blocker / Critical bugs
-3. Remaining issues by priority descending
-
-For issues beyond the 30-issue cap, generate scenarios from the `summary` field collected in Step 4 alone.
-
-### Subagent Extraction
-
-Follow the orchestration pattern in [extraction pattern](../_shared/extraction-pattern.md) to batch issue keys and spawn `jira:issue-extractor` subagents.
-
-Use this skill-specific extraction template in each agent prompt:
-
-```
-Fields to fetch: ["description"]
-
-For each issue, determine:
-1. What was built or changed? (the core functionality)
-2. What should be tested from a user's perspective? (key verification points)
-3. What are edge cases or risk areas? (max 3 items)
-
-Return format (one line per issue):
-{KEY}: {what-changed} | {what-to-test} | {edge-cases, max 3 comma-separated items}
+```bash
+node "${SCRIPT_PATH}" \
+  --domain "${DOMAIN}" \
+  --jql "project = ${PROJECT_KEY} AND fixVersion = \"${VERSION}\" ORDER BY priority DESC, issuetype ASC" \
+  --output "/tmp/jira-testing-release-${VERSION}-$(date +%Y%m%d-%H%M%S).json"
 ```
 
-### Using Extracted Data
+**If no version was provided**, discover available versions first:
 
-The subagents return condensed testing signals — one line per issue. Use these together with the metadata from Step 4 and the git diff analysis from Step 6 to generate scenarios in Step 7.
+```bash
+node "${SCRIPT_PATH}" \
+  --domain "${DOMAIN}" \
+  --jql "project = ${PROJECT_KEY} AND fixVersion IS NOT EMPTY ORDER BY fixVersion DESC" \
+  --output "/tmp/jira-testing-versions-$(date +%Y%m%d-%H%M%S).json"
+```
+
+Read the JSON output and extract unique version names from the `fixVersions` field across all issues. Present discovered versions to the user via `AskUserQuestion` (header: "Version") as selectable options. Allow free text input for a version not in the list.
+
+After the user selects a version, filter the already-fetched data to keep only issues where `fixVersions` includes the selected version. No second fetch needed — the discovery data already contains full issue details.
+
+If the script fails, show the error and stop. Common issues: missing `JIRA_EMAIL` or `JIRA_API_TOKEN` env vars.
+
+### Read and Parse
+
+The JSON output contains per issue: `key`, `type`, `status`, `priority`, `assignee`, `reporter`, `labels`, `fixVersions`, `components`, `summary`, `created`, `updated`, `description` (plaintext), `comments[]` (with `author`, `created`, `body` as plaintext).
+
+From the fetched (or filtered) data, collect for each issue: `key`, `summary`, `type`, `priority`, `status`, `labels`, `components`, `description`. Comments are available but not typically needed for testing scenarios — we care about what was built, not the discussion.
 
 ---
 
-## Analyze Git Diff (Step 6)
+## Analyze Git Diff (Step 4)
 
 Compare the feature branch against the base branch (from Step 1) to understand what code actually changed.
 
-### 6a. Get Changed Files
+### 4a. Get Changed Files
 
 Run:
 ```bash
@@ -121,7 +110,7 @@ git diff {baseBranch}...{featureBranch} --name-only
 
 If the command fails (branches not found, not a git repo), skip git analysis entirely and generate scenarios from Jira data alone. Inform the user that git analysis was skipped.
 
-### 6b. Get Change Statistics
+### 4b. Get Change Statistics
 
 Run:
 ```bash
@@ -130,7 +119,7 @@ git diff {baseBranch}...{featureBranch} --stat
 
 This provides lines added/removed per file — useful for identifying high-change areas.
 
-### 6c. Group Changed Files by Area
+### 4c. Group Changed Files by Area
 
 Classify each changed file into an area based on its path and extension:
 
@@ -144,7 +133,7 @@ Classify each changed file into an area based on its path and extension:
 | `*.config.*`, `*.yml`, `*.yaml`, `*.env*`, `Dockerfile`, `docker-compose*` | Configuration / Infrastructure |
 | Everything else | Other |
 
-### 6d. Identify High-Change Areas
+### 4d. Identify High-Change Areas
 
 Flag areas where:
 - A single file has more than 100 lines changed
@@ -155,22 +144,24 @@ These become candidates for the "High Risk Areas" section in the output.
 
 ---
 
-## Correlate and Generate Scenarios (Step 7)
+## Correlate and Generate Scenarios (Step 5)
 
 This is the core step — combine Jira data with git analysis to produce testing scenarios.
 
-### 7a. Match Files to Issues
+### 5a. Match Files to Issues
 
 For each Jira issue, attempt to correlate with changed files using:
 - Component names from Jira matching directory/file paths
 - Keywords from the issue summary matching file names or paths
-- Labels matching area classifications from Step 6c
+- Labels matching area classifications from Step 4c
 
 This correlation is best-effort — not every issue will have a clear file match, and that is fine.
 
-### 7b. Generate One Scenario Per Issue
+### 5b. Generate One Scenario Per Issue
 
 For each issue, produce a testing scenario that answers: **"What changed and what should the tester verify?"**
+
+Use the `description` field from the JSON data to understand what each task does and generate accurate testing scenarios. Having descriptions available directly (instead of summary alone) enables more precise and useful scenarios.
 
 Scenario writing rules:
 - **Descriptive, not procedural** — describe the function and what to check, not click-by-click steps
@@ -186,18 +177,18 @@ Examples of good scenarios:
 Examples of bad scenarios (too detailed / step-by-step):
 - "1. Go to Orders page 2. Click the Date Filter dropdown 3. Select 'Custom Range' 4. Enter start date 01/01/2025 5. Enter end date 03/01/2025 6. Click Apply..."
 
-### 7c. Detect Uncovered Changes
+### 5c. Detect Uncovered Changes
 
 After matching, identify files from the git diff that do not correlate with any Jira issue. These are "uncovered changes" — code that changed but has no corresponding task describing what was intended.
 
-Group uncovered files by area (from Step 6c) and flag them for tester attention. These changes might be:
+Group uncovered files by area (from Step 4c) and flag them for tester attention. These changes might be:
 - Refactoring (safe but worth noting)
 - Undocumented fixes (need testing)
 - Dependencies of other changes (implicit impact)
 
 ---
 
-## Compose Testing Document (Step 8)
+## Compose Testing Document (Step 6)
 
 Assemble the final document following the structure defined in [references/format.md](references/format.md).
 
@@ -238,7 +229,7 @@ If a version has more than 20 tasks:
 
 ---
 
-## Present Draft for Review (Step 9)
+## Present Draft for Review (Step 7)
 
 Present the complete testing document inside a clearly marked block and use `AskUserQuestion` (header: "Review"):
 
@@ -249,7 +240,7 @@ Present the complete testing document inside a clearly marked block and use `Ask
 
 If the user asks for adjustments, apply changes and present the updated draft again. Repeat until the user confirms.
 
-## Output (Step 10)
+## Output (Step 8)
 
 Present the final testing document in a code block and suggest saving to a file:
 

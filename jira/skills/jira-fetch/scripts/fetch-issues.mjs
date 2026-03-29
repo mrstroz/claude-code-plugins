@@ -17,8 +17,8 @@ const CONCURRENCY = 5;
 const MAX_COMMENTS = 50;
 const ISSUE_FIELDS = [
   'summary', 'status', 'assignee', 'priority',
-  'issuetype', 'labels', 'fixVersions', 'description',
-  'created', 'updated', 'reporter',
+  'issuetype', 'labels', 'fixVersions', 'components',
+  'description', 'created', 'updated', 'reporter',
 ];
 
 // ---------------------------------------------------------------------------
@@ -192,6 +192,7 @@ async function fetchIssue(baseUrl, key, auth) {
     reporter: f.reporter?.displayName || '',
     labels: f.labels || [],
     fixVersions: (f.fixVersions || []).map((v) => v.name),
+    components: (f.components || []).map((c) => c.name),
     summary: f.summary || '',
     created: (f.created || '').substring(0, 16),
     updated: (f.updated || '').substring(0, 16),
