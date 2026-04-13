@@ -37,7 +37,9 @@ Gather information from three sources, in priority order:
 
 **C. Conversation context** — Always review the conversation for discussed decisions, patterns, tooling choices, or conventions that may not appear in diffs (e.g., "we decided to use Zod for validation", "prefer named exports").
 
-Merge all sources. When the user description (A) conflicts with git (B), prefer the user's framing.
+**D. User corrections and preferences directed at the agent** — Scan the full conversation for moments where the user corrected, constrained, or redirected the AI's behavior. Examples: "don't add comments unless X", "stop rewriting this section", "prefer editing existing files", "never touch file Y", "always run lint before reporting done", "use named exports", "we already decided X, stop proposing Y". These corrections are among the most valuable CLAUDE.md entries — without them, the next session loses the same context and the user has to repeat the correction. Capture both *what* the user said and, when available, *why* (the reasoning they gave), so the instruction remains useful in edge cases. Also capture quietly-validated preferences (user accepted a non-obvious choice without pushback) when they'd surprise a fresh agent.
+
+Merge all sources. When the user description (A) conflicts with git (B), prefer the user's framing. Treat corrections from (D) as first-class candidates — do not drop them just because they aren't reflected in the diff.
 
 ### Step 2 — Read existing CLAUDE.md
 
@@ -56,7 +58,7 @@ Evaluate the session diff against the trigger categories in the table below. For
 
 If **no triggers fire** — tell the user "No CLAUDE.md update needed — these changes don't introduce anything that would surprise a future agent." and **stop**.
 
-### Step 4 — Draft the update
+### Step 4 — Draft candidate entries
 
 **If creating a new CLAUDE.md**, use this section template (omit sections that have no content):
 
@@ -67,8 +69,11 @@ If **no triggers fire** — tell the user "No CLAUDE.md update needed — these 
 - Code Style
 - Environment
 - Gotchas
+- Agent Guidance (for recurring user corrections and collaboration rules for future AI sessions)
 
-**If updating an existing CLAUDE.md**, draft only targeted additions or edits to existing sections. Do not rewrite sections that are unchanged.
+**If updating an existing CLAUDE.md**, draft only targeted additions or edits to existing sections. Do not rewrite sections that are unchanged. If corrections from source (D) don't fit any existing section, propose adding them under an **Agent Guidance** section (create it if absent).
+
+Lean toward proposing **more** candidate entries rather than fewer — it is cheaper for the user to deselect an option than to lose a useful rule. Err on the side of including borderline cases, especially user corrections from source (D); the user picks what actually lands.
 
 Writing rules for all entries:
 
@@ -77,21 +82,32 @@ Writing rules for all entries:
 - No sub-bullets or nested lists
 - No code blocks (inline backticks for commands and names are fine)
 - Maximum 2 lines per entry
+- For entries derived from user corrections, include a short "why" clause when the user stated a reason — it helps future agents judge edge cases
 - Check total line count stays within budget (200 for small/medium projects, up to 500 for large monorepos)
 
-### Step 5 — Present for review
+### Step 5 — Let the user pick which entries to include
 
-Show the complete draft to the user, then use `AskUserQuestion` with these options:
+Present each candidate entry as a selectable option via `AskUserQuestion` with `multiSelect: true`. The user cherry-picks which entries actually get written. Default philosophy: surface every plausible candidate and let the user prune — missing a useful rule costs more than offering one the user skips.
+
+Constraints of `AskUserQuestion`: up to **4 questions per call**, each with **2–4 options**. That gives up to 16 candidates per call. Pack them as follows:
+
+- Group candidates by CLAUDE.md section (e.g. "Commands", "Agent Guidance", "Gotchas"). Use one question per section when it helps the user reason; combine small sections into one question titled by theme when needed to stay within the 4-question cap.
+- **Label** (≤ 5 words): short name of the rule, e.g. "Prefer named exports", "Run lint before done".
+- **Description**: the full proposed bullet as it would appear in CLAUDE.md, so the user sees exactly what will be written.
+- For each question set `multiSelect: true`. Do **not** add "Apply" / "Skip" pseudo-options inside these lists — selection *is* the approval.
+- If there are more than 16 candidates, run a second `AskUserQuestion` call after the first.
+
+After the user responds, show a brief summary of the accepted entries and ask a final confirmation via `AskUserQuestion`:
 
 - **Header:** "CLAUDE.md"
 - **Options:**
-  - "Apply this update" — write the changes to CLAUDE.md
-  - "Let me refine the draft" — user will provide edits before applying
-  - "Skip — no update needed" — discard the draft and stop
+  - "Apply selected entries" — write them to CLAUDE.md
+  - "Let me refine first" — user will provide edits before applying
+  - "Cancel — don't write" — discard and stop
 
 ### Step 6 — Write the file
 
-Apply the approved changes to CLAUDE.md at the project root. After writing, confirm the action and report the final line count.
+Apply the approved changes to CLAUDE.md at the project root. Place user-correction entries under the relevant existing section, or under **Agent Guidance** if none fits. After writing, confirm the action and report the final line count.
 
 ## Update Trigger Categories
 
@@ -105,6 +121,7 @@ Apply the approved changes to CLAUDE.md at the project root. After writing, conf
 | **Gotchas** | Non-obvious workarounds discovered, surprising behavior documented, platform-specific quirks | Obvious bugs that were fixed, temporary hacks removed |
 | **Testing** | New test framework, new test commands, new coverage requirements, testing patterns established | Adding individual test files, fixing tests |
 | **Project Overview** | Project purpose or scope changed significantly, new major feature area | README updates, minor scope adjustments |
+| **Agent Guidance** | User corrected the AI's behavior during the session, stated a durable preference, or accepted a non-obvious approach without pushback (e.g., "don't add comments", "never touch file X", "prefer editing existing files"); without this, next session loses the correction | One-off tweaks the user doesn't want enforced generally, purely stylistic nitpicks already covered by formatter |
 
 ## CLAUDE.md Quality Checklist
 
