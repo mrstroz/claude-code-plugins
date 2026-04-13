@@ -1,19 +1,19 @@
 ---
 name: commit
-description: Create clean conventional commits. Use when the user wants to commit changes, make a commit, save progress, or says "commit". Enforces single-line conventional commit format with automatic task number detection from branch names. Never adds Co-Authored-By lines.
+description: Create clean conventional commits. Use when the user wants to commit changes, make a commit, save progress, or says "commit". Offers three message variants (short, descriptive, multi-line) with live preview, automatic task number detection from branch names, and conventional commit prefixes. Never adds Co-Authored-By lines.
 model: haiku
 ---
 
 # Commit
 
-Create clean, single-line conventional commits with automatic task number detection.
+Create clean conventional commits with automatic task number detection. Offer the user three message variants and let them pick with a live preview.
 
 ## Rules (strictly enforced)
 
 1. **Never** include `Co-Authored-By` or any trailer lines in the commit
 2. **Always** use a conventional commit type prefix
-3. **Single-line only** — no body, no bullet points, no multi-line messages
-4. Include task number after the colon when available: `type: TASK-123 summary`
+3. Include task number after the colon when available: `type: TASK-123 summary`
+4. The subject line stays single-line and lowercase; only the multi-line variant adds a body
 
 ## Commit Format
 
@@ -70,32 +70,69 @@ If there are unstaged changes and nothing is staged, ask the user via `AskUserQu
 
 If changes are already staged, skip this step.
 
-### Step 5 — Generate commit message
+### Step 5 — Generate three commit message variants
 
 Based on the diff, determine:
 
 1. The conventional commit **type** (see table below)
-2. A short lowercase **summary** describing *what* changed (imperative mood, no period)
+2. The task/issue prefix to embed after the colon (Jira `TASK-123`, GitHub `#456`, or none)
 
-Construct the message:
-- With Jira task: `type: TASK-123 summary`
-- With GitHub issue: `type: #456 summary`
-- Without task: `type: summary`
+Then craft **three** variants of the message. All three share the same `type:` and task prefix; they differ in length and shape:
 
-### Step 6 — Confirm and commit
+- **Variant 1 — Short:** the current concise style. One short lowercase summary in imperative mood, no period. Aim for ≤ 72 characters total.
+- **Variant 2 — Descriptive:** a longer single-line subject that names the key change(s) more explicitly. Useful for larger or multi-faceted commits where the short summary loses important nuance. Still one line, still lowercase, no period.
+- **Variant 3 — Multi-line:** a short subject line (same shape as Variant 1) followed by a blank line and a body. The body uses 1–5 short bullet points (`- `) describing what changed and why, in plain language. Use this for substantial changes that benefit from explanation.
 
-Use `AskUserQuestion` to confirm the commit:
+Examples:
 
-- **Header:** The generated commit message (e.g. `feat: PROJ-123 add user avatar upload endpoint`)
+```
+# Variant 1 — Short
+feat: PROJ-123 add avatar upload endpoint
+
+# Variant 2 — Descriptive
+feat: PROJ-123 add avatar upload endpoint with size validation and S3 storage
+
+# Variant 3 — Multi-line
+feat: PROJ-123 add avatar upload endpoint
+
+- accept multipart uploads up to 5 MB
+- validate mime type and reject non-image payloads
+- store files in S3 under user-scoped prefixes
+- return signed URL in the response
+```
+
+### Step 6 — Let the user pick a variant
+
+Use `AskUserQuestion` to present the three variants. The picker shows the option label on the left and the option **description** as a live preview on the right as the user moves between options — put the full commit message into each option's description so the user sees exactly what will be committed.
+
+- **Header:** "Pick commit message"
 - **Options (in this order):**
-  1. "Yes, commit" ← default, user just presses Enter
-  2. "Edit message" — ask the user for a corrected message, then re-confirm
-  3. "Abort" — stop without committing
+  1. **Label:** "Short" — **Description:** the full Variant 1 message
+  2. **Label:** "Descriptive" — **Description:** the full Variant 2 message
+  3. **Label:** "Multi-line" — **Description:** the full Variant 3 message (subject + blank line + bullets)
+  4. **Label:** "Edit message" — **Description:** "Provide your own message"
+  5. **Label:** "Abort" — **Description:** "Cancel without committing"
 
-If confirmed, execute:
+If the user picks "Edit message", ask them for the corrected message and then commit it directly without re-confirming.
+
+### Step 7 — Commit
+
+For single-line variants (Short, Descriptive, or a single-line edited message):
 
 ```
 git commit -m "the commit message"
+```
+
+For the multi-line variant (or a multi-line edited message), use a HEREDOC so newlines are preserved:
+
+```
+git commit -m "$(cat <<'EOF'
+type: TASK-123 subject line
+
+- first bullet
+- second bullet
+EOF
+)"
 ```
 
 Show the result of the commit. Do **not** push.
