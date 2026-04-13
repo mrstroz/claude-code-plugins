@@ -111,9 +111,8 @@ Use `AskUserQuestion` to present the three variants. The picker shows the option
   2. **Label:** "Descriptive" — **Description:** the full Variant 2 message
   3. **Label:** "Multi-line" — **Description:** the full Variant 3 message (subject + blank line + bullets)
   4. **Label:** "Edit message" — **Description:** "Provide your own message"
-  5. **Label:** "Abort" — **Description:** "Cancel without committing"
 
-If the user picks "Edit message", ask them for the corrected message and then commit it directly without re-confirming.
+If the user picks "Edit message", ask them for the corrected message and then commit it directly without re-confirming. If the user cancels the picker (Esc), stop without committing.
 
 ### Step 7 — Commit
 
