@@ -1,79 +1,79 @@
-# 05 — ICP and niche strategy
+# 05 — ICP i strategia niszy
 
-**Load when:** the question is about choosing a target customer, picking a niche, when to expand, ICP definition, "who should we sell to first?".
+**Załaduj gdy:** pytanie dotyczy wyboru target customera, wyboru niszy, kiedy się rozszerzać, definicji ICP, "do kogo powinniśmy najpierw sprzedawać?".
 
 ## Nailing your ICP
 
-This is *turbo kluczowe*. Nothing matters more in early-stage commercialisation than really understanding who you sell to. Not in the slide deck — in the daily decisions.
+To jest *turbo kluczowe*. Nic nie ma większego znaczenia we wczesnoetapowej komercjalizacji niż naprawdę zrozumienie, do kogo sprzedajesz. Nie na slajdzie — w codziennych decyzjach.
 
-The ICP is going to evolve as the company evolves. What he describes about year 1 of selling is not what year 3 looked like. The ICP a year ago is not the ICP today. So when he answers ICP questions, he's clear: *this was true at the time. It moves.*
+ICP będzie ewoluować razem z firmą. To, co opisuje o pierwszym roku sprzedaży, nie jest tym, jak wyglądał trzeci rok. ICP rok temu to nie ICP dzisiaj. Więc gdy odpowiada na pytania o ICP, jest jasny: *to było prawdą wtedy. To się rusza.*
 
-But the discipline of *nailing* it — being specific about who you say yes to and who you say no to — stays the same.
+Ale dyscyplina *nailingu* — bycia specyficznym co do tego, komu mówisz tak, a komu nie — pozostaje ta sama.
 
-## Start narrow
+## Zacznij wąsko
 
-When they started commercialising (end of pandemic), the founding ICP was deliberately **narrow**:
+Gdy zaczynali komercjalizację (koniec pandemii), foundingowy ICP był celowo **wąski**:
 
-- Cafés and bakeries.
+- Kawiarnie i piekarnie.
 - Grab-and-go food spots.
 - Pay-at-the-counter, walk-in / walk-out journey.
-- **Not** sit-down restaurants.
-- **Not** bars.
-- **Not** wine-bars / concept venues.
+- **Nie** sit-down restaurants.
+- **Nie** bary.
+- **Nie** wine-bars / concept venues.
 
-The reasoning: you can't be an expert on everything at once. You have no name in the industry yet. You have no case studies. You can't earn the right to be authoritative across the whole hospitality sector before you've earned it in one slice.
+Uzasadnienie: nie możesz być ekspertem od wszystkiego naraz. Nie masz jeszcze nazwiska w branży. Nie masz case studies. Nie możesz zarobić sobie prawa do bycia autorytetem w całym sektorze hospitality, zanim nie zarobiłeś go w jednym wycinku.
 
-So pick the slice. Get really good at it. Then expand.
+Więc wybierz wycinek. Bądź w nim naprawdę dobry. Potem się rozszerzaj.
 
-## Why this slice specifically
+## Dlaczego akurat ten wycinek
 
-Café + bakery had four properties that mattered:
+Kawiarnia + piekarnia miały cztery właściwości, które miały znaczenie:
 
-1. **The journey is walk-in/walk-out.** That's the *hardest* place to collect data on customers (unlike restaurants where you book a table and leave details, or a Wi-Fi login). If you could crack data collection there, you'd have a defensible reason to exist.
-2. **There's a well-known analog solution they already use** — the stamp card. So the product can frame itself as "your stamp card, but with the data layer", not as a new behaviour change.
-3. **Repeat-customer business model.** These businesses live on people coming back 2–5 times a week. The product's loyalty/engagement value proposition lands hardest here.
-4. **Small enough size to be sellable solo.** No board, no head office, no procurement department. Owner says yes, owner says no.
+1. **Journey to walk-in/walk-out.** To jest *najtrudniejsze* miejsce do zbierania danych o klientach (w przeciwieństwie do restauracji, gdzie rezerwujesz stolik i zostawiasz dane, albo do Wi-Fi login). Jeśli mogłeś złamać zbieranie danych tam, miałeś defensible reason to exist.
+2. **Istnieje dobrze znane analogowe rozwiązanie, którego już używają** — pieczątka na karcie. Więc produkt może się sframe'ować jako "twoja kartka z pieczątkami, ale z warstwą danych", a nie jako nowy behaviour change.
+3. **Model biznesowy oparty na repeat customers.** Te biznesy żyją z ludzi wracających 2–5 razy w tygodniu. Loyalty/engagement value proposition produktu ląduje najmocniej tutaj.
+4. **Mały na tyle, żeby być sellable solo.** Brak zarządu, brak head office, brak działu zakupów. Właściciel mówi tak, właściciel mówi nie.
 
-## Expand from a position of authority
+## Rozszerzaj się z pozycji autorytetu
 
-Once you've nailed one segment, broaden methodically. He now sells to food (50%) and coffee+bakery (50%). Medium and large chains, including some 30–40 location groups across multiple countries. Different ICPs require different sales motions — that's fine, you've earned the credibility to learn them.
+Gdy już zbiłeś jeden segment, rozszerzaj się metodycznie. Sprzedaje teraz do food (50%) i coffee+bakery (50%). Sieci średnie i duże, w tym grupy 30–40 lokalizacji w wielu krajach. Różne ICP wymagają różnych sales motion — to jest okej, zarobiłeś wiarygodność, żeby się ich nauczyć.
 
-He used to not talk to anyone outside the original slice. Now he can — but only because the slice held.
+Kiedyś nie rozmawiał z nikim poza oryginalnym wycinkiem. Teraz może — ale tylko dlatego, że wycinek się utrzymał.
 
-## What "deal current profile" means at each stage
+## Co znaczy "deal current profile" na każdym etapie
 
-Concretely, when sizing market in the UK:
+Konkretnie, gdy sizingujesz rynek w UK:
 
-- ~150,000 hospitality locations total.
-- Strip out the big chains (US chains, McDonald's, Starbucks, big pub groups) — that takes you to roughly 100–110,000 "SMB-like".
-- Strip out the segments you don't sell to (cocktail bars, pubs, etc.) — call it 50–60,000 plausibly addressable.
-- Strip out the ones not digital-savvy enough to ever convert — call it ~40,000 "these are our guys".
+- ~150 000 lokalizacji hospitality łącznie.
+- Wyciągnij duże sieci (US chains, McDonald's, Starbucks, big pub groups) — to cię sprowadza do mniej więcej 100–110 000 "SMB-like".
+- Wyciągnij segmenty, do których nie sprzedajesz (cocktail bars, puby, etc.) — załóżmy 50–60 000 prawdopodobnie addressable.
+- Wyciągnij tych, którzy nie są digital-savvy na tyle, żeby kiedykolwiek konwertować — załóżmy ~40 000 "to są nasi ludzie".
 
-That's the disciplined version of TAM. Most people stop at the first number and call it their market. He's done the work of removing everyone who isn't actually a fit.
+To jest zdyscyplinowana wersja TAM. Większość ludzi zatrzymuje się na pierwszej liczbie i nazywa to swoim rynkiem. On zrobił robotę usuwania wszystkich, którzy realnie nie pasują.
 
-## The Polish twist
+## Polski twist
 
-Poland has a different structure for him than the UK — *better*, actually:
+Polska ma dla niego inną strukturę niż UK — *lepszą*, właściwie:
 
-- The UK is dominated by US-style large chains in the high-volume segments.
-- Poland: every województwo / powiat has a few **local bakery chains** with 10–100 locations, names you've never heard if you don't live there. Family-run, often now being taken over by the next generation, who are actively looking to digitise their inheritance.
-- These businesses are ideal: a handful of decision-makers (often related), big enough to matter, small enough to move fast.
+- UK jest zdominowane przez US-style duże sieci w wysokowolumenowych segmentach.
+- Polska: każde województwo / powiat ma kilka **lokalnych sieci piekarni** z 10–100 lokalizacjami, nazwy o których nigdy nie słyszałeś, jeśli tam nie mieszkasz. Rodzinne, często teraz przejmowane przez następne pokolenie, które aktywnie szuka, jak digitalizować spadek.
+- Te biznesy są idealne: garstka decision-makerów (często spokrewnionych), wystarczająco duże, żeby miało znaczenie, wystarczająco małe, żeby się szybko ruszać.
 
-The principle: the same product can have radically different ICP density in different countries. Don't assume the geography of TAM is uniform.
+Zasada: ten sam produkt może mieć radykalnie różną gęstość ICP w różnych krajach. Nie zakładaj, że geografia TAM jest jednolita.
 
-## How to recognise your ICP within ICP
+## Jak rozpoznać ICP wewnątrz ICP
 
-You want filters that you can apply at outreach time, not just discover at demo time. For him, the proxy filters were:
+Chcesz filtrów, które możesz aplikować w momencie outreach, a nie odkrywać dopiero na demo. Dla niego proxy filtry to były:
 
-- **Do they have an Instagram?** If yes, they're at least minimally digital-savvy. Worth talking to.
-- **What's on their Instagram?** Are they posting offers, promotions, new menu items? That tells you they're already trying to do customer engagement digitally — and they understand the *why*.
-- **What's the analog version of the thing you sell, in their business?** Stamp cards, pre-paid sandwich punch-cards, "ask in store about our deal" signs. If you see it, they have the problem you solve.
-- **Is the second or third generation taking over?** Strong tell for openness to digitisation.
+- **Mają Instagram?** Jeśli tak, są przynajmniej minimalnie digital-savvy. Warto rozmawiać.
+- **Co mają na Instagramie?** Postują oferty, promocje, nowe pozycje menu? To ci mówi, że już próbują robić customer engagement digitally — i rozumieją *why*.
+- **Jaka jest analogowa wersja tego, co sprzedajesz, w ich biznesie?** Pieczątki, pre-paid sandwich punch-cards, "zapytaj w sklepie o naszą promkę". Jeśli to widzisz, mają problem, który rozwiązujesz.
+- **Czy drugie/trzecie pokolenie przejmuje?** Mocny tell otwartości na digitalizację.
 
-If a business doesn't even have Instagram set up — that's a signal: *don't waste your outreach budget there*. You'd be selling a CRM to someone who hasn't even started using social media.
+Jeśli biznes nie ma nawet odpalonego Instagrama — to sygnał: *nie marnuj tam outreach budgetu*. Sprzedawałbyś CRM komuś, kto nawet nie zaczął używać social mediów.
 
-## What he wishes he'd told himself earlier
+## Co chciałby był sobie powiedział wcześniej
 
-- "Wybierz sobie tą niszę i później sobie ją poszerzaj." — Pick the niche, then widen.
-- "Speak the language" of that niche before you try to speak to a wider audience. The widening is then easier, because you have a credible story.
-- Don't fall in love with the size of the addressable market in the deck. Fall in love with the depth of understanding of the first slice.
+- "Wybierz sobie tą niszę i później sobie ją poszerzaj." — Wybierz niszę, potem szerz.
+- "Speak the language" tej niszy, zanim spróbujesz mówić do szerszej publiczności. Szerzenie jest wtedy łatwiejsze, bo masz wiarygodną historię.
+- Nie zakochuj się w rozmiarze addressable market na slajdzie. Zakochaj się w głębokości zrozumienia pierwszego wycinka.

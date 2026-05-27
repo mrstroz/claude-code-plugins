@@ -1,101 +1,101 @@
-# 10 — Pricing and packages
+# 10 — Pricing i packages
 
-**Load when:** the question is about when to surface price, how to talk about price, packaging, raising prices, ARPU strategy, the tradeoff between price hikes and product investment.
+**Załaduj gdy:** pytanie dotyczy kiedy ujawnić cenę, jak o niej mówić, packagingu, podnoszenia cen, strategii ARPU, tradeoffu między podwyżkami a inwestycją w produkt.
 
-## When to talk about price
+## Kiedy rozmawiać o cenie
 
-**Not at the start.** Not in the cold reach-out (unless you have a really tight reason to). Not at the beginning of the demo.
+**Nie na początku.** Nie w zimnym reach-oucie (chyba że masz naprawdę mocny powód). Nie na początku demo.
 
-Price comes *toward the end of the demo*, after the customer understands what they're buying and what it's worth. If you start with price, the customer has nothing to evaluate it against — they're being asked to pay for an unknown.
+Cena przychodzi *pod koniec demo*, po tym, jak klient rozumie, co kupuje i ile to jest warte. Jeśli zaczynasz od ceny, klient nie ma niczego, do czego mógłby ją odnieść — proszony jest o zapłatę za nieznane.
 
 > "Jeżeli zaczynasz od ceny, a potem mówisz 'OK, ale za co ja właściwie płacę?' — to ciężko ci się odnieść. Cena jest zakończeniem. Jest *wytłumaczeniem dlaczego to tyle kosztuje*, nie pierwszym pytaniem."
 
-The framing matters: by the end of a good demo, the customer has joined enough dots that the price feels like the natural conclusion of the story. Then you can land it cleanly.
+Framing ma znaczenie: pod koniec dobrego demo klient połączył wystarczająco dużo kropek, że cena czuje się jak naturalne zakończenie historii. Wtedy możesz ją czysto wylądować.
 
-## How to present the price
+## Jak prezentować cenę
 
-Don't walk through every detail of every line item. That's the *instruction manual* mode again (see `07-demo-and-storytelling.md`).
+Nie przechodź przez każdy szczegół każdej linii. To znowu *instrukcja obsługi* (patrz `07-demo-and-storytelling.md`).
 
-Land the price in the simplest way possible:
+Wyląduj cenę najprościej jak się da:
 
 - "Mamy plany, które się zaczynają od [X]. Różnica między tym a tym pakietem to [Y]."
-- That's it. Two or three sentences. They can read the rest in the proposal.
+- I tyle. Dwa albo trzy zdania. Resztę przeczytają w propozycji.
 
-## Relativise the number
+## Relatywizuj liczbę
 
-This is the move. Don't let the number sit there as an abstract cost. Anchor it against something they understand.
+To jest ruch. Nie pozwól liczbie siedzieć tam jako abstrakcyjnemu kosztowi. Zakotwicz ją wobec czegoś, co rozumieją.
 
 > "Jeżeli to jest 80 dolarów miesięcznie za lokalizację — to jest mniej więcej 2,5 dolara dziennie. Czyli jeżeli ten system sprawi, że sprzedasz jedną dodatkową kawę dziennie, albo dwa dodatkowe lunche tygodniowo — już ci się to zwraca."
 
-What this does:
+Co to robi:
 
-- Makes the cost feel tiny relative to the upside.
-- Anchors the upside in *units they sell every day*, not abstract revenue.
-- Makes the math something they can verify in their head without a spreadsheet.
+- Sprawia, że koszt czuje się malutki w stosunku do upside'u.
+- Kotwiczy upside w *jednostkach, które sprzedają codziennie*, nie w abstrakcyjnym przychodzie.
+- Robi z matematyki coś, co mogą sprawdzić w głowie bez arkusza.
 
-This works for almost any SaaS sold to SMBs. Find the most concrete daily unit they sell, and price your tool against fractions of it.
+To działa dla prawie każdego SaaS sprzedawanego SMB. Znajdź najkonkretniejszą dzienną jednostkę, którą sprzedają, i wycenj swoje narzędzie w jej ułamkach.
 
-## Packages, not menu
+## Pakiety, nie menu
 
-Have a small number of packages — basic, growth, full — that the customer can self-select between. Don't price every feature à la carte: it makes the conversation too long and forces the customer to think about each line item, which is exactly the headspace burden you want to avoid.
+Miej małą liczbę pakietów — basic, growth, full — między którymi klient może się sam wybrać. Nie wyceniaj każdego feature'u à la carte: czyni to rozmowę za długą i zmusza klienta do myślenia o każdej linii, co jest dokładnie tym headspace burden, którego chcesz uniknąć.
 
-The packaging structure should naturally guide the customer toward what fits them. Most will start mid-tier; some will go top-tier (especially after well-built follow-ups — see `09-followups-and-closing.md`).
+Struktura packagingu powinna naturalnie prowadzić klienta do tego, co do niego pasuje. Większość zacznie od mid-tieru; niektórzy pójdą top-tier (szczególnie po dobrze zbudowanych followupach — patrz `09-followups-and-closing.md`).
 
-Have enough package variation that customers feel they can self-fit to their budget without having to negotiate. Reduces friction.
+Miej wystarczającą wariację pakietów, żeby klienci czuli, że mogą się sami dopasować do budżetu bez negocjacji. Redukuje to friction.
 
-## Price negotiation — when it happens
+## Negocjacja ceny — kiedy się dzieje
 
-For the very small SMBs at the start: rare. The packages cover most situations.
+Dla bardzo małych SMB na początku: rzadko. Pakiety pokrywają większość sytuacji.
 
-As you move upmarket (groups with 30–40+ locations across multiple countries), price negotiation becomes part of the deal. That's fine. At that scale, you have more flexibility to negotiate, and the conversation isn't purely about price — it's about implementation scope, custom features, support level.
+Gdy ruszasz upmarket (grupy z 30–40+ lokalizacjami w wielu krajach), negocjacja ceny staje się częścią deala. To jest okej. W tej skali masz więcej elastyczności do negocjowania, a rozmowa nie jest czysto o cenie — jest o scope wdrożenia, custom feature'ach, poziomie wsparcia.
 
-The starting point in any negotiation is still the package — you anchor on a tier, then adjust.
+Punkt startu w każdej negocjacji wciąż jest pakietem — kotwiczysz na tierze, potem dostosowujesz.
 
-## Lazy price hikes vs ARPU strategy
+## Leniwe podwyżki vs strategia ARPU
 
-This is the big one. He has not raised prices in the UK since the pandemic. *Tym bardziej — ceny wszystkiego poszły do góry, a my nie podnieśliśmy.* So clearly there's room to raise prices.
+To jest ta duża sprawa. Nie podniósł cen w UK od czasu pandemii. *Tym bardziej — ceny wszystkiego poszły do góry, a my nie podnieśliśmy.* Więc oczywiście jest miejsce na podniesienie cen.
 
-But he sees a bigger upside in growing ARPU **through value**, not through price hikes:
+Ale widzi większy upside w rozwijaniu ARPU **przez wartość**, nie przez podwyżki:
 
-- **Lazy version:** raise prices 10–20% across the existing customer base. Quick boost to margin. Annoys everyone. Risks churn. Stops working pretty quickly.
-- **Real version:** build new product features that customers genuinely want, and that compound. Add ordering. Add tips. Add web ordering. Add CRM. Each new feature added more revenue than a 10–20% price hike would have. Some of these added 2x–3x ARPU; in some cases 10x.
+- **Leniwa wersja:** podnieś ceny o 10–20% w istniejącej bazie klientów. Szybki boost do marży. Wkurza wszystkich. Ryzyko churn. Przestaje działać dość szybko.
+- **Prawdziwa wersja:** zbuduj nowe feature'y, których klienci naprawdę chcą i które się składają. Dodaj ordering. Dodaj tips. Dodaj web ordering. Dodaj CRM. Każdy nowy feature dodał więcej przychodu niż dałaby podwyżka o 10–20%. Niektóre dodały 2x–3x ARPU; w niektórych przypadkach 10x.
 
-Hard data: their 2025 cohort of new customers had average MRR per location ~52% higher than their 2024 cohort. *No way I can increase prices by this.* That's product-led growth in action.
+Twarde dane: ich kohorta 2025 nowych klientów miała średnie MRR na lokalizację ~52% wyższe niż kohorta 2024. *No way I can increase prices by this.* To product-led growth w akcji.
 
 > "Kiedy zmuszam siebie do tego, że muszę rozwijać produkt, muszę się uczyć lepiej sprzedawać wyższe pakiety, budować bundles — to jest znacznie większy upside long-term niż short-term podwyżka cen."
 
-## The investor pressure to lazy-hike
+## Inwestorska presja na leniwą podwyżkę
 
-If you had an investor whose only metric was "+20% on revenue this quarter", you'd be pushed toward the lazy hike. He's deliberately structured the company to *not* have that kind of investor pressure — and he can name the freedom this gives him as one of the reasons growth is sustainable.
+Gdybyś miał inwestora, którego jedyną metryką jest "+20% na przychodzie w tym kwartale", byłbyś pchany w stronę leniwej podwyżki. Celowo ustrukturyzował firmę, żeby *nie* mieć takiego typu inwestorskiej presji — i potrafi nazwać tę wolność jako jeden z powodów, dla których wzrost jest zrównoważony.
 
-If your investor situation forces you toward quarterly hikes, that's a problem to solve at the cap table level, not at the pricing level.
+Jeśli twoja sytuacja inwestorska zmusza cię do kwartalnych podwyżek, to problem do rozwiązania na poziomie cap table, nie na poziomie ceny.
 
-## When to do raise prices
+## Kiedy faktycznie podnieść ceny
 
-He will raise prices eventually — too many years, too much inflation, the value of the product is much higher today. But the framing is:
+Podniesie ceny w końcu — za dużo lat, za dużo inflacji, wartość produktu jest dziś znacznie wyższa. Ale framing jest:
 
-- A price hike is a *boost*, not the growth engine.
-- The bigger the customer base by the time you do it, the more absolute impact a small percentage rise has — so timing it later gives more lift.
-- The increase should track the increase in value the product has delivered — *and you should be able to show that*, not just assert it.
+- Podwyżka ceny to *boost*, nie silnik wzrostu.
+- Im większa baza klientów w momencie, kiedy to robisz, tym większy absolutny impact ma mały procent — więc późniejszy timing daje więcej lift.
+- Wzrost ceny powinien śledzić wzrost wartości, którą produkt dostarczył — *i powinieneś móc to pokazać*, a nie tylko stwierdzić.
 
-## Bundling as a growth lever
+## Bundling jako dźwignia wzrostu
 
-Today he offers the customer a bundle that gives loyalty + CRM + ordering + tips at one price. That's a stack that a McDonald's or Starbucks spends hundreds of millions per year to maintain. The pitch becomes:
+Dziś oferuje klientowi bundle, który daje loyalty + CRM + ordering + tips w jednej cenie. To jest stack, który McDonald's albo Starbucks wydaje setki milionów rocznie, żeby utrzymać. Pitch staje się:
 
 > "Dajemy ci coś, na co McDonald's wydaje setki milionów dolarów rocznie — w 3 dni robocze, plug and play, na platformie z milionami userów i tysiącami biznesów."
 
-Bundles work because:
+Bundles działają, bo:
 
-- They make the value comparison feel ridiculous (you're getting Tier-1 capability at SMB price).
-- They simplify the customer's decision — one yes, not five.
-- They create more *stickiness*: the customer has more of their business glued to your platform (see `13-long-term-game.md`).
+- Sprawiają, że porównanie wartości czuje się absurdalnie (dostajesz Tier-1 capability w cenie SMB).
+- Upraszczają decyzję klienta — jedno tak, nie pięć.
+- Tworzą więcej *stickiness*: klient ma więcej swojego biznesu przyklejonego do twojej platformy (patrz `13-long-term-game.md`).
 
-## Stickiness as a pricing weapon
+## Stickiness jako broń cenowa
 
-The more of the merchant's stack is on your platform, the less likely they are to leave. *Just under 1% monthly churn including closures* — net churn closer to ~0.5%. For SaaS to SMB, that's crazy low. Pricing decisions should support stickiness, not just maximise top-line.
+Im więcej stack'u merchanta jest na twojej platformie, tym mniej prawdopodobne, że wyjdzie. *Tuż poniżej 1% miesięcznego churn włącznie z zamknięciami* — net churn bliżej ~0,5%. Dla SaaS do SMB to szaleńczo niska liczba. Decyzje cenowe powinny wspierać stickiness, nie tylko maksymalizować top-line.
 
-A small price hike that adds 5% to revenue but loses you 1% in churn is a *bad trade* — you've doubled your churn for almost nothing. A new feature that doesn't change price but increases stickiness from 99% to 99.5% is golden, even though it doesn't show up in this month's ARPU.
+Mała podwyżka, która dodaje 5% do przychodu, ale traci 1% churn, to *zły trade* — podwoiłeś churn za prawie nic. Nowy feature, który nie zmienia ceny, ale podnosi stickiness z 99% do 99,5%, jest na wagę złota, nawet jeśli nie pokazuje się w ARPU tego miesiąca.
 
-## What he says about pricing in a sentence
+## Co mówi o cenie w jednym zdaniu
 
 > "Cena nie powinna być problemem. Jak klient już wie, czego chce i rozumie, co z tego ma — cena jest naturalnym zakończeniem rozmowy, nie pierwszym tematem."

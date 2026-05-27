@@ -1,74 +1,74 @@
-# 11 — Onboarding emphasis (as a sales tool)
+# 11 — Onboarding emphasis (jako narzędzie sprzedażowe)
 
-**Load when:** the question is about how easy it is to start, implementation, fast onboarding, lowering adoption friction, how to talk about implementation during the sale.
+**Załaduj gdy:** pytanie dotyczy tego, jak łatwo zacząć, wdrożenia, szybkiego onboardingu, obniżania friction adopcji, jak mówić o wdrożeniu w trakcie sprzedaży.
 
-## Why onboarding talk belongs in the sales conversation
+## Dlaczego rozmowa o onboardingu należy do sales conversation
 
-The SMB owner's biggest hidden objection isn't "is this product good?" — it's "do I have the *headspace* to take this on?". They're already drowning (see `04-selling-to-smb.md`). Every new vendor, every new system, every new tool they say yes to is a new mental load.
+Największa ukryta obiekcja właściciela SMB to nie "czy ten produkt jest dobry?" — to "czy mam *headspace*, żeby to wziąć na siebie?". Już toną (patrz `04-selling-to-smb.md`). Każdy nowy vendor, każdy nowy system, każde nowe narzędzie, na które mówią tak, to nowe obciążenie mentalne.
 
-If you don't proactively lower that perceived load, *the deal dies in the prospect's head* — even if they liked the product, even if the price made sense. They walk away with "I'll think about it" because the cognitive cost of implementation feels too high.
+Jeśli proaktywnie nie obniżysz tego odczuwanego obciążenia, *deal umiera w głowie prospekta* — nawet jeśli polubił produkt, nawet jeśli cena miała sens. Wychodzi z "pomyślę o tym", bo poznawczy koszt wdrożenia czuje się za wysoki.
 
-This means: how you talk about onboarding is *part of the sales motion*, not a post-sales topic.
+To znaczy: jak mówisz o onboardingu jest *częścią sales motion*, nie tematem post-sprzedażowym.
 
-## The phrase
+## Fraza
 
 > *"Easy don't worry don't stress make it happen."*
 
-That captures the spirit. Implementation is light. We do the work. You give us the green light and a few inputs. We make it happen.
+To łapie ducha. Wdrożenie jest lekkie. My robimy robotę. Wy dajecie zielone światło i kilka inputów. Robimy, żeby się stało.
 
-Use it (or something close to it) explicitly. The customer needs to *hear* the reassurance, not infer it.
+Używaj jej (albo czegoś bliskiego) wprost. Klient musi *usłyszeć* tę asekurację, nie wyciągać ją sam.
 
-## What goes in the message
+## Co idzie w wiadomości
 
-- **Concrete timeline**: "3 dni robocze plug and play."
-- **What you need from them**: just a couple of basic inputs (logo, brand colours, menu reference). Not a project plan, not a long discovery.
-- **What you do for them**: setup, configuration, training, launch comms templates.
-- **What they DON'T have to do**: no IT person, no agency, no integration work, no migration headache.
+- **Konkretny timeline**: "3 dni robocze plug and play."
+- **Co potrzebujesz od nich**: tylko kilka podstawowych inputów (logo, brand colours, menu reference). Nie project plan, nie długi discovery.
+- **Co robisz za nich**: setup, konfiguracja, szkolenie, launch comms templates.
+- **Co NIE muszą robić**: brak osoby IT, brak agencji, brak prac integracyjnych, brak headache'u migracji.
 
-The whole message: *we will not consume your headspace*.
+Cały message: *nie pożremy waszego headspace'u*.
 
-## During follow-ups, keep reinforcing it
+## W trakcie follow-upów wzmacniaj to ciągle
 
-Every follow-up (see `09-followups-and-closing.md`) is an opportunity to seed this:
+Każdy follow-up (patrz `09-followups-and-closing.md`) to okazja, żeby tego dosypać:
 
-- "BTW, once you give us the green light, we just need [these two things] and you're live in 3 days."
-- "I should mention — the implementation work is on us. We just need [X] from you."
+- "BTW, gdy dacie zielone światło, potrzebujemy tylko [tych dwóch rzeczy] i jesteście live w 3 dni."
+- "Powinienem wspomnieć — pracę wdrożeniową bierzemy na siebie. Potrzebujemy tylko [X] od was."
 
-By the time they say yes, they should feel like the hardest part of starting is *deciding*, not *doing*. That perception is the gift you're giving them.
+W momencie, kiedy mówią tak, powinni czuć, że najtrudniejsza część rozpoczęcia to *decyzja*, nie *robota*. Ta percepcja jest darem, który im dajesz.
 
-## The post-yes acceleration
+## Post-yes acceleration
 
-The moment they say yes, follow up with a clear, light implementation request:
+W momencie, w którym mówią tak, follow-upuj jasnym, lekkim wezwaniem do wdrożenia:
 
 - "Świetnie. Najszybciej będzie, jak prześlecie nam [dwie konkretne rzeczy]. Wtedy mogę już zacząć projektować twoje karty lojalnościowe / customer journey, i mamy was gotowych w trzy dni robocze."
 
-This signals two things:
+To sygnalizuje dwie rzeczy:
 
-1. **The relationship is real now**: we're already starting the work.
-2. **The path is short**: from here to live is days, not weeks.
+1. **Relacja jest teraz prawdziwa**: zaczynamy już robotę.
+2. **Ścieżka jest krótka**: stąd do live to dni, nie tygodnie.
 
-This addresses the second-most-common deal killer post-yes: the prospect goes silent because they're overwhelmed by the perceived setup work. If you reduce that to "send us two files", you keep momentum.
+To adresuje drugą najczęstszą deal killer post-yes: prospekt milknie, bo jest przytłoczony postrzeganą robotą setupu. Jeśli redukujesz to do "wyślijcie nam dwa pliki", trzymasz momentum.
 
-## A specific framing he likes
+## Specyficzny framing, który lubi
 
 > "Dajemy ci coś, na co McDonald's wydaje setki milionów dolarów rocznie — w 3 dni robocze, plug and play, na platformie z milionami userów i tysiącami biznesów. Najwyżej oceniana, sprawdzona, działa. *Jeszcze ci memy wyślemy.*"
 
-The juxtaposition is deliberate:
+Zestawienie jest celowe:
 
-- Anchors the value of the product at the Tier-1 level (the McDonald's spend).
-- Anchors the *effort* required as trivial (3 days, plug-and-play).
-- Mixes in something playful at the end to reinforce that this is a low-stress relationship, not another vendor dragging them through a procurement gauntlet.
+- Kotwiczy wartość produktu na poziomie Tier-1 (wydatek McDonald's).
+- Kotwiczy *wysiłek* potrzebny jako trywialny (3 dni, plug-and-play).
+- Mixuje coś żartobliwego na końcu, żeby wzmocnić, że to jest niskostresowa relacja, nie kolejny vendor ciągnący ich przez procurement gauntlet.
 
-That's the emotional pitch beside the rational pitch.
+To jest emocjonalny pitch obok racjonalnego pitchu.
 
-## What you should *not* do
+## Czego NIE robić
 
-- Don't pretend onboarding is harder than it is to sound serious. Some founders think a heavier-looking implementation feels more "enterprise" and "valuable" — for SMB, that perception kills you. Light is better.
-- Don't surprise them with hidden steps after they sign. If you said 3 days and it actually takes 2 weeks, you've burned trust on day 1. Match reality to the promise.
-- Don't make them feel they need an internal champion to drive implementation. They don't have one. *You* are the champion, on their side.
+- Nie udawaj, że onboarding jest trudniejszy niż jest, żeby zabrzmieć poważnie. Niektórzy founderzy myślą, że cięższe-wyglądające wdrożenie czuje się bardziej "enterprise" i "valuable" — dla SMB ta percepcja cię zabija. Lekkie jest lepsze.
+- Nie zaskakuj ich ukrytymi krokami, gdy już podpiszą. Jeśli powiedziałeś 3 dni, a faktycznie zajmuje 2 tygodnie, spaliłeś zaufanie dnia pierwszego. Dopasuj rzeczywistość do obietnicy.
+- Nie sprawiaj, że czują, że muszą mieć wewnętrznego championa do przepchnięcia wdrożenia. Nie mają go. *Ty* jesteś championem, po ich stronie.
 
-## Implementation as a churn reducer
+## Wdrożenie jako churn reducer
 
-Light, well-executed onboarding is one of the strongest predictors of low churn. They get to the *aha* moment fast. They have something to show their team. They have a positive first experience with you. All of that compounds into sub-1% monthly churn (see `12-product-philosophy.md` and `13-long-term-game.md`).
+Lekki, dobrze wykonany onboarding to jeden z najsilniejszych predyktorów niskiego churn. Dochodzą do *aha* momentu szybko. Mają coś, co mogą pokazać swojemu teamowi. Mają pozytywne pierwsze doświadczenie z tobą. Wszystko to składa się w sub-1% miesięcznego churn (patrz `12-product-philosophy.md` i `13-long-term-game.md`).
 
-The point: investment in onboarding speed and clarity is not just a sales tool — it pays back in retention every month after.
+Punkt: inwestycja w szybkość i jasność onboardingu nie jest tylko narzędziem sprzedażowym — zwraca się w retention każdego miesiąca.

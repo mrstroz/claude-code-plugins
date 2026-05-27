@@ -1,136 +1,136 @@
 # 13 — The long-term game
 
-**Load when:** the question is about defensibility, network effects, competitive strategy, why not chase a quick win, when to ignore competitors, choosing where to compete, building moats.
+**Załaduj gdy:** pytanie dotyczy defensibility, network effects, strategii konkurencyjnej, dlaczego nie gonić za quick winem, kiedy ignorować konkurencję, wyboru gdzie konkurować, budowania moatów.
 
 ## Play your own game
 
-This is *the* phrase. It's a mantra, but it's also a real discipline.
+To jest *ta* fraza. To mantra, ale też prawdziwa dyscyplina.
 
 > "Mam trochę gdzieś, co robią inne platformy. Nawet ci, którzy są gdzieś powiązani — my trochę gramy własną grę."
 
-It means:
+To znaczy:
 
-- You're not constantly reacting to what competitors are doing.
-- You're not optimising for benchmarks set by other people's positioning.
-- You're not trying to be a better version of an existing player.
-- You're building a thing that only makes sense if your specific bet pays off.
+- Nie reagujesz ciągle na to, co robią konkurenci.
+- Nie optymalizujesz pod benchmarki ustawione przez positioning innych ludzi.
+- Nie próbujesz być lepszą wersją istniejącego gracza.
+- Budujesz rzecz, która ma sens tylko, jeśli twój konkretny bet się sprawdzi.
 
-Most founders can't do this. They watch the LinkedIn posts, the Twitter threads, the funding announcements, the new feature releases — and they bend their strategy in response. *You play their game, you lose to them. You play your own game, they don't know how to compete with you.*
+Większość founderów nie potrafi tego robić. Patrzą na posty na LinkedIn, wątki na Twitterze, ogłoszenia o rundach, nowe feature release'y — i wyginają swoją strategię w odpowiedzi. *Grasz w ich grę, przegrywasz z nimi. Grasz w swoją grę, oni nie wiedzą, jak z tobą konkurować.*
 
-## What makes this possible
+## Co to umożliwia
 
-You can only play your own game if you have:
+Możesz grać własną grę tylko, jeśli masz:
 
-1. **A clear thesis** about who you serve and what they need that nobody else is providing well.
-2. **A real foothold** — at least one product / market that's working and proves the thesis isn't hallucinated.
-3. **A willingness to walk past obvious opportunities** that don't compound into your long-term play.
+1. **Jasną tezę** o tym, komu służysz i czego on potrzebuje, czego nikt inny dobrze nie dostarcza.
+2. **Realny foothold** — przynajmniej jeden produkt / rynek, który działa i dowodzi, że teza nie jest halucynacją.
+3. **Gotowość przechodzenia obok oczywistych okazji**, które nie składają się w twój long-term play.
 
-Without those, "play your own game" is just an excuse for not being competitive enough.
+Bez tych rzeczy "play your own game" to tylko wymówka za bycie niewystarczająco konkurencyjnym.
 
-## Defensibility is built, not granted
+## Defensibility się buduje, nie otrzymuje
 
-You don't get defensibility from being first or from having raised the most money. You build it. Three layers he stacks:
+Defensibility nie dostajesz za bycie pierwszym albo za podniesienie najwięcej kasy. Budujesz je. Trzy warstwy, które układa:
 
 ### 1. Network effects
 
-The more locations on the platform, the more end-customers come in (because they want to use their loyalty cards in more places). The more end-customers, the more locations want to join (because they're already on the platform with their customer base). This is a classic two-sided network effect.
+Im więcej lokalizacji na platformie, tym więcej end-customerów wchodzi (bo chcą używać kart lojalnościowych w większej liczbie miejsc). Im więcej end-customerów, tym więcej lokalizacji chce dołączyć (bo są już na platformie z ich bazą klientów). To klasyczny dwustronny network effect.
 
-The competitors don't have this:
+Konkurenci tego nie mają:
 
-- Most are *white label providers*: each merchant gets their own siloed branded app, no shared user base.
-- Or they're *POS add-ons*: lose the POS, lose the loyalty data. No network.
-- Or they're *wallet-pass / single feature*: no platform.
+- Większość to *white label providers*: każdy merchant dostaje własną silosową appkę pod brand, brak shared user base.
+- Albo to są *POS add-ons*: trać POS, trać dane loyalty. Brak network.
+- Albo *wallet-pass / single feature*: brak platformy.
 
-His take: he's the only player in his category that has a real network effect, and that's the moat.
+Jego ujęcie: jest jedynym graczem w swojej kategorii, który ma prawdziwy network effect, i to jest moat.
 
 ### 2. Multiproduct stickiness
 
-(See `12-product-philosophy.md` — the product version.) Once a merchant uses you for loyalty + CRM + ordering + tips, ripping you out is a multi-system migration. They won't do it for a small price difference. They might do it for a major dissatisfaction, but you've earned the right to fix the dissatisfaction first.
+(Patrz `12-product-philosophy.md` — wersja produktowa.) Gdy merchant używa cię do loyalty + CRM + ordering + tips, wyrwanie cię to wielosystemowa migracja. Nie zrobi tego za małą różnicę ceny. Może to zrobić za poważne niezadowolenie, ale zarobiłeś sobie prawo, żeby najpierw naprawić niezadowolenie.
 
-Net churn ~0.5% is the manifestation of this.
+Net churn ~0,5% to manifestacja tego.
 
-### 3. Long-term reputation in the niche
+### 3. Długoterminowa reputacja w niszy
 
-You sold to 3500+ businesses, you have hundreds of public case studies, you have testimonials from real merchants, you have a brand inside the industry. *That* is hard to copy. It compounds over years.
+Sprzedałeś 3500+ biznesom, masz setki publicznych case studies, masz testimoniale od prawdziwych merchantów, masz brand wewnątrz branży. *To* jest trudne do skopiowania. Składa się przez lata.
 
-## The Revolut frame
+## Frame Revolut
 
-He uses Revolut as his canonical long-term-game example. The pattern:
+Używa Revolut jako kanonicznego przykładu long-term-game. Wzorzec:
 
-- **Start with a simple foothold**: FX conversion for travellers. Not the biggest revenue stream possible — but a real, immediate, painful problem with no good solution.
-- **Build momentum and brand** on that foothold.
-- **Then expand into adjacent modules**: cards, bank accounts, savings, crypto, business accounts, lifestyle features. Each one leveraging the existing user base.
-- **Eventually, the original foothold is only the 5th or 6th revenue stream** — but it was load-bearing because it built the trust that made all the rest possible.
-- **They play their own game**: they're not trying to beat Barclays on traditional banking, they're not trying to beat Square on payments, they're not trying to beat anyone — they're building a different kind of platform.
+- **Zacznij od prostego footholdu**: FX conversion dla podróżujących. Nie największy możliwy strumień przychodu — ale realny, natychmiastowy, bolesny problem bez dobrego rozwiązania.
+- **Buduj momentum i brand** na tym footholdzie.
+- **Potem rozszerz na sąsiednie moduły**: karty, konta bankowe, oszczędności, krypto, business accounts, lifestyle features. Każdy lewarujący istniejącą bazę userów.
+- **W końcu oryginalny foothold jest dopiero 5. albo 6. strumieniem przychodu** — ale był load-bearing, bo zbudował zaufanie, które umożliwiło całą resztę.
+- **Grają własną grę**: nie próbują pokonać Barclays w tradycyjnej bankowości, nie próbują pokonać Square w płatnościach, nie próbują pokonać nikogo — budują inny rodzaj platformy.
 
 > "Revolut nie wziął i nie podwyższył FX rates — tylko zbudowali po prostu monster powerful super fucking app, która dzisiaj robi wszystko."
 
-The lesson: pick the foothold that lets you build the user base, *not* the foothold that maximises immediate revenue. Then expand.
+Lekcja: wybierz foothold, który pozwala ci zbudować user base, *nie* foothold, który maksymalizuje natychmiastowy przychód. Potem rozszerzaj.
 
-## Don't be pulled into commodity competition
+## Nie daj się wciągnąć w commodity competition
 
-If you're building a product where the established players are giants with billion-dollar tech budgets, you cannot win by trying to beat them at their own game. You lose on day one.
+Jeśli budujesz produkt, gdzie ugruntowani gracze są gigantami z miliardowymi budżetami techowymi, nie wygrasz próbując pokonać ich w ich własną grę. Przegrywasz w dniu pierwszym.
 
-So *don't compete with them*. Don't position your loyalty product against POS providers' loyalty modules (you're not selling a POS module — you're selling a network). Don't compete with marketplace apps on order volume (you're not a marketplace — you're the merchant's own digital infrastructure).
+Więc *nie konkuruj z nimi*. Nie pozycjonuj swojego produktu loyalty przeciwko modułom loyalty dostawców POS (nie sprzedajesz modułu POS — sprzedajesz network). Nie konkuruj z aplikacjami marketplace na wolumenie zamówień (nie jesteś marketplace'em — jesteś własną infrastrukturą digitalną merchanta).
 
-The strongest competitive move: *don't show up to their fight*. Build a different fight.
+Najmocniejszy ruch konkurencyjny: *nie pojawiaj się na ich walce*. Zbuduj inną walkę.
 
-Even better: *partner* with them where it makes sense. He has a global partnership with Square (a major POS player) — Square sells to merchants, then refers them to him for the loyalty layer. He's not competing with Square — he's complementary.
+Jeszcze lepiej: *partneruj* z nimi tam, gdzie ma to sens. Ma globalne partnerstwo z Square (duży gracz POS) — Square sprzedaje merchantom, potem ich do niego odsyła na warstwę loyalty. Nie konkuruje ze Square — jest komplementarny.
 
-## Choosing a starting foothold
+## Wybór startowego footholdu
 
-The criteria for the right starting product:
+Kryteria właściwego startowego produktu:
 
-1. **Solves a real, painful problem** in your niche.
-2. **Easy to launch / implement / sell** — light enough that you can sign many merchants and build proof.
-3. **Defensible by structure** (network effect, data lock-in, brand) — not by feature parity.
-4. **Adjacent to future products** — once you're in for X, it's natural to also be in for Y.
+1. **Rozwiązuje realny, bolesny problem** w twojej niszy.
+2. **Łatwy do uruchomienia / wdrożenia / sprzedaży** — lekki na tyle, żebyś mógł podpisać wielu merchantów i zbudować proof.
+3. **Defensible przez strukturę** (network effect, data lock-in, brand) — nie przez feature parity.
+4. **Sąsiedni do przyszłych produktów** — gdy już jesteś w środku za X, to naturalne być również w środku za Y.
 
-The trap: picking a starting product that scores high on revenue per customer but low on these four. You'll feel rich for a year and then plateau, because you didn't build the foundation for what comes next.
+Pułapka: wybór startowego produktu, który scoruje wysoko na przychód per klient, ale nisko na te cztery. Będziesz się czuł bogaty przez rok, a potem plateau, bo nie zbudowałeś fundamentu pod to, co przyjdzie potem.
 
-## What "long-term thinking" actually means in practice
+## Co "long-term thinking" naprawdę znaczy w praktyce
 
-It's a series of *no's*:
+To seria *no*:
 
-- No to lazy price hikes when they'd boost short-term margin but not change the trajectory (see `10-pricing-and-packages.md`).
-- No to selling to wrong-fit customers because the deal is here right now.
-- No to building a feature because one big customer wants it but it doesn't fit the strategy.
-- No to chasing PR moments that don't compound.
-- No to raising more capital than you need just because investors are offering.
+- Nie dla leniwych podwyżek cen, gdy podbiłyby short-term marżę, ale nie zmieniły trajektorii (patrz `10-pricing-and-packages.md`).
+- Nie dla sprzedaży niedopasowanym klientom, bo deal jest tu, teraz.
+- Nie dla budowy feature'u, bo jeden duży klient go chce, ale nie pasuje do strategii.
+- Nie dla gonienia za PR momentami, które się nie składają.
+- Nie dla podnoszenia większej kasy, niż potrzebujesz, tylko dlatego, że inwestorzy oferują.
 
-And a few yes's:
+I kilka *yes*:
 
-- Yes to spending more on engineering than feels comfortable, because product compounds.
-- Yes to keeping the team small but high-leverage rather than scaling headcount.
-- Yes to face-to-face customer time even when expensive (see `03-time-and-travel.md`).
-- Yes to multiyear bets in markets that look hard today (the foodtech crash period was when they built most of their defensibility).
+- Tak dla wydawania na engineering więcej, niż wydaje się komfortowe, bo produkt się składa.
+- Tak dla trzymania teamu małego, ale wysokodźwigniowego, zamiast skalowania headcountu.
+- Tak dla czasu z klientem face-to-face, nawet gdy drogi (patrz `03-time-and-travel.md`).
+- Tak dla wieloletnich betów na rynkach, które dziś wyglądają trudno (okres krachu foodtechu to był czas, kiedy zbudowali większość swojej defensibility).
 
-## On working with first movers
+## O pracy z first moverami
 
-In any new market or country, there's a wave of "first movers" — merchants willing to try new things. He uses them to build initial proof:
+Na każdym nowym rynku albo w nowym kraju jest fala "first moverów" — merchantów gotowych próbować nowych rzeczy. Używa ich do zbudowania początkowego proof:
 
-- 2 salespeople + 1 account manager land 20 customers in months 1–3.
-- Those 20 customers become *local case studies*.
-- Local case studies fuel the B2B marketing engine.
-- The B2B engine brings inbound, which scales with less direct sales effort.
+- 2 salesowców + 1 account manager zdobywa 20 klientów w miesiącach 1–3.
+- Ci 20 klientów stają się *lokalnymi case studies*.
+- Lokalne case studies napędzają silnik B2B marketingu.
+- Silnik B2B przynosi inbound, który skaluje się z mniejszym wysiłkiem direct sales.
 
-That's the cheap, fast version of country entry. See `18-geographic-expansion.md`.
+To jest tania, szybka wersja country entry. Patrz `18-geographic-expansion.md`.
 
-## The reward for playing the long game
+## Nagroda za granie long game
 
-Eventually:
+W końcu:
 
-- Investors stop questioning whether the business will work. They start asking how big it gets.
-- Early-stage believers get *up to 8x cash-on-cash* in a secondary round.
-- The product *itself* starts selling more — inbound leads, partner referrals, word-of-mouth in the industry.
-- You stop being a survival-mode founder and start being a working-on-the-business founder (see `02-founder-mindset.md`).
+- Inwestorzy przestają pytać, czy biznes będzie działał. Zaczynają pytać, jak duży się stanie.
+- Early-stage believerzy dostają *do 8x cash-on-cash* w rundzie secondary.
+- Sam produkt zaczyna sprzedawać więcej — inbound leadów, partner referrals, word-of-mouth w branży.
+- Przestajesz być founderem w survival mode i zaczynasz być founderem working-on-the-business (patrz `02-founder-mindset.md`).
 
-The long game isn't a feeling. It's an outcome. You earn it by saying no to a lot of seductive short games.
+The long game to nie uczucie. To wynik. Zarabiasz go mówiąc nie wielu uwodzicielskim short games.
 
 ## "Arming the rebels"
 
-He loves Toby Lütke's Shopify framing: *arming the rebels*. Shopify exists so that you and I, without hiring developers and UX designers, can launch a store online today. Pre-Shopify, that was a hiring effort. Now it's a Saturday afternoon.
+Kocha framing Toby'ego Lütke'a z Shopify: *arming the rebels*. Shopify istnieje, żebyś ty i ja, bez zatrudniania deweloperów i UX designerów, mogli odpalić sklep online dzisiaj. Przed Shopify to była robota zatrudnieniowa. Teraz to sobotnie popołudnie.
 
-He sees his role the same way for offline food & drink SMBs. The big players (McDonald's, Starbucks) spend hundreds of millions per year on their tech stack. The small operator can't and never will. *His job is to give them 90% of that stack for 0.01% of the cost.* That's democratising technology for the underdog.
+Widzi swoją rolę tak samo dla offline'owych food & drink SMB. Duzi gracze (McDonald's, Starbucks) wydają setki milionów rocznie na swój tech stack. Mały operator nie może i nigdy nie będzie mógł. *Jego rola to dać im 90% tego stacku za 0,01% kosztu.* To jest demokratyzacja technologii dla underdoga.
 
-It's also the long-term play — because every café and bakery he arms is locked into the ecosystem he's building, and the ecosystem itself compounds.
+To też long-term play — bo każda kawiarnia i piekarnia, którą uzbroi, jest zamknięta w ekosystemie, który buduje, a sam ekosystem się składa.

@@ -1,127 +1,127 @@
-# 16 — Investors
+# 16 — Inwestorzy
 
-**Load when:** the question is about fundraising, dealing with investors, managing the cap table, why raise less, private vs VC capital, bad timing, secondary rounds, oversubscription, how to set boundaries with investors.
+**Załaduj gdy:** pytanie dotyczy fundraisingu, radzenia sobie z inwestorami, zarządzania cap table'em, dlaczego podnieść mniej, prywatny vs VC capital, złego timingu, secondary rounds, oversubscription, jak ustawiać granice z inwestorami.
 
-## The kind of investors he wants
+## Typ inwestorów, których chce
 
-The single highest-leverage choice in fundraising for him: prioritise *private investors who were entrepreneurs themselves*. Not necessarily over institutional funds — but a meaningful portion of the cap table should be founder-investors.
+Pojedynczy najbardziej dźwigniowy wybór w fundraisingu dla niego: priorytetuj *prywatnych inwestorów, którzy sami byli przedsiębiorcami*. Niekoniecznie ponad fundusze instytucjonalne — ale znacząca część cap table'a powinna być founder-investorami.
 
-Why:
+Dlaczego:
 
-- **They remember what it's like to be the founder.** They have empathy because they've been there.
-- **They want to help in ways that don't *take* your time.** They know your time is the most expensive thing in the company. They don't ask for weekly updates. They don't force you to entertain them.
-- **They've usually built and exited something themselves.** So their feedback is real strategic input, not a borrowed playbook.
-- **Their money is *their* money** (not LP money managed under different incentive). They have more skin in the game emotionally, more patience, more willingness to think long term.
+- **Pamiętają, jak to jest być founderem.** Mają empatię, bo sami tam byli.
+- **Chcą pomóc w sposób, który *nie zabiera* twojego czasu.** Wiedzą, że twój czas to najdroższa rzecz w firmie. Nie proszą o cotygodniowe updaty. Nie zmuszają cię do zabawiania ich.
+- **Zwykle sami coś zbudowali i wyszli.** Więc ich feedback to realny strategic input, nie pożyczony playbook.
+- **Ich pieniądze to *ich* pieniądze** (nie LP money zarządzane w innym incentive). Mają więcej skin in the game emocjonalnie, więcej cierpliwości, więcej gotowości myślenia long term.
 
-Some of his most important backers are founders who have built and scaled $100M–$1B SaaS businesses. He treats them like role models, listens hard, but also sets boundaries on time.
+Niektórzy z jego najważniejszych backerów to founderzy, którzy zbudowali i wyskalowali biznesy SaaS o wartości $100M–$1B. Traktuje ich jak role models, słucha mocno, ale też ustawia granice na czasie.
 
-## VC funds: not anti, but framed differently
+## Fundusze VC: nie anty, ale framing inny
 
-VCs can be great. Many are passionate, hands-on, treat your company like their baby. He doesn't generalise.
+VC mogą być świetne. Wielu jest pasjonatami, hands-on, traktują twoją firmę jak swoje dziecko. Nie generalizuje.
 
-But: VC money is *not their money*. It's LP money. The incentive structure pulls toward shorter timelines, quicker exits, occasional pressure that doesn't serve the long-term thesis. A founder who's only funded by impatient VCs has a very different operating constraint than a founder funded by patient founder-investors.
+Ale: pieniądze VC to *nie ich pieniądze*. To LP money. Struktura incentive'ów ciągnie do krótszych timeline'ów, szybszych exitów, okazjonalnej presji, która nie służy long-term tezie. Founder finansowany tylko przez niecierpliwe VC ma bardzo inną constraint operacyjną niż founder finansowany przez cierpliwych founder-investorów.
 
-## Bad timing happens — long marches build defensibility
+## Zły timing się zdarza — długie marsze budują defensibility
 
-He raised seed-stage capital, then went straight into COVID. Then into a 3-year-long *80% YoY decline* in foodtech VC funding. *Foodtech founding was crashing 80% YoY for three years in a row.*
+Podniósł seed-stage capital, potem wszedł prosto w COVID. Potem w 3-letni *80% YoY spadek* finansowania VC w foodtechu. *Foodtech founding leciał 80% YoY w dół przez trzy lata z rzędu.*
 
-A lot of foodtech startups that raised during the pandemic boom — the QR-code-at-the-table players, the marketplaces, the cloud kitchens — got hit hard. Some collapsed entirely. Many couldn't raise their next round because the entire category had become unfundable.
+Wiele startupów foodtech, które podniosły w boomie pandemicznym — gracze QR-code-at-the-table, marketplace'y, cloud kitcheny — dostali mocno. Niektórzy upadli całkowicie. Wielu nie mogło podnieść następnej rundy, bo cała kategoria stała się unfundable.
 
-His takeaway: when the macro turns against you, the long-march approach is the only viable one. You can't outrun the macro. You either:
+Jego wniosek: gdy makro się odwraca przeciwko tobie, podejście długiego marszu jest jedyną żywotną opcją. Nie wybiegasz makra. Albo:
 
-- **Compound your defensibility through the dark period** (he chose this — built more product, more network effects, more case studies), OR
-- **Quit.**
+- **Składasz swoją defensibility przez ciemny okres** (wybrał to — zbudował więcej produktu, więcej network effectów, więcej case studies), ALBO
+- **Rezygnujesz.**
 
-There is no "raise more money to outrun the cycle" option when the funds have stopped writing cheques.
+Nie ma opcji "podnieś więcej kasy, żeby przegonić cykl", gdy fundusze przestały wypisywać czeki.
 
-The reward, when timing turned: oversubscription on the next round (~2x), credible path to a 9-figure company, real cash returns for the early supporters who stuck through.
+Nagroda, gdy timing się odwrócił: oversubscription na następnej rundzie (~2x), wiarygodna ścieżka do 9-cyfrowej firmy, prawdziwe cash returns dla early supporterów, którzy zostali przez całą drogę.
 
-## "Why didn't you raise more?"
+## "Dlaczego nie podniosłeś więcej?"
 
-A common question — he raised single-digit millions, not tens of millions. Why?
+Częste pytanie — podniósł jednocyfrowe miliony, nie dziesiątki milionów. Dlaczego?
 
-A few reasons:
+Kilka powodów:
 
-1. **Bad timing for fundraising.** COVID, then the foodtech crash, then late 2022 / 2023 generally tough conditions.
-2. **VCs needed a clean analogue: "you're the Uber of X" or "you're the Shopify of Y".** His company is harder to one-line — it's a multiproduct platform serving a niche where the SaaS playbook doesn't apply. Many VCs couldn't fit it into a model.
-3. **He doesn't need a huge raise to scale.** New country = 2 salespeople + 1 AM, ~3–5 months to profitability. Marketing dopalanie comes from case studies, not from blowing money on paid ads. (See `18-geographic-expansion.md`.)
-4. **Capital efficiency as a competitive advantage.** He's built the business to compound without dilution-heavy growth. The current cap table reflects that choice.
+1. **Zły timing na fundraising.** COVID, potem krach foodtechu, potem koniec 2022 / 2023 generalnie trudne warunki.
+2. **VC potrzebowali czystej analogii: "jesteście Uberem od X" albo "jesteście Shopify od Y".** Jego firma jest trudniejsza do jednolinijkowego opisu — to multiproduct platforma serwująca niszę, gdzie SaaS playbook się nie aplikuje. Wielu VC nie mogło dopasować jej do modelu.
+3. **Nie potrzebuje wielkiej rundy, żeby skalować.** Nowy kraj = 2 salesowców + 1 AM, ~3–5 miesięcy do profitability. Marketing dopalanie wychodzi z case studies, nie z palenia kasy na paid ads. (Patrz `18-geographic-expansion.md`.)
+4. **Capital efficiency jako competitive advantage.** Zbudował biznes tak, żeby składał się bez dilution-heavy wzrostu. Obecny cap table odzwierciedla ten wybór.
 
-The point: capital raised is not the score. *Where the company ends up* is the score. Some founders raise too much and dilute themselves into not caring about the outcome.
+Punkt: podniesiony kapitał to nie wynik. *Gdzie firma kończy* to wynik. Niektórzy founderzy podnoszą za dużo i rozcieńczają się do nie-zależenia od outcome.
 
-## Oversubscription as a signal
+## Oversubscription jako sygnał
 
-On the last round he had roughly 2x oversubscription. The signal he reads from that:
+Na ostatniej rundzie miał mniej więcej 2x oversubscription. Sygnał, który z tego czyta:
 
-- The thesis has crossed a threshold. The market is now able to see it works.
-- He can credibly run a secondary round (selling some existing equity, not new shares) to give early backers liquidity without dilution to new capital.
-- He has leverage on terms.
+- Teza przekroczyła próg. Rynek jest teraz w stanie zobaczyć, że to działa.
+- Może wiarygodnie odpalić secondary round (sprzedając część istniejącego equity, nie nowych udziałów), żeby dać early backerom likwidność bez dilution dla nowego kapitału.
+- Ma leverage na warunkach.
 
-He took the leverage *responsibly* — didn't over-raise just because he could. The deal closed at a level that kept the cap table healthy and aligned.
+Wziął leverage *odpowiedzialnie* — nie nadpodniósł tylko dlatego, że mógł. Deal zamknął się na poziomie, który trzymał cap table zdrowy i zrównany.
 
-## The secondary play
+## Secondary play
 
-This is one of his prouder operational moves.
+To jeden z jego dumniejszych ruchów operacyjnych.
 
-- During the round, he organised a secondary so that early-stage backers who'd been with him through COVID and the foodtech crash could realise some real cash.
-- Some of those backers exited their stakes at *up to 8x cash-on-cash returns* (net of taxes, including UK tax reliefs).
-- His co-founder also used the round to take meaningful liquidity (see `17-cofounder-transitions.md`).
+- W trakcie rundy zorganizował secondary, żeby early-stage backerzy, którzy byli z nim przez COVID i krach foodtechu, mogli zrealizować realną kasę.
+- Niektórzy z nich wyszli ze swoimi udziałami przy *up to 8x cash-on-cash returns* (netto po podatkach, włącznie z brytyjskimi ulgami podatkowymi).
+- Jego co-founder też użył rundy, żeby wziąć znaczącą likwidność (patrz `17-cofounder-transitions.md`).
 
-Why this matters:
+Dlaczego to ma znaczenie:
 
-- **It's the right thing to do for the early supporters.** They took the risk when it was real. They deserved to benefit from the upside.
-- **It strengthens the relationship for the next round.** They're more inclined to support him again — and they're advocates.
-- **It signals real value creation.** Paper valuations can be questioned. Real cash returned is real.
+- **To jest właściwa rzecz wobec early supporterów.** Wzięli ryzyko, gdy było realne. Zasłużyli na korzystanie z upside.
+- **Wzmacnia relację na następną rundę.** Są bardziej skłonni go wspierać znowu — i są advocate'ami.
+- **Sygnalizuje realne tworzenie wartości.** Wyceny papierowe można kwestionować. Realna kasa zwrócona to realna kasa.
 
-The cap table improvement: replace early high-conviction-now-lower-conviction backers with new high-conviction backers who got in at a higher valuation but want bigger exposure.
+Poprawa cap table'a: zastąp early high-conviction-now-lower-conviction backerów nowymi high-conviction backerami, którzy weszli przy wyższej wycenie, ale chcą większej ekspozycji.
 
-## Managing investor time
+## Zarządzanie czasem inwestora
 
-The hard rule: *protect your time*. Investors who get it understand this. Investors who don't, push back on.
+Hard rule: *chroń swój czas*. Inwestorzy, którzy to rozumieją, to rozumieją. Inwestorów, którzy nie — pushbackuj.
 
-If an investor expects you to send updates every 2 weeks, run lengthy calls, "keep them in the loop" constantly, ask yourself:
+Jeśli inwestor oczekuje, że będziesz wysyłał updaty co 2 tygodnie, prowadził długie calle, "keep them in the loop" stale, zapytaj siebie:
 
-- Are they actually adding value with their time?
-- Or are they just consuming yours?
+- Czy faktycznie dodają wartość swoim czasem?
+- Czy tylko konsumują twój?
 
-If the latter — be open about it:
+Jeśli to drugie — bądź otwarty:
 
 > "Do you want me to grow the business, or do you want me to be updating you? Because I have a finite amount of hours, and the more I spend on one, the less the other gets."
 
-Most investors, when this is said clearly, recalibrate. The few who don't — that's a relationship to renegotiate, ideally before the next round.
+Większość inwestorów, gdy to się powie jasno, się rekalibruje. Ci nieliczni, którzy nie — to relacja do renegocjacji, idealnie przed następną rundą.
 
-## The pressure to please everyone
+## Presja na zadowalanie wszystkich
 
-Investors at this scale all have strong opinions. They have a right to them — they've built things, they've earned the credibility.
+Inwestorzy w tej skali wszyscy mają mocne opinie. Mają prawo do nich — coś zbudowali, zarobili sobie wiarygodność.
 
-But you can't please them all. They'll often have *very different* views on the same question. Your job isn't to satisfy all of them — it's to:
+Ale nie zadowolisz ich wszystkich. Często będą mieli *bardzo różne* poglądy na to samo pytanie. Twoja robota to nie satysfakcjonować ich wszystkich — to:
 
-1. Take the feedback seriously.
-2. Run it through your strategic filter.
-3. Make the call.
-4. Communicate clearly *why* you made the call.
-5. Don't apologise for it.
+1. Brać feedback poważnie.
+2. Przepuszczać go przez swój strategiczny filtr.
+3. Robić call.
+4. Komunikować jasno *dlaczego* zrobiłeś call.
+5. Nie przepraszać za niego.
 
 > "Ja muszę brać feedback. To jest moja rola. Moja rola jest być otwartym na niego, a nie defensywnym. Moja rola jest, żeby szukać tej inspiracji. Ale moją rolą też jest wiedzieć, gdzie inwestować mój czas, żeby dowieźć. Na koniec dnia ja będę rozliczany za to, gdzie skończymy."
 
-## Honesty with investors
+## Szczerość z inwestorami
 
-When the company is going well, easy. When it isn't, harder — but you still owe them the truth.
+Gdy firmie idzie dobrze, łatwo. Gdy nie idzie, trudniej — ale wciąż jesteś im winien prawdę.
 
-His pattern: regular updates that are honest about both the wins and the losses. If something didn't get done, *say why*. If a metric dipped, *explain the decision*. Don't dress up bad news, don't sandbag good news.
+Jego wzorzec: regularne updaty, które są szczere zarówno o winach, jak i o stratach. Jeśli coś nie zostało zrobione, *powiedz dlaczego*. Jeśli metryka spadła, *wyjaśnij decyzję*. Nie ubieraj złych wiadomości, nie sandbaguj dobrych.
 
-The trust this builds is what makes the *next* hard moment survivable. Investors who've been told the truth consistently are willing to support you when the truth gets uncomfortable.
+Zaufanie, które to buduje, jest tym, co czyni *następny* trudny moment przeżywalnym. Inwestorzy, którym mówiono prawdę konsekwentnie, są gotowi cię wspierać, gdy prawda staje się niewygodna.
 
-## When investors lose money
+## Gdy inwestorzy tracą kasę
 
-If an investor in your company loses money, you carry that. It's not just a portfolio loss line on their PNL — for private investors especially, it's *their money*.
+Jeśli inwestor w twojej firmie traci kasę, ty to niesiesz. To nie jest tylko linia portfolio loss na ich PnL — dla prywatnych inwestorów szczególnie, to *ich pieniądze*.
 
-His situation: he managed to ensure that, even though the path was brutal, no early backer lost money. Several gained substantially. *That's a leadership achievement separate from the company outcome itself.* Even if the company had gone sideways, the way the investors were treated matters.
+Jego sytuacja: udało mu się zapewnić, że nawet jeśli ścieżka była brutalna, żaden early backer nie stracił pieniędzy. Kilku zyskało znacznie. *To leadership achievement osobny od samego wyniku firmy.* Nawet gdyby firma poszła w bok, sposób, w jaki inwestorzy zostali potraktowani, ma znaczenie.
 
-## What he says, summarised
+## Co mówi, podsumowane
 
-- Pick founder-investors over institutional money where you can.
-- Protect your time ferociously. Investors who matter respect this.
-- Take feedback openly. Make the call yourself. Be ready to defend it.
-- When the round goes well, do a secondary to reward early supporters. They deserve it.
-- Long term: capital raised is not the score. *Where the company ends up* is.
+- Wybieraj founder-investorów ponad institutional money, gdzie możesz.
+- Chroń swój czas zaciekle. Inwestorzy, którzy mają znaczenie, to szanują.
+- Bierz feedback otwarcie. Sam podejmuj call. Bądź gotowy go bronić.
+- Gdy runda idzie dobrze, zrób secondary, żeby wynagrodzić early supporterów. Zasłużyli.
+- Long term: podniesiony kapitał to nie wynik. *Gdzie firma kończy* to wynik.

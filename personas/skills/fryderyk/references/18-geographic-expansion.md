@@ -1,82 +1,82 @@
-# 18 — Geographic expansion
+# 18 — Ekspansja geograficzna
 
-**Load when:** the question is about entering new countries / markets, international expansion, how to scale geographically without burning capital, the 2-3-5 month playbook.
+**Załaduj gdy:** pytanie dotyczy wchodzenia na nowe kraje / rynki, międzynarodowej ekspansji, jak skalować geograficznie bez palenia kapitału, playbooka 2-3-5 miesięcy.
 
-## Expansion is not the big-bang move people think
+## Ekspansja to nie big-bang, za jaki ludzie ją mają
 
-The default mental model of geographic expansion: huge fixed cost, big team, marketing splash, take a year to break even. That model fits some businesses. It does not fit his.
+Domyślny model mentalny ekspansji geograficznej: ogromny fixed cost, duży team, marketing splash, rok do break-even. Ten model pasuje do niektórych biznesów. Nie pasuje do jego.
 
-His expansion playbook costs almost nothing and breaks even within a few months. The key insight: at his stage, with the playbook nailed, a new country isn't a big-bang launch — it's a *focused 3–5 month rollout* using a small dedicated team.
+Jego playbook ekspansji kosztuje prawie nic i wychodzi na zero w kilka miesięcy. Kluczowy insight: na jego etapie, ze zbitym playbookiem, nowy kraj to nie big-bang launch — to *skupiony 3–5 miesięczny rollout* z małym dedykowanym teamem.
 
-## The actual playbook
+## Faktyczny playbook
 
-For Spain — the most recent launch — here's what they did:
+Dla Hiszpanii — najnowszego launcha — oto co zrobili:
 
-1. **Translate the platform.** Technologically trivial today. Don't overthink it. Don't wait for "perfect localisation" — start with a clean translation and adapt as you learn.
-2. **Hire 2 salespeople + 1 account manager** in the country. Three people. That's the entire on-ground team to start.
-3. **Run the existing sales playbook localised.** The motion (outreach, demo, follow-up — see `06`, `07`, `09`) translates well across countries because it's based on the merchant's situation, not on country-specific quirks.
-4. **Target a first 20 customers in months 1–3.** First movers exist in every market — find them, sell them, onboard them fast.
-5. **Build local case studies** from those first 20. Video testimonials, written stories, screenshots. Visual content (see `06-outreach.md`).
-6. **From month 3, start dopalanie of B2B marketing** in the new country. Now you have local proof. Inbound starts.
-7. **Profitability per market: months 3–5.** If you've hired right, sold right, and the playbook is real — the country is in the black inside half a year.
+1. **Przetłumacz platformę.** Technologicznie trywialne dziś. Nie przekombinuj. Nie czekaj na "perfect localisation" — zacznij od czystego tłumaczenia i adaptuj w miarę uczenia się.
+2. **Zatrudnij 2 salesowców + 1 account managera** w kraju. Trzy osoby. To cały on-ground team na start.
+3. **Odpal istniejący sales playbook zlokalizowany.** Motion (outreach, demo, follow-up — patrz `06`, `07`, `09`) tłumaczy się dobrze między krajami, bo jest oparty na sytuacji merchanta, a nie na country-specific dziwactwach.
+4. **Celuj w pierwszych 20 klientów w miesiącach 1–3.** First moverzy istnieją na każdym rynku — znajdź ich, sprzedaj im, onboarduj szybko.
+5. **Buduj lokalne case studies** z tych pierwszych 20. Video testimonials, written stories, screenshoty. Visual content (patrz `06-outreach.md`).
+6. **Od miesiąca 3 zacznij dopalanie B2B marketingu** w nowym kraju. Teraz masz lokalny proof. Inbound startuje.
+7. **Profitability per rynek: miesiące 3–5.** Jeśli zatrudniłeś dobrze, sprzedawałeś dobrze, a playbook jest realny — kraj jest na plusie w niecałe pół roku.
 
-That's the model. Subject to country-specific hiccups (wrong hires, content that doesn't land, market not ready) — but if the playbook is solid, those are tweaks, not disasters.
+To jest model. Z zastrzeżeniem country-specific hiccupów (złe hires, content który nie ląduje, rynek nie gotowy) — ale jeśli playbook jest solidny, to są poprawki, nie katastrofy.
 
-## Why this is so cheap
+## Dlaczego to jest tak tanie
 
-- **Engineering cost is near-zero.** The product is the same. You translate it.
-- **Sales cost is small.** Three people total in-country, not 20.
-- **Marketing cost is deferred.** You don't blast money on paid acquisition before you have local case studies. You build the case studies first.
-- **No huge office.** Either a small space or fully remote.
+- **Engineering cost to prawie zero.** Produkt jest ten sam. Tłumaczysz go.
+- **Sales cost jest mały.** Trzy osoby łącznie w kraju, nie 20.
+- **Marketing cost jest odroczony.** Nie palisz kasy na paid acquisition, zanim masz lokalne case studies. Najpierw budujesz case studies.
+- **Brak ogromnego biura.** Albo mała przestrzeń, albo w pełni remote.
 
-Compare this to a classic VC-funded "land grab" playbook: hire a country manager, build a sales team of 10, run paid acquisition for 6 months, take a year to be net-positive. That costs millions per country. His version costs a fraction.
+Porównaj to z klasycznym playbookiem "land grab" finansowanym przez VC: zatrudnij country managera, zbuduj sales team 10 osób, prowadź paid acquisition przez 6 miesięcy, rok do bycia net-positive. To kosztuje miliony per kraj. Jego wersja kosztuje ułamek.
 
-## The compounding logic
+## Logika compoundowania
 
-The first country is the hardest. The 5th country is much easier:
+Pierwszy kraj jest najtrudniejszy. Piąty kraj jest dużo łatwiejszy:
 
-- The playbook has been refined across multiple environments.
-- Hiring patterns are clearer (you know what kind of salesperson works).
-- Case studies from existing countries can sometimes be used in new ones, accelerating local credibility.
-- Multi-product platform means you enter with more revenue per customer than you would have in the first country.
+- Playbook został wyrafinowany w wielu środowiskach.
+- Wzorce zatrudniania są jaśniejsze (wiesz, jaki typ salesowca działa).
+- Case studies z istniejących krajów czasem mogą być użyte w nowych, przyspieszając lokalną wiarygodność.
+- Multi-product platforma znaczy, że wchodzisz z większym przychodem per klient, niż byś miał w pierwszym kraju.
 
-So expansion *accelerates* — each new country gets cheaper, faster, more profitable per unit of time.
+Więc ekspansja *przyspiesza* — każdy nowy kraj staje się tańszy, szybszy, bardziej profitable per jednostkę czasu.
 
-## Where to expand next
+## Gdzie ekspansować dalej
 
-Not random. He picks countries based on signal:
+Nie losowo. Wybiera kraje na podstawie sygnału:
 
-- **Customers from the country already inbound.** If significant merchants in NL and DE are already buying without local presence, those are hot markets to go to next.
-- **Market structure matches the playbook.** Markets dominated by US chain franchises with rigid head offices are *harder*. Markets with lots of independent local mid-sized chains (like Poland) are *easier*.
-- **Language and adjacency**. Spain is a Spanish-speaking platform launch, which opens future LATAM optionality. UK is the English-language anchor. Germany and Netherlands are next in the EU stack.
+- **Klienci z kraju już inboundują.** Jeśli znaczący merchanci w NL i DE już kupują bez lokalnej obecności, to gorące rynki, na które iść dalej.
+- **Struktura rynku pasuje do playbooka.** Rynki zdominowane przez franczyzy US chains ze sztywnymi head office'ami są *trudniejsze*. Rynki z dużą liczbą niezależnych lokalnych średnich sieci (jak Polska) są *łatwiejsze*.
+- **Język i adjacency**. Hiszpania to launch hiszpańskojęzycznej platformy, co otwiera przyszłą opcjonalność LATAM. UK to kotwica angielskojęzyczna. Niemcy i Holandia są następne w stacku EU.
 
-## What can go wrong (be honest about it)
+## Co może pójść nie tak (bądź uczciwy o tym)
 
-- **Wrong hires.** Sales is local — local hires matter. A bad hire burns 3 months easily.
-- **Wrong content.** Outreach assets that worked in market A might not land in market B. Iterate.
-- **Market not actually ready.** Some markets are 2 years behind on digital adoption. You'll know within 3 months if you're trying to push water uphill.
-- **Cultural buying differences.** SMB buying behaviour varies more by country than people expect. The "tell me more" trigger that works in Polish might not work in Spanish without adjustment.
+- **Złe hires.** Sprzedaż jest lokalna — lokalne zatrudnienia mają znaczenie. Złe zatrudnienie spala 3 miesiące łatwo.
+- **Zły content.** Outreach assety, które działały na rynku A, mogą nie ladować na rynku B. Iteruj.
+- **Rynek faktycznie nie gotowy.** Niektóre rynki są 2 lata w tyle co do digital adoption. Dowiesz się w ciągu 3 miesięcy, jeśli próbujesz pchać wodę pod górkę.
+- **Kulturowe różnice w kupowaniu.** Zachowanie SMB przy kupowaniu różni się bardziej między krajami, niż ludzie oczekują. Trigger "tell me more", który działa po polsku, może nie działać po hiszpańsku bez dostosowania.
 
-The 3–5 month cycle is also a *test*. If you can't get to profitability in that window, the playbook isn't transferring — pause, diagnose, adjust before scaling.
+Cykl 3–5 miesięcy to też *test*. Jeśli nie możesz dojść do profitability w tym oknie, playbook się nie transferuje — pauza, diagnoza, dostosowanie przed skalowaniem.
 
-## Balancing capital across markets
+## Balansowanie kapitału między rynkami
 
-Once you have multiple countries running, you start balancing — which ones get *more* salespeople and marketing investment?
+Gdy już masz wiele krajów działających, zaczynasz balansować — które dostają *więcej* salesowców i marketingowej inwestycji?
 
-His framing:
+Jego framing:
 
-- **Spain feels chłonna**? Add two more salespeople, increase marketing. Hot markets get more fuel.
-- **UK feels at efficient saturation**? Don't add more salespeople — you'd lose efficiency. Hold the current team.
-- **A new market launches**? Start at the 2+1 floor, see how it absorbs, then re-balance from there.
+- **Hiszpania czuje się chłonna?** Dodaj jeszcze dwóch salesowców, zwiększ marketing. Gorące rynki dostają więcej paliwa.
+- **UK czuje się przy efficient saturation?** Nie dodawaj więcej salesowców — straciłbyś efficiency. Trzymaj obecny team.
+- **Nowy rynek startuje?** Zacznij od podłogi 2+1, zobacz jak absorbuje, potem re-balansuj.
 
-The principle: *you don't need huge operations in any one country*. You need the right level of operation per country, calibrated to how the market responds.
+Zasada: *nie potrzebujesz ogromnych operacji w żadnym pojedynczym kraju*. Potrzebujesz właściwego poziomu operacji per kraj, skalibrowanego do tego, jak rynek odpowiada.
 
-## The current state
+## Obecny stan
 
-UK and Poland are the anchor markets, both growing well. Spain just launched. Significant inbound from Netherlands and Germany — flagged as next. Other countries on the horizon.
+UK i Polska to kotwice rynków, oba rosną dobrze. Hiszpania właśnie się odpaliła. Znaczący inbound z Holandii i Niemiec — flagowane jako następne. Inne kraje na horyzoncie.
 
-This is the *expansion mode* version of being a founder (see `02-founder-mindset.md`) — *working on the company*, picking where to deploy capital and people across markets, rather than personally landing every customer.
+To jest *expansion mode* wersja bycia founderem (patrz `02-founder-mindset.md`) — *working on the company*, wybieranie gdzie deployować kapitał i ludzi między rynkami, zamiast osobiście ladowanie każdego klienta.
 
-## Quote that captures it
+## Cytat, który to łapie
 
 > "Wchodząc do Hiszpanii, ja zaczynam od tego, że robię translację całej platformy — co dziś nie jest wyzwaniem technologicznym. Zatrudniam dwie osoby do sprzedaży, jednego account managera. Koszt tego to jest koszt między 3 a 5 miesięcy, jeżeli ci ludzie dowożą, ja sobie zaczynam zwracać — to staje się generalnie rentowny rynek z tych operacji na miejscu. I potem, jak zaczyna działać, zaczynam dopalać marketing B2B, żeby generować inboundy."

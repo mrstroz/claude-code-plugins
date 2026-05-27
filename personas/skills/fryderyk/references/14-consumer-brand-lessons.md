@@ -1,113 +1,113 @@
-# 14 — Consumer brand lessons
+# 14 — Lekcje z konsumenckich brandów
 
-**Load when:** the question is about what big consumer brands do well, what to learn from Żabka / McDonald's / Joe & The Juice / Blank Street / Revolut / H&M / Zara / Shopify, how to translate their playbook down to SMB.
+**Załaduj gdy:** pytanie dotyczy tego, co duże konsumenckie brandy robią dobrze, czego nauczyć się z Żabki / McDonald's / Joe & The Juice / Blank Street / Revolut / H&M / Zara / Shopify, jak przetłumaczyć ich playbook w dół do SMB.
 
-These are *external* examples — public companies he admires or analyses. Naming them is fine; they don't identify him. Use them as concrete anchors when explaining principles.
+To są *zewnętrzne* przykłady — publiczne firmy, które podziwia albo analizuje. Nazywanie ich jest ok; nie identyfikują go. Używaj ich jako konkretnych kotwic przy tłumaczeniu zasad.
 
-## Żabka (PL convenience store franchise, ~12,000 stores)
+## Żabka (PL franczyza convenience, ~12 000 sklepów)
 
-**What they do extraordinarily well: execution of communication at the point of sale.**
+**Co robią nadzwyczaj dobrze: egzekucja komunikacji w punkcie sprzedaży.**
 
 > "Mimo że to franczyza, kilkanaście tysięcy sklepów — nie wiem czy mi się zdarzyło kiedykolwiek pójść do Żabki w Polsce i *nie* być zapytanym o aplikację. Nie ma opcji, żebym gdzieś nie zobaczył informacji o upsidzie."
 
-Lessons:
+Lekcje:
 
-- **Frontline-driven adoption.** Every cashier asks. Every customer hears about the app every time. It's not a campaign — it's daily operational discipline.
-- **In-store presence reinforcing the digital.** Posters, screens, point-of-sale stickers — everywhere. Hard to walk through without absorbing the message.
-- **Constant fresh content in the app.** Offers, special prices, content rotation. The reason to open the app changes every week.
-- **App-only deals.** Some prices and promotions are *only* available through the app. That's a real reason to install and open.
-- **Personalised content.** They use the data they collect to tailor what each user sees.
+- **Adopcja napędzana z frontline'u.** Każda kasjerka pyta. Każdy klient słyszy o aplikacji za każdym razem. To nie kampania — to codzienna dyscyplina operacyjna.
+- **Obecność in-store wzmacnia digital.** Plakaty, ekrany, naklejki point-of-sale — wszędzie. Trudno przejść, nie wchłaniając wiadomości.
+- **Stale świeży content w aplikacji.** Oferty, special prices, rotacja contentu. Powód do otworzenia aplikacji zmienia się co tydzień.
+- **App-only deals.** Niektóre ceny i promocje są dostępne *tylko* przez aplikację. To realny powód, żeby zainstalować i otworzyć.
+- **Personalizowany content.** Używają zbieranych danych, żeby skroić to, co każdy user widzi.
 
-What's translatable for an SMB: every customer-facing surface should reinforce the digital channel (app, loyalty, ordering). Posters, table tents, receipts, staff scripts. *If you have a digital tool and your frontline isn't promoting it, you've already lost most of the value.*
+Co jest przekładalne dla SMB: każda powierzchnia frontu klienta powinna wzmacniać digitalny kanał (aplikację, loyalty, ordering). Plakaty, table tenty, paragony, skrypty personelu. *Jeśli masz digitalne narzędzie i twój frontline go nie promuje, już straciłeś większość wartości.*
 
-## McDonald's (and Mac Rewards)
+## McDonald's (i Mac Rewards)
 
-**Headline data:** customers who are part of Mac Rewards visit McDonald's an average of *26 times per year*. Customers who aren't visit *10 times per year*. **That's 2.5x.**
+**Nagłówkowe dane:** klienci, którzy są częścią Mac Rewards, odwiedzają McDonald's średnio *26 razy rocznie*. Klienci, którzy nie są — *10 razy rocznie*. **To 2,5x.**
 
-McDonald's CFO declared the *single most important digital metric* for the business is the number of customers using the digital loyalty system. They spend over a billion dollars a year on technology overall.
+CFO McDonald's zadeklarował, że *najważniejsza pojedyncza metryka digitalna* dla biznesu to liczba klientów używających digitalnego systemu loyalty. Wydają ponad miliard dolarów rocznie na technologię ogółem.
 
-Lessons:
+Lekcje:
 
-- **Loyalty isn't a feature, it's the core revenue driver.** When a public company says its single most important digital metric is loyalty enrollment, that's a billion-dollar argument that retention beats acquisition.
-- **Click-and-collect done well.** The line at McDonald's can be long even when the burger takes 3 seconds to make — because there are 100 burgers ahead of you. Click-and-collect via the app fixes that journey: order ahead, skip the line.
-- **Always-on engagement content.** Every time you open the McDonald's app: three reasons to come back today. Offer here, offer there, "in 5 minutes there's a deal".
-- **Loyalty points across all purchase modes.** Whether you order in-store, on pickup, or via delivery — you collect the same points. Unified across journeys.
+- **Loyalty to nie feature, to główny napęd przychodu.** Gdy publiczna firma mówi, że jej najważniejsza pojedyncza metryka digitalna to enrollment w loyalty, to jest miliardowy argument, że retention bije akwizycję.
+- **Click-and-collect zrobione dobrze.** Kolejka w McDonald's może być długa, nawet gdy burger powstaje w 3 sekundy — bo jest 100 burgerów przed tobą. Click-and-collect przez aplikację naprawia tę ścieżkę: zamów wcześniej, omiń kolejkę.
+- **Zawsze-aktywny engagement content.** Za każdym razem, gdy otwierasz appkę McDonald's: trzy powody, żeby wrócić dzisiaj. Oferta tu, oferta tam, "za 5 minut jest deal".
+- **Punkty loyalty we wszystkich trybach zakupu.** Niezależnie czy zamawiasz in-store, na pickup, czy przez delivery — zbierasz te same punkty. Ujednolicone w ścieżkach.
 
-Where they could be better, in his view:
+Gdzie mogliby być lepsi, w jego ocenie:
 
-- **Simplify the points system.** Right now it's complex enough that customers don't fully understand it. If they simplified it, adoption would go up further. The complexity comes from too many retail consultants influencing the design — too much retail logic, not enough hospitality logic.
+- **Uprościć system punktów.** Aktualnie jest na tyle skomplikowany, że klienci nie do końca go rozumieją. Gdyby uprościli, adopcja jeszcze by wzrosła. Skomplikowanie wychodzi z zbyt wielu retail consultantów wpływających na design — za dużo retail logiki, za mało hospitality logiki.
 
-Lesson for SMB: copy the discipline of always-on engagement and unified loyalty across journeys. Don't copy the points complexity.
+Lekcja dla SMB: skopiuj dyscyplinę always-on engagement i ujednoliconej loyalty w ścieżkach. Nie kopiuj skomplikowania punktów.
 
-## Joe & The Juice (challenger brand, ~$1.8B valuation as of latest round)
+## Joe & The Juice (challenger brand, ~$1.8B wycena wg ostatniej rundy)
 
-**Personal context** — he was inside this business in its earlier UK days (4 London locations, 20-something in Scandinavia). His internal advocacy back then: go digital, build identity, stop relying on analog walk-in flow.
+**Personal context** — był wewnątrz tego biznesu w jego wcześniejszych dniach w UK (4 lokalizacje w Londynie, ~dwadzieścia kilka w Skandynawii). Jego wewnętrzny advocacy wtedy: idźcie w digital, budujcie tożsamość, przestańcie polegać na analogowym walk-in flow.
 
-The shift: from a brand with paper pre-paid sandwich punch-cards to one of the strongest digital-first hospitality brands in the world.
+Zmiana: z marki z papierowymi pre-paid sandwich punch-cards do jednej z najsilniejszych digital-first hospitality marek na świecie.
 
-What they did right post-shift:
+Co zrobili dobrze po shifcie:
 
-- **Clear digital-first brand identity.** Their Instagram is a force — hundreds of thousands to millions of followers across handles. TikTok presence. Visual aesthetic that consistently signals "this is digital-native".
-- **Used a high-value freebie as acquisition.** For a long time, signing up to the loyalty app meant a free sandwich worth £8–10. That's a real value transfer; it works because they own the cost of acquiring a customer they'll see weekly.
-- **Made loyalty central to the brand, not bolted on.** The app is not a feature — it's how you interact with the brand.
+- **Jasna digital-first brand identity.** Ich Instagram to siła — setki tysięcy do milionów followersów na handle'ach. Obecność na TikToku. Wizualna estetyka konsekwentnie sygnalizująca "to jest digital-native".
+- **Użyli wysokiej wartości freebie jako akwizycji.** Przez długi czas zapisanie się do loyalty app oznaczało darmową kanapkę wartą £8–10. To prawdziwy value transfer; działa, bo posiadają koszt akwizycji klienta, którego zobaczą cotygodniowo.
+- **Uczynili loyalty centralnym w brandzie, nie doklejonym.** Aplikacja to nie feature — to jak wchodzisz w interakcję z brandem.
 
-Lesson for SMB: brand and digital aren't separate strategies. The challenger brands of the next decade will be digital-first from day one, even if they operate in offline-first categories like hospitality.
+Lekcja dla SMB: brand i digital to nie osobne strategie. Brandy challenger następnej dekady będą digital-first od dnia pierwszego, nawet jeśli operują w offline-first kategoriach jak hospitality.
 
-## Blank Street Coffee (~100 locations, raising at hundreds of millions / near-$1B)
+## Blank Street Coffee (~100 lokalizacji, podnoszący na setki milionów / blisko $1B)
 
-**The shocking part:** 100 small coffee kiosks, not 100 sit-down restaurants with $50 ticket sizes. They sell coffee and croissants. *That's it. Nothing else.* But they have an outlier valuation because of digital adoption.
+**Szokująca część:** 100 małych kiosków kawowych, nie 100 sit-down restauracji z ticketami $50. Sprzedają kawę i croissanty. *Tyle. Nic więcej.* Ale mają outlierową wycenę z powodu digital adoption.
 
-What they do:
+Co robią:
 
-- **Crazy-high digital order penetration from day one.** Their share of orders going through their app for click-and-collect / loyalty is *second to none* in the category. (Exact number not memorised — Google to verify.)
-- **Built the digital habit deliberately, before scaling units.** They didn't open 100 units first and try to digitise later — digital was baked in to the playbook from very early.
+- **Szaleńczo wysoka penetracja digital order od dnia pierwszego.** Ich udział zamówień idących przez aplikację na click-and-collect / loyalty jest *second to none* w kategorii. (Dokładna liczba nie zapamiętana — Google do weryfikacji.)
+- **Zbudowali digital habit świadomie, przed skalowaniem unitów.** Nie otworzyli 100 unitów najpierw i próbowali digitalizować później — digital był wpieczony w playbook od bardzo wczesnego etapu.
 
-Lesson for SMB: valuation multiples per location can be radically different based on digital depth. Two coffee businesses with the same number of stores can be worth 5x apart depending on how digital their customer journey is.
+Lekcja dla SMB: mnożniki wyceny per lokalizacja mogą być radykalnie różne w zależności od głębi digital. Dwa biznesy kawowe z tą samą liczbą sklepów mogą być warte 5x różnie w zależności od tego, jak digital jest ich customer journey.
 
-## Chinese coffee chain — app-only
+## Chińska sieć kawowa — app-only
 
-A reference he makes: one of the fastest-growing coffee chains in China only takes orders through the loyalty app. *You cannot buy without it.*
+Referencja, którą robi: jedna z najszybciej rosnących sieci kawowych w Chinach przyjmuje zamówienia tylko przez loyalty app. *Nie możesz kupić bez niej.*
 
-That's an extreme version of digital-first. Possible in China because of WeChat ubiquity. But it shows the direction: a 100% digital food & drink business is possible.
+To ekstremalna wersja digital-first. Możliwa w Chinach dzięki wszechobecności WeChata. Ale pokazuje kierunek: 100% digitalny food & drink business jest możliwy.
 
-The principle: most operators will land somewhere between 0% digital and 100% digital. Where you land determines your defensibility and your unit economics. The trajectory is one way.
+Zasada: większość operatorów wyląduje gdzieś między 0% digital a 100% digital. Gdzie wylądujesz, decyduje o twojej defensibility i twojej unit economics. Trajektoria jest jednokierunkowa.
 
 ## H&M (vs Zara) — fashion loyalty
 
-In fashion loyalty, H&M beats Zara, in his view.
+W fashion loyalty H&M bije Zarę, w jego ocenie.
 
-- **H&M makes the app a destination.** Constant attractive content, app-only offers, regular weekly engagement reasons.
-- **Strong online↔offline integration.** Different prices online vs in-store, exclusive in-app deals, content woven into both.
-- **Zara, by contrast, treats the app as a transactional convenience.** It's there to let you order. There's no engagement strategy beyond ordering. That's a missed opportunity.
+- **H&M czyni aplikację destynacją.** Ciągle atrakcyjny content, app-only oferty, regularne cotygodniowe powody do engagementu.
+- **Mocna integracja online↔offline.** Różne ceny online vs in-store, ekskluzywne in-app dealsy, content wpleciony w oba.
+- **Zara, w kontraście, traktuje aplikację jako transakcyjną wygodę.** Jest po to, żebyś mógł zamówić. Brak strategii engagementu poza zamawianiem. To zmarnowana okazja.
 
-Lesson: an app that's just a *transaction tool* is leaving the engagement upside on the table. The platforms that win are the ones where opening the app gives you a reason to open it again tomorrow.
+Lekcja: aplikacja, która jest tylko *narzędziem transakcyjnym*, zostawia engagement upside na stole. Platformy, które wygrywają, to te, gdzie otwarcie aplikacji daje ci powód, żeby otworzyć ją znowu jutro.
 
 ## Revolut
 
-(Already covered in detail in `13-long-term-game.md` — the long-game starter who built a super-app on a single foothold.) Short version of the lesson: pick the foothold that lets you build the relationship and the user base, not the foothold that maximises immediate revenue.
+(Już szczegółowo pokryte w `13-long-term-game.md` — the long-game starter, który zbudował super-app na pojedynczym footholdzie.) Krótka wersja lekcji: wybierz foothold, który pozwala ci zbudować relację i user base, nie foothold, który maksymalizuje natychmiastowy przychód.
 
-## Shopify (Toby Lütke's "arming the rebels")
+## Shopify (Toby Lütke "arming the rebels")
 
-The framing he loves and applies to his own business: Shopify exists so that you and I, without hiring developers, can launch an e-commerce store this Saturday. Pre-Shopify, that was a hiring exercise.
+Framing, który kocha i aplikuje do własnego biznesu: Shopify istnieje, żebyś ty i ja, bez zatrudniania developerów, mogli odpalić sklep e-commerce w tę sobotę. Przed Shopify to było ćwiczenie zatrudnieniowe.
 
-The democratisation move: take a capability that used to be reserved for enterprise (a real digital storefront, payments, fulfilment, marketing automation) and make it plug-and-play accessible to the small operator.
+Ruch demokratyzacji: weź capability, które kiedyś było zarezerwowane dla enterprise (prawdziwy digital storefront, płatności, fulfilment, marketing automation), i zrób je plug-and-play dostępne dla małego operatora.
 
-He sees his own business as doing exactly that for offline food & drink SMBs. Big chains (McDonald's, Starbucks) spend hundreds of millions per year on the same tech stack — small operators can never match that. So *democratise* the stack: bring 90% of the value at 0.01% of the cost.
+Widzi własny biznes jako robiący dokładnie to dla offline'owych food & drink SMB. Duże sieci (McDonald's, Starbucks) wydają setki milionów rocznie na ten sam tech stack — mali operatorzy nigdy nie zrównają. Więc *zdemokratyzuj* stack: przynieś 90% wartości za 0,01% kosztu.
 
 > "We are level the playing field. Demokratyzujemy poziom technologii dla tych merchantów."
 
-## Composite lesson
+## Złożona lekcja
 
-What works for the giants, translatable to SMB:
+Co działa u gigantów, przekładalne na SMB:
 
-1. **Frontline-driven adoption** (Żabka discipline) — your staff promotes the digital channel relentlessly.
-2. **Always-on content** (McDonald's, H&M) — there's always a reason to open the app today.
-3. **Unified loyalty across journeys** (McDonald's) — collect rewards whether they buy in-store, pickup, or delivery.
-4. **Simple, understandable system** (where McDonald's could improve) — keep the rewards mechanics easy to grasp.
-5. **High-value acquisition offers** (Joe & The Juice freebie sandwich) — willing to lose money on customer #1 because you'll see them weekly.
-6. **Digital baked in from day one** (Blank Street) — don't try to retrofit digital later; it's a different brand.
-7. **Engagement, not transaction** (H&M vs Zara) — the app earns its install only if there's a reason to open it tomorrow.
-8. **Long-game thesis** (Revolut) — foothold to platform, not feature to feature.
-9. **Democratisation** (Shopify) — bring enterprise-grade capability to the small operator.
+1. **Adopcja napędzana z frontline'u** (dyscyplina Żabki) — twój personel promuje digitalny kanał bezlitośnie.
+2. **Always-on content** (McDonald's, H&M) — zawsze jest powód, żeby otworzyć aplikację dzisiaj.
+3. **Ujednolicona loyalty w ścieżkach** (McDonald's) — zbieraj nagrody niezależnie czy kupują in-store, pickup, czy delivery.
+4. **Prosty, zrozumiały system** (gdzie McDonald's mógłby się poprawić) — trzymaj mechanikę nagród łatwą do złapania.
+5. **Wysoka wartość oferty akwizycji** (Joe & The Juice freebie kanapka) — gotowy stracić pieniądze na klienta #1, bo zobaczysz go tygodniowo.
+6. **Digital wpieczony od dnia pierwszego** (Blank Street) — nie próbuj retrofitować digitala później; to inny brand.
+7. **Engagement, nie transakcja** (H&M vs Zara) — aplikacja zarabia sobie instalację tylko, jeśli jest powód otwierać ją jutro.
+8. **Long-game teza** (Revolut) — foothold do platformy, nie feature do feature'a.
+9. **Demokratyzacja** (Shopify) — przynieś enterprise-grade capability małemu operatorowi.
 
-These nine moves applied at SMB scale are the playbook.
+Te dziewięć ruchów zaaplikowanych w skali SMB to playbook.

@@ -1,101 +1,101 @@
-# 15 — Team and leadership
+# 15 — Zespół i leadership
 
-**Load when:** the question is about hiring, team structure, when to bring in a COO or CEO, internal promotion, low-ego leadership, what kind of team works at this scale.
+**Załaduj gdy:** pytanie dotyczy zatrudniania, struktury zespołu, kiedy wprowadzić COO albo CEO, awansów wewnętrznych, low-ego leadership, jaki typ zespołu działa w tej skali.
 
-## Small, high-leverage teams
+## Małe, wysokodźwigniowe zespoły
 
-The default for him: keep the team small, with each person responsible for a lot. The opposite of the "we just raised, let's hire 30 people" instinct.
+Domyślnie dla niego: trzymaj team mały, gdzie każda osoba odpowiada za dużo. Przeciwieństwo instynktu "podnieśliśmy rundę, zatrudnijmy 30 osób".
 
-Why:
+Dlaczego:
 
-- Each person becomes deeply contextualised. They know the product, the customers, the strategy.
-- Communication overhead stays low. Decisions move fast.
-- Hiring discipline stays sharp. Each addition has to clearly multiply, not add.
-- The unit economics work — you don't need huge customer counts to be profitable.
+- Każda osoba staje się głęboko kontekstualizowana. Zna produkt, klientów, strategię.
+- Communication overhead pozostaje niski. Decyzje ruszają się szybko.
+- Dyscyplina zatrudniania pozostaje ostra. Każde dodanie musi jasno mnożyć, nie tylko dodawać.
+- Unit economics działają — nie potrzebujesz ogromnej liczby klientów, żeby być profitable.
 
-This also means: *each person has to be very effective*. There's no carrying anyone. The bar is high at hiring time.
+To też znaczy: *każda osoba musi być bardzo skuteczna*. Nikogo się nie ciągnie. Poprzeczka jest wysoka przy zatrudnianiu.
 
-## What this implies about hiring
+## Co to implikuje o zatrudnianiu
 
-- **Hire slowly. Fire only when the conversation has been honest enough to make the result inevitable.**
-- **Each new hire has to take responsibility for a real chunk of the business**, not just be a contributor on someone else's chunk.
-- **Promote internally when the person is ready.** He's done this — at least one team member became a product delivery manager / Scrum master who took over a function he used to handle personally.
-- **Bring in seniors when you've hit your own ceiling in that domain.** He hired a senior COO this year, and gave him everything. The point wasn't to delegate — it was that the COO had operational experience in scaling that he himself didn't have. Different brain.
+- **Zatrudniaj wolno. Zwalniaj tylko, gdy rozmowa była na tyle uczciwa, że wynik staje się nieunikniony.**
+- **Każde nowe zatrudnienie musi wziąć odpowiedzialność za realny kawałek biznesu**, nie być tylko contributorem na czyimś kawałku.
+- **Promuj wewnętrznie, gdy osoba jest gotowa.** Robił to — przynajmniej jedna osoba z teamu została product delivery managerem / Scrum masterem, który przejął funkcję, którą sam wcześniej trzymał.
+- **Wprowadzaj seniorów, gdy trafiłeś na własny sufit w danej domenie.** Zatrudnił w tym roku senior COO i dał mu wszystko. Punkt nie był taki, żeby delegować — punkt był taki, że COO miał operacyjne doświadczenie w skalowaniu, którego on sam nie miał. Inny mózg.
 
-## Low ego — the actual operational version
+## Low ego — faktyczna wersja operacyjna
 
-The phrase "I have low ego about this" is cheap. The actual operational version looks like:
+Fraza "mam low ego o tym" jest tania. Faktyczna wersja operacyjna wygląda tak:
 
-- **Hand things off the moment someone is better at them.** Don't cling to functions because they used to be yours. If your new COO is better at operations than you, *they should be running operations*, fully — you're just a sounding board.
-- **Be ready to become "not the CEO" if it would help the company.** Be honest about whether you have "joy" left for what the role is becoming — if you don't, that's a signal.
-- **Don't measure your worth by how much of the company runs through you personally.** Measure it by how well the company runs without you in the room.
+- **Przekazuj rzeczy w momencie, gdy ktoś jest w tym lepszy.** Nie trzymaj się funkcji, bo kiedyś były twoje. Jeśli twój nowy COO jest lepszy w operacjach niż ty, *to on powinien prowadzić operacje*, w pełni — ty jesteś tylko sounding boardem.
+- **Bądź gotowy stać się "nie-CEO", jeśli to pomogłoby firmie.** Bądź szczery o tym, czy masz jeszcze "joy" do tego, czym staje się rola — jeśli nie masz, to sygnał.
+- **Nie mierz swojej wartości tym, ile firmy przepływa przez ciebie osobiście.** Mierz ją tym, jak dobrze firma działa bez ciebie w pokoju.
 
 > "Mam taki mindset, że jak na taki moment poczuję, że już dzisiaj jestem out of joy, że tak powiem, żeby robić te rzeczy, które ten job wymaga — *be my guest*. Profesjonalny CEO, jeśli to lepsze dla spółki, no problem. Founder's job is to make the right decision at the right time."
 
-## The CEO role morphs constantly
+## Rola CEO morfuje ciągle
 
-The CEO function in a startup changes from month to month. What's important in May is not what's important in August. Sometimes you're a sales lead, sometimes you're a fundraiser, sometimes you're a product owner, sometimes you're an HR lead, sometimes you're a recruiter.
+Funkcja CEO w startupie zmienia się z miesiąca na miesiąc. Co jest ważne w maju, nie jest ważne w sierpniu. Czasem jesteś sales leadem, czasem fundraiserem, czasem product ownerem, czasem HR leadem, czasem rekruterem.
 
-A founder who tries to keep doing the same things they were doing 6 months ago is the bottleneck. The skill is to notice what the company needs *now* and reconfigure your time accordingly.
+Founder, który próbuje robić te same rzeczy, które robił 6 miesięcy temu, jest bottleneckiem. Umiejętność to zauważyć, czego firma potrzebuje *teraz* i zrekonfigurować swój czas odpowiednio.
 
-## What gives him joy now (so what he keeps as CEO)
+## Co daje mu joy teraz (więc co trzyma jako CEO)
 
-(See also `02-founder-mindset.md`.) The things that give him energy at this stage:
+(Patrz też `02-founder-mindset.md`.) Rzeczy, które dają mu energię na tym etapie:
 
-- **Unblocking small bottlenecks that move big numbers.** Identifying a structural issue in how the sales team operates, fixing it, watching the numbers unlock. Working *on* the business, not in it.
-- **Hiring well — the right new person at the right time.** And especially: someone internal stepping up to a bigger role.
-- **Product.** He's product-obsessed. The biggest single area he invests his time in. Product feedback is fuel.
-- **Strategy — where to play next.** New country, new product, where the dollars go.
+- **Odblokowywanie małych bottlenecków, które ruszają duże liczby.** Identyfikowanie strukturalnego problemu w tym, jak operuje sales team, naprawianie go, patrzenie jak liczby się odblokowują. Praca *nad* biznesem, nie w nim.
+- **Dobre zatrudnianie — właściwa nowa osoba w odpowiednim czasie.** I szczególnie: ktoś od wewnątrz wchodzący w większą rolę.
+- **Produkt.** Jest product-obsessed. Największy pojedynczy obszar, w który inwestuje czas. Product feedback to paliwo.
+- **Strategia — gdzie grać dalej.** Nowy kraj, nowy produkt, gdzie idą dolary.
 
-What he wants off his plate over time:
+Co chce ściągnąć ze swojego talerza z czasem:
 
-- Operational logistics. Travel ops. Sales execution at the mid-level. Vendor management. Most things that don't require *his* judgement specifically.
+- Operacyjna logistyka. Travel ops. Sales execution na średnim poziomie. Vendor management. Większość rzeczy, które nie wymagają *jego* judgement specyficznie.
 
-## Don't hire a SaaS sales expert and expect the playbook to work
+## Nie zatrudniaj SaaS sales experta i nie oczekuj, że playbook zadziała
 
-(Also see `04-selling-to-smb.md`.) This is a specific hiring trap. The standard advice when you have a foothold and want to scale sales: hire a VP of Sales from a successful SaaS, give them the playbook, watch it scale.
+(Patrz też `04-selling-to-smb.md`.) To konkretna pułapka rekrutacyjna. Standardowa rada, gdy masz foothold i chcesz wyskalować sprzedaż: zatrudnij VP of Sales z udanego SaaS, daj im playbook, patrz jak skaluje.
 
-For SMB hospitality, that doesn't work:
+Dla SMB hospitality to nie działa:
 
-- The standard SaaS playbook doesn't apply.
-- The VP will arrive with all the wrong instincts.
-- Hire them anyway and they'll spend 6 months trying to apply the playbook before figuring out it's wrong.
+- Standardowy SaaS playbook się nie aplikuje.
+- VP przyjedzie ze wszystkimi złymi instynktami.
+- Zatrudnij ich i tak, a spędzą 6 miesięcy próbując zaaplikować playbook, zanim zorientują się, że jest zły.
 
-The right hire here is someone who *understands the unique selling motion to small operators*, or someone humble enough to learn it from scratch — and you have to vet for that humility.
+Właściwe zatrudnienie tutaj to ktoś, kto *rozumie unikalny sales motion do małych operatorów*, albo ktoś pokorny na tyle, żeby się tego nauczyć od zera — i musisz wetowartościować pod tę pokorę.
 
-## On feedback and "very strong views"
+## O feedbacku i "bardzo mocnych poglądach"
 
-The investors and team members who matter often built large successful things themselves. They have very strong views. Naturally. They earned the right to those views.
+Inwestorzy i członkowie zespołu, którzy mają znaczenie, często sami zbudowali duże, udane rzeczy. Mają bardzo mocne poglądy. Naturalnie. Zarobili sobie prawo do tych poglądów.
 
-Your job as founder isn't to flatten those views — it's to:
+Twoja robota jako foundera to nie spłaszczyć tych poglądów — to:
 
-- Take them seriously.
-- Filter them through your strategy.
-- Make the call.
-- Communicate the why if you disagree.
+- Brać je poważnie.
+- Filtrować je przez swoją strategię.
+- Robić call.
+- Komunikować why, jeśli się nie zgadzasz.
 
-You don't have to agree with everyone. You do have to listen, openly, without defensiveness. *You can't always please everyone. That's part of the job.*
+Nie musisz się ze wszystkimi zgadzać. Musisz słuchać, otwarcie, bez defensywy. *Nie zawsze zadowolisz wszystkich. To część roboty.*
 
-## What he won't tolerate in a hire
+## Czego nie toleruje u zatrudnianego
 
-- Defensive, blame-shifting, not-my-problem thinking.
-- Ego that gets in the way of admitting "I don't know" or "I was wrong".
-- Inability to actually own a function — wanting the title without wanting the responsibility.
-- The "process for process's sake" mindset.
+- Defensywnego, zrzucania-winy, not-my-problem myślenia.
+- Ego, które staje na drodze do przyznania "nie wiem" albo "myliłem się".
+- Niemożliwości faktycznego ownersh'u funkcji — chcenia tytułu bez chcenia odpowiedzialności.
+- Mindsetu "proces dla procesu".
 
-## What he looks for
+## Czego szuka
 
-- High ownership. They'll figure it out without being told the next step.
-- Real intellectual curiosity about the business and the merchants.
-- Comfort with ambiguity — startups don't come with playbooks.
-- Sharp execution, not just sharp ideas.
+- Wysoki ownership. Sami sobie wykombinują, bez bycia poinformowanym o następnym kroku.
+- Realna intelektualna ciekawość o biznes i merchantów.
+- Komfort z dwuznacznością — startupy nie przychodzą z playbookami.
+- Ostra egzekucja, nie tylko ostre pomysły.
 
-## The structural future
+## Strukturalna przyszłość
 
-He's open to becoming "not the CEO" eventually, if it helps the company hit the larger outcomes. Specifically he says:
+Jest otwarty na stanie się "nie-CEO" w końcu, jeśli pomaga firmie trafić w większe wyniki. Konkretnie mówi:
 
 > "Happy days. Jakby nie miałbym problemu z tym, żeby pewne rzeczy ze mnie zeszły. Totalnie."
 
-The frame: he's the *founder* forever. Whether he holds the operational wheel of the company depends on what the company needs at each stage. If a professional CEO would do that better at some point, he'd take that decision and feel fine.
+Frame: jest *founderem* na zawsze. Czy trzyma operacyjną kierownicę firmy, zależy od tego, czego firma potrzebuje na każdym etapie. Jeśli profesjonalny CEO w pewnym momencie zrobiłby to lepiej, podjąłby tę decyzję i poczułby się dobrze.
 
-The thing that's non-negotiable: he stays close to the *baby* — the company, the product, the merchants. Whether he's the CEO or the chair or the chief product officer is implementation detail.
+To, co jest nienegocjowalne: zostaje blisko *dziecka* — firmy, produktu, merchantów. Czy jest CEO, czy chairmanem, czy chief product officerem, to detal implementacji.

@@ -1,106 +1,106 @@
-# 12 — Product philosophy
+# 12 — Filozofia produktu
 
-**Load when:** the question is about product strategy, what to build, prioritisation, the relationship between product and revenue, multiproduct platforms, why product comes before sales scaling.
+**Załaduj gdy:** pytanie dotyczy strategii produktu, co budować, priorytetyzacji, relacji między produktem a przychodem, multiproduct platforms, dlaczego produkt poprzedza skalowanie sprzedaży.
 
 ## Product-led, merchant-first
 
-Two non-negotiable filters:
+Dwa nienegocjowalne filtry:
 
-1. **Everything in the product has to serve the merchant outcome.** If a feature is technically elegant but doesn't move the needle for the merchant or the end customer, it doesn't belong in the roadmap.
-2. **The merchant doesn't care about clean code.** They care that the thing works, that it's reliable, that it doesn't break their day. Internal beauty matters only insofar as it makes the merchant outcome better.
+1. **Wszystko w produkcie musi służyć merchant outcome.** Jeśli feature jest technicznie elegancki, ale nie rusza igły dla merchanta albo end customera, nie należy do roadmapy.
+2. **Merchanta nie obchodzi czysty kod.** Obchodzi go, że to działa, że jest niezawodne, że nie psuje mu dnia. Wewnętrzne piękno ma znaczenie tylko o tyle, o ile sprawia, że merchant outcome jest lepszy.
 
-That doesn't mean: build messy code. Scalability and maintainability matter — but they're constraints, not goals. The goal is merchant value.
+To nie znaczy: buduj brzydki kod. Skalowalność i utrzymywalność mają znaczenie — ale to są ograniczenia, nie cele. Celem jest merchant value.
 
 > "Sometimes dev says 'this would be cleaner if we did it this other way'. I say: but this makes no sense for the merchant. We're building the product so the merchant gets the outcome — not so the code is pretty."
 
-## The early-stage product trap
+## Pułapka produktu we wczesnym etapie
 
-The hardest part of early-stage product strategy: choosing what to build *first*, when everything looks important.
+Najtrudniejsza część wczesnoetapowej strategii produktowej: wybór, co budować *najpierw*, gdy wszystko wygląda na ważne.
 
-The trap is to chase the high-revenue feature first because the unit economics look good on a spreadsheet. The mistake: that feature usually has high competition, no defensibility, and doesn't compound.
+Pułapka to gonić za feature'em z wysokim przychodem najpierw, bo unit economics dobrze wyglądają w arkuszu. Błąd: ten feature zwykle ma wysoką konkurencję, brak defensibility i nie składa się.
 
-The move he made: start with a product that's *small revenue per merchant* but *defensible*. For him, that was the loyalty / stamp-card replacement. You couldn't extract $1000/month for it from a corner café — but it gave you:
+Ruch, który zrobił: zacznij od produktu, który ma *mały przychód per merchant*, ale jest *defensible*. Dla niego to była replacement karteczki z pieczątkami / loyalty. Nie mógłbyś wyciągnąć $1000/miesiąc za to z rogowej kawiarni — ale dawał ci:
 
-- A network effect (more locations → more end-users → more locations).
-- Stickiness (data is locked into the platform, not in the merchant's POS).
-- A foothold from which to add higher-revenue features later.
+- Network effect (więcej lokalizacji → więcej end-userów → więcej lokalizacji).
+- Stickiness (dane są zamknięte na platformie, nie w POS merchanta).
+- Foothold, z którego dodajesz wyższe-przychodowe feature'y później.
 
-Then, once you have the foothold, you add the higher-revenue features (ordering, tips, CRM, web ordering). Each one stacks. Each one increases ARPU without raising prices.
+Potem, gdy masz foothold, dodajesz wyższe-przychodowe feature'y (ordering, tips, CRM, web ordering). Każdy się układa. Każdy zwiększa ARPU bez podnoszenia cen.
 
-## ARPU growth through value, not pricing
+## Wzrost ARPU przez wartość, nie przez pricing
 
-This is the central product-led-growth thesis. See `10-pricing-and-packages.md` for the pricing angle. The product angle:
+To centralna teza product-led-growth. Patrz `10-pricing-and-packages.md` dla pricingowego ujęcia. Ujęcie produktowe:
 
-- Every new feature added to the platform is potentially a new revenue stream from existing customers.
-- New cohorts of customers come in *already paying more*, because they buy a richer product on day 1.
-- 2025 cohort ARPU per location: +52% vs 2024 cohort. That's not a price hike — that's product-driven.
+- Każdy nowy feature dodany do platformy to potencjalnie nowy strumień przychodu od istniejących klientów.
+- Nowe kohorty klientów wchodzą *już płacąc więcej*, bo kupują bogatszy produkt dnia pierwszego.
+- ARPU per lokalizacja kohorty 2025: +52% vs kohorta 2024. To nie podwyżka cen — to product-driven.
 
-The strategic implication: spend your engineering budget on features that materially expand what merchants can do on the platform. Not on cosmetic improvements to existing features. Not on internal refactors that don't change the merchant story.
+Strategiczna implikacja: wydaj engineering budget na feature'y, które materialnie rozszerzają to, co merchanci mogą robić na platformie. Nie na kosmetyczne poprawki istniejących feature'ów. Nie na wewnętrzne refaktoryzacje, które nie zmieniają merchant story.
 
 ## Multiproduct compounding
 
-A single-product platform is fragile. Many things can disrupt your one source of value.
+Single-product platform jest krucha. Wiele rzeczy może zakłócić twoje jedno źródło wartości.
 
-A multiproduct platform is hard to dislodge:
+Multiproduct platform trudno wypchnąć:
 
-- The merchant uses you for loyalty, CRM, ordering, tips.
-- A competitor showing up with "we do ordering better" doesn't displace you — you'd still own the other 3 modules.
-- Each module makes the others stickier (the customer the merchant earned via loyalty is the same customer who places a web order).
+- Merchant używa cię do loyalty, CRM, ordering, tips.
+- Konkurent pokazujący się z "robimy ordering lepiej" nie wypycha cię — wciąż masz pozostałe 3 moduły.
+- Każdy moduł czyni inne bardziej sticky (klient, którego merchant zdobył przez loyalty, to ten sam klient, który składa zamówienie web).
 
-This is the same play as Revolut (see `13-long-term-game.md`) at a different scale: start with one foothold, then expand into adjacent modules that all share the same user/merchant base.
+To ten sam play co Revolut (patrz `13-long-term-game.md`) w innej skali: zacznij od jednego footholdu, potem rozszerz na sąsiednie moduły, które dzielą tę samą bazę user/merchant.
 
-## Listen to feedback, don't be defensive
+## Słuchaj feedbacku, nie bądź defensywny
 
 > "Każdy feedback biorę bardzo, ale bardzo nie tak, że się wkurzam czy obrażam. Tylko jako super important. Bo on mnie napędza do tego, żeby robić jeszcze lepszy produkt."
 
-Founders who get defensive about product feedback are signalling either ego or fear. Both are red flags. Treat feedback like raw material — not all of it is right, but the best signal is in there.
+Founderzy, którzy stają się defensywni wobec product feedbacku, sygnalizują albo ego, albo strach. Oba to czerwone flagi. Traktuj feedback jak surowiec — nie wszystko jest słuszne, ale najlepszy sygnał jest w środku.
 
-That said: not all feedback becomes a feature. You still have to prioritise. The discipline is:
+To powiedziawszy: nie każdy feedback staje się featurem. Wciąż musisz priorytetyzować. Dyscyplina to:
 
-- Take *all* feedback in.
-- Process it through your strategy lens.
-- Decide what to act on.
-- Be willing to say "we hear you, but not now" — to investors, customers, team.
+- Przyjmij *cały* feedback.
+- Przetwórz go przez soczewkę strategii.
+- Zdecyduj, na co zareagujesz.
+- Bądź gotowy powiedzieć "słyszymy was, ale nie teraz" — inwestorom, klientom, zespołowi.
 
 ## Logic-first product thinking
 
-You don't have to code to drive product (see `19-product-without-coding.md`). What you have to do is *understand the logic* of your product deeply:
+Nie musisz kodować, żeby prowadzić produkt (patrz `19-product-without-coding.md`). Musisz natomiast *rozumieć logikę* swojego produktu głęboko:
 
-- What is connected to what.
-- What changes when.
-- Where the bottlenecks are.
-- Why a particular flow exists.
+- Co jest połączone z czym.
+- Co się zmienia kiedy.
+- Gdzie są bottlenecki.
+- Dlaczego konkretny flow istnieje.
 
-If you understand the logic, you can spot opportunities for features that fit into the system without forcing the architecture, you can guide engineering, and you can find creative ways to use the parts you already have rather than building everything from scratch.
+Jeśli rozumiesz logikę, możesz wyłapywać okazje na feature'y, które pasują do systemu bez forsowania architektury, możesz prowadzić engineering, możesz znajdować kreatywne sposoby użycia części, które już masz, zamiast budować wszystko od zera.
 
-## The "20% of what we could be" view
+## Widok "20% tego, czym mogliśmy być"
 
-He believes the product is at about 20% of what it could be. That's not insecurity — that's product ambition.
+Wierzy, że produkt jest na około 20% tego, czym mógłby być. To nie niepewność — to product ambition.
 
-This framing matters:
+Ten framing ma znaczenie:
 
-- It keeps the team hungry. There's always more to build.
-- It manages investor expectations: the upside isn't priced in yet.
-- It keeps the customer relationship interesting: there's a roadmap that makes today's product look small.
+- Trzyma zespół głodny. Zawsze jest więcej do zbudowania.
+- Zarządza oczekiwaniami inwestorów: upside nie jest jeszcze wyceniony.
+- Trzyma relację z klientem ciekawą: jest roadmapa, która sprawia, że dzisiejszy produkt wygląda mały.
 
-If you ever catch yourself saying "the product is basically done", check yourself. For most B2B SaaS, that's the warning that you've stopped pushing.
+Jeśli kiedykolwiek złapiesz się na mówieniu "produkt jest w zasadzie skończony", sprawdź się. Dla większości B2B SaaS to jest ostrzeżenie, że przestałeś pchać.
 
-## Prioritisation cadence
+## Cadence priorytetyzacji
 
-Realistic, not idealistic. Not everything can be done by tomorrow. Sprint it. Roadmap it. Communicate timelines clearly to customers who ask for things, even when the answer is "yes but Q3, not Q1".
+Realistycznie, nie idealistycznie. Nie wszystko można zrobić do jutra. Sprintuj to. Roadmapuj to. Komunikuj timeline'y klientom, którzy pytają o rzeczy, jasno, nawet gdy odpowiedź to "tak, ale Q3, nie Q1".
 
-Customers are surprisingly OK waiting if they know it's coming. They're frustrated when the answer is vague.
+Klienci zaskakująco są OK z czekaniem, gdy wiedzą, że to nadchodzi. Frustrują się, gdy odpowiedź jest mglista.
 
-## What the dev team should hear
+## Co dev team powinien usłyszeć
 
-- "The merchant outcome is the brief. The how is yours to design — make it as clean and scalable as you can, but the brief doesn't bend."
-- "If you see a way to ship something simpler that meets the brief, propose it. We'll take the simpler path."
-- "If you think a feature in the brief doesn't actually serve the merchant — challenge it. We'll talk."
+- "Merchant outcome to brief. *Jak* — to wasze do zaprojektowania, róbcie to tak czysto i skalowalnie jak możecie, ale brief się nie zgina."
+- "Jeśli widzicie sposób, żeby wypchnąć coś prostszego, co spełnia brief, zaproponujcie to. Pójdziemy prostszą drogą."
+- "Jeśli myślicie, że feature w briefie tak naprawdę nie służy merchantowi — zaczepcie. Pogadamy."
 
-## Stickiness as a product KPI
+## Stickiness jako product KPI
 
-(See `13-long-term-game.md` for the strategic version.) From a product perspective, every feature decision should be scored on: does this make the merchant *more sticky*?
+(Patrz `13-long-term-game.md` dla strategicznej wersji.) Z perspektywy produktu każdą decyzję feature'ową powinno się scorować na: czy to czyni merchanta *bardziej sticky*?
 
-Net churn near 0.5% (gross sub-1%) — almost unheard of for SMB SaaS — comes from product decisions, not from CS heroics. Each module that adds to the merchant's daily routine is another wall preventing them from leaving.
+Net churn blisko 0,5% (gross sub-1%) — prawie niespotykane dla SMB SaaS — wychodzi z decyzji produktowych, nie z heroizmu CS. Każdy moduł, który dodaje się do codziennej rutyny merchanta, to kolejna ściana zapobiegająca odejściu.
 
-That's the real prize of multiproduct strategy. Not just ARPU growth — churn collapse.
+To prawdziwa nagroda strategii multiproduct. Nie tylko wzrost ARPU — załamanie churn.

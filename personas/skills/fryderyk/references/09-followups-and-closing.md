@@ -1,118 +1,118 @@
-# 09 — Follow-ups and closing
+# 09 — Follow-upy i closing
 
-**Load when:** the question is about what to do *after* the demo, follow-up cadence, why deals leak post-demo, vacations, setting next steps, the pricing-decision discipline.
+**Załaduj gdy:** pytanie dotyczy tego, co robić *po* demo, kadencji followupów, dlaczego deale wyciekają po demo, wakacji, ustawiania next stepów, dyscypliny decyzji cenowej.
 
-## The wrong mental model of the prospect
+## Zły model mentalny prospekta
 
-The biggest single mistake post-demo is imagining the prospect as a corporate buyer who walks out of your call, goes back to their desk, opens their calendar, blocks an hour to "think about the offer and align with the team", gets a coffee from the assistant, opens Google Calendar to schedule with their CFO, and so on.
+Największy pojedynczy błąd po demo to wyobrażanie sobie prospekta jako korporacyjnego kupującego, który wychodzi z twojego calla, wraca do biurka, otwiera kalendarz, blokuje godzinę na "przemyślenie oferty i ustalenie z zespołem", bierze kawę od asystenta, otwiera Google Calendar, żeby umówić się z CFO, i tak dalej.
 
-That's not your buyer.
+To nie jest twój kupujący.
 
-Your buyer walks off the call and goes back to the *mindfack* — the broken tap, the late staff member, the supplier increasing prices, the booking system glitching, the courier app sending a fee-change notification. That's their world (see `04-selling-to-smb.md`).
+Twój kupujący wychodzi z calla i wraca do *mindfacku* — popsuty kran, spóźniony pracownik, dostawca podnoszący ceny, system rezerwacji glitchujący, aplikacja kurierska wysyłająca powiadomienie o zmianie opłaty. To ich świat (patrz `04-selling-to-smb.md`).
 
-You have to design your follow-up process around *that* person, not the imaginary corporate buyer.
+Musisz zaprojektować swój follow-up proces wokół *tej* osoby, nie wokół wyobrażonego korporacyjnego kupującego.
 
 ## "How you don't lose that client"
 
-The biggest leakage was *here*. He was converting 60–70% of demos to close once they got past the demo. But deals were dying in the gap between demo and decision. So they redesigned the follow-up flow around the SMB buyer's reality.
+Największy leakage był *tutaj*. Konwertował 60–70% demo na close, gdy już przeszli przez demo. Ale deale umierały w przerwie między demo a decyzją. Więc przeprojektowali follow-up flow wokół rzeczywistości kupującego SMB.
 
-Key principles below.
+Kluczowe zasady niżej.
 
-## Set hard next steps before the call ends
+## Ustaw twarde next stepy zanim call się skończy
 
-Don't end a demo with "we'll send you the summary, talk soon". End with:
+Nie kończ demo "wyślemy ci podsumowanie, do usłyszenia". Zakończ:
 
-- A specific next-step meeting on the calendar, ideally booked while you're on the call.
-- An agreed format: "I'll call you Tuesday at 11 to catch up — same call, takes 10–15 minutes."
-- Their phone number exchanged with yours.
+- Konkretnym next-step meetingiem w kalendarzu, idealnie zbookowanym w trakcie calla.
+- Uzgodnionym formatem: "zadzwonię we wtorek o 11, żeby się odezwać — ten sam call, 10–15 minut".
+- Wymienionymi numerami telefonów.
 
-Even if the next call gets moved three times, it exists as an anchor. You can refer to it. They can refer to it.
+Nawet jeśli następny call zostanie przesunięty trzy razy, istnieje jako kotwica. Możesz się do niego odnosić. Oni też.
 
 > "Bez tego — nawet jeżeli to będzie przesunięte trzy razy — mer jest coś, do czego może się odnieść."
 
-Without this anchor, you're working through ambient pressure ("I should follow up"), which is the worst mode possible. With this anchor, the prospect's mental model has a specific date on it, and so does yours.
+Bez tej kotwicy pracujesz przez ambient pressure ("powinienem zrobić follow-up"), co jest najgorszym możliwym trybem. Z tą kotwicą model mentalny prospekta ma konkretną datę i twój też.
 
-## Ask about vacations and timing
+## Pytaj o wakacje i timing
 
-Ask before the demo ends:
+Pytaj zanim demo się skończy:
 
 - "Kiedy myślisz, że wracasz do mnie z decyzją? Powiedzmy, że wszystko ci się podoba."
 - "Jesteście teraz w jakimś szczególnym sezonie?"
 - "Masz jakieś urlopy zaplanowane w tym czy w przyszłym tygodniu?"
 
-If they say "I'll talk to the team in 1.5 weeks because I'm on vacation" — *that's valuable information*. You now know not to send follow-ups during that window. The worst thing you can do is hammer follow-ups at someone on vacation: it burns the deal in a way that's almost unrecoverable.
+Jeśli mówią "porozmawiam z zespołem za 1,5 tygodnia, bo jestem na wakacjach" — *to jest wartościowa informacja*. Wiesz teraz, że nie wysyłasz follow-upów w tym oknie. Najgorsze, co możesz zrobić, to napieprzać follow-upami kogoś na urlopie: spala deal w sposób prawie nie do odzyskania.
 
 > "Lepiej wiedzieć, że dwa tygodnie nic się nie dzieje, niż napieprzać follow-upy do kogoś, kto jest na urlopie. To jest dokładnie to, czego ten człowiek nie chce — dostawać follow-upy od sprzedawcy, kiedy w końcu ma czas z rodziną."
 
-## Never send empty follow-ups
+## Nigdy nie wysyłaj pustych follow-upów
 
-This is a hard rule. He actively forbids his team from sending follow-ups like:
+To jest hard rule. Aktywnie zakazuje swojemu teamowi wysyłania follow-upów typu:
 
 - "Just following up."
 - "Circling back."
 - "Wanted to check in on the decision."
 - "Any thoughts?"
 
-Every single follow-up is an opportunity to add value. Treat it that way.
+Każdy pojedynczy follow-up to okazja, żeby dodać wartość. Traktuj go tak.
 
-What goes into a good follow-up:
+Co wchodzi w dobry follow-up:
 
-- **Another case study** — ideally from a similar business in the same city or country.
-- **A video testimonial** — short, from a real merchant.
-- **A new piece of content** — a behind-the-scenes of how an existing customer is using the product, a quick clip showing a specific feature working in a real cafe.
-- **A new angle** — "btw, I thought of something we didn't get to in the demo, here's a 30-second video."
-- **An answer to a question raised inside their team** — "I think there was a question from your marketing person about X, here's the answer."
+- **Kolejne case study** — idealnie z podobnego biznesu w tym samym mieście albo kraju.
+- **Video testimonial** — krótkie, od prawdziwego merchanta.
+- **Nowy kawałek contentu** — behind-the-scenes, jak istniejący klient używa produktu, krótki clip pokazujący konkretny feature działający w prawdziwej kawiarni.
+- **Nowy angle** — "btw, pomyślałem o czymś, czego nie pokazałem na demo, oto 30-sekundowy film".
+- **Odpowiedź na pytanie podniesione wewnątrz ich teamu** — "wydaje mi się, że było pytanie od twojego marketingowca o X, oto odpowiedź".
 
-Even a follow-up that just says "looking forward to tomorrow's call" should drop another asset alongside it. Always be adding signal.
+Nawet follow-up, który tylko mówi "do zobaczenia jutro na callu", powinien wrzucić obok kolejny asset. Zawsze dodawaj sygnał.
 
-## Follow-ups as upsell opportunity
+## Follow-upy jako upsell opportunity
 
-This is the move people miss. A well-built follow-up flow doesn't just *close the deal* — it can move the customer to a higher package than they were initially considering.
+To ruch, który ludzie pomijają. Dobrze zbudowany follow-up flow nie tylko *zamyka deal* — może przesunąć klienta na wyższy pakiet, niż początkowo rozważał.
 
-Mechanism: every follow-up brings new evidence that the product solves more than they realised. The prospect, who was thinking "I'll start with the basic plan", reads three follow-ups with case studies showing the value of the higher tier, and walks in to the next call ready to go bigger.
+Mechanizm: każdy follow-up wnosi nowy dowód, że produkt rozwiązuje więcej, niż zdawało im się. Prospekt, który myślał "zacznę od podstawowego planu", czyta trzy follow-upy z case studies pokazującymi wartość wyższego tieru i wchodzi na następny call gotowy iść większy.
 
-This compounds: the better your follow-up content library, the more often you upsell at decision time without ever pitching the upsell directly.
+To składa się jak procent składany: im lepsza twoja biblioteka contentu follow-upowego, tym częściej upsellujesz w czasie decyzji, nigdy nie pitchując upsellu wprost.
 
-## The vacation-into-upsell pattern
+## Wzorzec vacation-into-upsell
 
-Concrete pattern he uses:
+Konkretny wzorzec, którego używa:
 
-- Demo on a Thursday, prospect says "we're on vacation next week, talk the Tuesday after".
-- Friday: send the summary + drop one more case study.
-- Don't message during their vacation. *Leave them alone.*
-- The Tuesday they're back: light follow-up. "Hope the vacation was good. Btw I thought of one thing I should have shown — here's a 30-second video."
-- The catch-up call happens that week.
+- Demo w czwartek, prospekt mówi "jesteśmy na urlopie przez tydzień, gadamy we wtorek po".
+- Piątek: wyślij podsumowanie + wrzuć jeszcze jedno case study.
+- Nie pisz w trakcie ich urlopu. *Zostaw ich w spokoju.*
+- Wtorek powrotu: lekki follow-up. "Mam nadzieję, że urlop był dobry. Btw pomyślałem o jednej rzeczy, którą powinienem był pokazać — oto 30-sekundowe wideo."
+- Catch-up call dzieje się tego tygodnia.
 
-The signal sent: *I respect your time, I'm not desperate, but I've been building the value case while you were away.* That's the founder a small business owner wants to buy from.
+Wysłany sygnał: *szanuję twój czas, nie jestem zdesperowany, ale budowałem case wartości, podczas gdy cię nie było.* To jest founder, od którego właściciel małego biznesu chce kupić.
 
-## Acknowledging when they push back the call
+## Uznanie, gdy przesuwają call
 
-If they say "sorry, can't do Tuesday, can we move to Friday?" — that's *also good information*. Respond:
+Jeśli mówią "sorry, nie mogę we wtorek, możemy przesunąć na piątek?" — to też *dobra informacja*. Odpowiedz:
 
 - "Spokojnie, nie ma problemu. Przed naszą rozmową — czy były jakieś pytania od kogoś z twojego zespołu? Tak by się przygotować."
 
-Two reasons:
+Dwa powody:
 
-1. You learn what's happening inside their team without having to ask.
-2. You stop wasting Tuesday following up unnecessarily — you can spend that day reaching out to other prospects.
+1. Dowiadujesz się, co się dzieje w ich zespole, bez konieczności pytania.
+2. Przestajesz marnować wtorek na zbędne follow-upowanie — możesz spędzić ten dzień na reach-outach do innych prospektów.
 
-## Onboarding hint as a closing motion
+## Onboardingowa wskazówka jako closing motion
 
-(See `11-onboarding-emphasis.md` for the longer version.) Every follow-up in this stage is also a chance to drop a sentence about how easy implementation will be:
+(Patrz `11-onboarding-emphasis.md` dla dłuższej wersji.) Każdy follow-up na tym etapie to też szansa, żeby wrzucić zdanie o tym, jak łatwa będzie implementacja:
 
-- "BTW once you decide, we just need [these two things] and we can have you live in 3 days."
-- "We do the heavy lifting on the setup — you basically just give us the green light."
+- "BTW gdy zdecydujecie, potrzebujemy tylko [tych dwóch rzeczy] i możemy was uruchomić w 3 dni."
+- "My robimy heavy lifting przy setupie — wy w zasadzie tylko dajecie zielone światło."
 
-This addresses the *headspace deficit* (see `04-selling-to-smb.md`) — they're not just deciding to buy, they're deciding to take on another mental load. Selling them on how *light* that load will be lowers the psychological cost of saying yes.
+To adresuje *deficyt headspace* (patrz `04-selling-to-smb.md`) — oni nie decydują tylko o kupnie, decydują o wzięciu na siebie kolejnego mentalnego obciążenia. Sprzedanie im, jak *lekkie* to obciążenie będzie, obniża psychologiczny koszt powiedzenia tak.
 
-## When the deal stalls — actually stalls
+## Gdy deal się zatrzymuje — naprawdę zatrzymuje
 
-If you've done all the above and they've gone quiet anyway, don't blast. Send one clean message:
+Jeśli zrobiłeś wszystko powyżej, a oni zamilkli mimo to, nie napieprzaj. Wyślij jedną czystą wiadomość:
 
 - "Słuchaj, wiem, że teraz pewnie kilka rzeczy się na was wali. Daj znać, jak chcesz wrócić do rozmowy — przesyłam jeszcze [jedno case study / krótkie wideo] na wszelki wypadek. No pressure."
 
-That keeps the door open. They'll come back when their week breathes.
+To trzyma drzwi otwarte. Wrócą, gdy ich tydzień zacznie oddychać.
 
-## The metric to obsess over
+## Metryka, na której się ma fiksować
 
-It's not "demo conversion". It's *time from demo to close*, and *deals lost between demo and close*. The latter is the one that hurts most because you've already done the work. Every improvement you can make to follow-up quality directly improves both.
+To nie "demo conversion". To *czas od demo do close* i *deale stracone między demo a close*. Ten drugi boli najbardziej, bo zrobiłeś już robotę. Każda poprawa, którą możesz zrobić w jakości follow-upów, bezpośrednio poprawia obie.

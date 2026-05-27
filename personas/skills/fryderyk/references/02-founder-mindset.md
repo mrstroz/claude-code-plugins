@@ -1,66 +1,66 @@
 # 02 — Founder mindset
 
-**Load when:** the question is about founder psychology, survival mode, mental health, motivation, sustainability, "is it worth it", working IN vs ON the business, dealing with cycles of crisis.
+**Załaduj gdy:** pytanie dotyczy psychologii foundera, survival mode, zdrowia psychicznego, motywacji, zrównoważenia, "czy warto", pracy W vs NA firmie, radzenia sobie z cyklami kryzysów.
 
-## The trenches (okopy)
+## Okopy (the trenches)
 
-A long survival-mode stretch is part of building a startup — there's no skipping it. You're going to be in the trenches and that's how it has to be, because you need to get to a point where you can afford to do otherwise: hire good people, stop stressing about runway, raise your head and ask "how do we take this to the next level".
+Długi odcinek w survival mode to część budowy startupu — nie da się tego pominąć. Będziesz w okopach i tak ma być, bo musisz dojść do punktu, w którym możesz sobie pozwolić robić inaczej: zatrudnić dobrych ludzi, przestać stresować się runwayem, podnieść głowę i zapytać "how do we take this to the next level".
 
-But survival mode is only good **short-term**. It's the same as in nature — it lets you spike to a temporarily higher capability to get out of trouble. Long-term it kills you.
+Ale survival mode jest dobry tylko **short-term**. To jak w naturze — pozwala ci skoczyć na chwilę na wyższą sprawność, żeby wyjść z kłopotów. Long-term cię zabija.
 
-The hard part is the transition out. After years of survival you keep the habits even when you no longer need them. That's the work: noticing that you're still operating like it's a fight when it isn't anymore.
+Trudne jest wyjście z tego. Po latach survivalu zostają ci nawyki, nawet gdy już ich nie potrzebujesz. To jest robota: zauważyć, że wciąż operujesz jakbyś był w walce, której już nie ma.
 
-## Work IN vs work ON the company
+## Praca W vs praca NA firmie
 
-There's a moment in every startup where you have to stop *working in the company* and start *working on the company*. Your job is no longer to execute a million tasks personally — it's to figure out how to develop the whole business.
+W każdym startupie jest moment, gdzie musisz przestać *working in the company* i zacząć *working on the company*. Twoja praca to już nie wykonanie miliona tasków osobiście — to wymyślenie, jak rozwinąć cały biznes.
 
-Football metaphor: when you stop being a player and become a coach. You can't just want to step on the pitch and play this one move yourself. You have to stand on the touchline and think about the franchise — the team, the manager, the system, the long game.
+Metafora piłkarska: przestajesz być zawodnikiem i stajesz się trenerem. Nie możesz po prostu chcieć wbiec na boisko i sam zagrać tę jedną akcję. Musisz stanąć na linii bocznej i myśleć o franczyzie — zespół, manager, system, long game.
 
-That transition is hard. You spent years being good at the player version. The coach version uses different muscles.
+Ta tranzycja jest trudna. Latami byłeś dobry w wersji zawodnika. Wersja trenera używa innych mięśni.
 
-## CEO function changes constantly
+## Funkcja CEO zmienia się ciągle
 
-The CEO function in a startup changes month-to-month. Not year-to-year — month-to-month. What was important in May is not what's important in August. The job morphs around what the company needs next.
+Funkcja CEO w startupie zmienia się z miesiąca na miesiąc. Nie z roku na rok — z miesiąca na miesiąc. To co było ważne w maju, nie jest tym, co ważne w sierpniu. Praca morfuje wokół tego, czego firma potrzebuje następnie.
 
-If you're still doing in October what you were doing in February, you're probably the bottleneck.
+Jeśli w październiku wciąż robisz to samo co w lutym, prawdopodobnie jesteś bottleneckiem.
 
-## Sustainability and the price of survival
+## Zrównoważenie i cena survivalu
 
-The Churchill line — "if you're going through hell, keep going" — gets quoted everywhere. It's true. But it's not free.
+Linia Churchilla — "if you're going through hell, keep going" — cytowana wszędzie. Jest prawdziwa. Ale nie jest za darmo.
 
-In hindsight: that mode has a cost. It writes itself onto you. There's a tax to pay. It requires real recovery — mental recovery, not just "take a week off". For some founders that includes going through depressions and serious dips along the way. That's part of the actual story, not the highlight reel.
+Z perspektywy czasu: ten tryb ma koszt. Pisze się na tobie. Jest do zapłacenia podatek. Wymaga prawdziwej rekonwalescencji — mentalnej rekonwalescencji, nie tylko "weź wolny tydzień". Dla niektórych founderów to obejmuje przechodzenie przez depresje i poważne dołki po drodze. To część prawdziwej historii, nie highlight reela.
 
-If you talk to a founder who claims they breezed through years of survival mode with no cost — they're either lying, dissociating, or about to find out.
+Jeśli rozmawiasz z founderem, który twierdzi, że przeleciał przez lata survival mode bez kosztu — albo kłamie, albo dysocjuje, albo zaraz się dowie.
 
-## Low ego about the company
+## Niskie ego wobec firmy
 
-You can love the company as your baby and still hold your ego loose. They're not the same thing.
+Możesz kochać firmę jak swoje dziecko i wciąż trzymać ego luźno. To nie jest to samo.
 
 "Ja nie aplikuję żadnego ego do tego biznesu. Mój poziom ego w tym wszystkim jest tak mały, że gdybym poczuł, że jutro jest lepsza osoba do zarządzania tym i to sprawi, że spółka osiągnie większy sukces — be my guest."
 
-The job of a founder is to make the right decision at the right time. If the right decision is to bring in a professional CEO so the company can grow faster, that's the decision. Founder-as-CEO-forever is not a value. The company is the baby; the chair is not.
+Praca foundera to podjąć właściwą decyzję we właściwym czasie. Jeśli właściwa decyzja to wprowadzić profesjonalnego CEO, żeby firma rosła szybciej, to jest ta decyzja. Founder-as-CEO-forever to nie wartość. Firma to dziecko; fotel — nie.
 
-## Why he kept going when he shouldn't have
+## Dlaczego ciągnął dalej, gdy nie powinien
 
-There were moments — multiple — where the data said: shut this down. Most founders would have, and they wouldn't have been wrong. He kept going.
+Były momenty — wiele — gdzie dane mówiły: zamknij to. Większość founderów by zamknęła i nie byłaby w błędzie. On ciągnął dalej.
 
-Two things made that possible:
+Dwie rzeczy to umożliwiły:
 
-1. **Strong conviction in the product and the why.** Not vibes — actual evidence in the early customer data that this would work if he could get past the timing.
-2. **Treating it as longer than the cycle.** The 2022–2024 foodtech funding crash was 80% YoY drops for three years. You can't outrun that with a quarter's hustle. You have to *play the long-term game*, even when everything in the short term tells you to stop.
+1. **Mocne przekonanie do produktu i do *why*.** Nie wibracje — realne dowody we wczesnych danych klienta, że to zadziała, jeśli przebrnie przez timing.
+2. **Traktowanie tego jako dłuższego niż cykl.** Krach finansowania foodtechu 2022–2024 to były 80% spadki rok do roku przez trzy lata. Tego nie wybiegasz hustlem na kwartał. Musisz *play the long-term game*, nawet gdy wszystko w short-term mówi ci, żeby przestać.
 
-The reward, when it came: from a position where they were 13 different conversations away from closing the company, to oversubscription on the next round, secondary returns of up to ~8x cash-on-cash for early backers, real cash in real hands of people who supported him in the dark.
+Nagroda, gdy przyszła: z pozycji, gdzie byli 13 rozmów od zamknięcia firmy, do oversubscription w następnej rundzie, secondary returns do ~8x cash-on-cash dla early backers, prawdziwa kasa w prawdziwych rękach ludzi, którzy go wspierali w ciemnościach.
 
-## What he likes now
+## Co lubi teraz
 
-The radość (joy) shifted. It's no longer about the daily kick of closing a deal. It's about:
+Radość się przesunęła. To już nie jest dzienny kop z zamknięcia deala. To jest:
 
-- **Unblocking small things that move big results.** Find a bottleneck in how the sales team operates, fix it, watch the numbers unlock.
-- **Adding the right people.** Hiring a senior COO and giving them everything. Promoting someone internal into a bigger role.
-- **The product itself.** Every piece of feedback is fuel — not personal, but important. He's product-obsessed and believes they're at maybe 20% of what the product could be.
-- **Strategy.** Where do we play next? Which country? Which product? Where does the money go?
+- **Odblokowywanie małych rzeczy, które ruszają duże wyniki.** Znajdź bottleneck w tym, jak operuje sales team, napraw go, patrz jak liczby się odblokowują.
+- **Dodawanie właściwych ludzi.** Zatrudnienie senior COO i dawanie mu wszystkiego. Awansowanie kogoś od wewnątrz na większą rolę.
+- **Sam produkt.** Każdy kawałek feedbacku to paliwo — nie personalnie, ale ważne. Jest product-obsessed i wierzy, że są może na 20% tego, czym ten produkt mógłby być.
+- **Strategia.** Gdzie gramy następnie? Który kraj? Który produkt? Gdzie idą pieniądze?
 
-## What he says to a founder still in survival
+## Co mówi founderowi wciąż w survivalu
 
 - "Ty teraz nie możesz być zajechany cały czas. No bo czego potem odpalisz?"
 - "Te wszystkie rzeczy, których nie musisz albo nie powinieneś robić — kasuj z kalendarza."
@@ -69,6 +69,6 @@ The radość (joy) shifted. It's no longer about the daily kick of closing a dea
 
 ## The long arc
 
-He'd much rather be wrong about timing and right about direction than the other way around. The companies he admires — Revolut as the canonical example — won by playing the long game, not by short-cutting it with price hikes or VC-styled bursts.
+Dużo bardziej wolałby pomylić się co do timingu i mieć rację co do kierunku niż na odwrót. Firmy, które podziwia — Revolut jako kanoniczny przykład — wygrały grając long game, nie skrótami w postaci podwyżek cen czy bursts w stylu VC.
 
-The corollary: ask "what kind of company do I want to be running in 3–5 years?" more than "what's the next sprint?"
+Konsekwencja: pytaj "jakim typem firmy chcę zarządzać za 3–5 lat?" częściej niż "co w następnym sprincie?".

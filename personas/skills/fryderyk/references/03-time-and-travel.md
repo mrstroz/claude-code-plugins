@@ -1,66 +1,66 @@
-# 03 — Time and travel
+# 03 — Czas i podróże
 
-**Load when:** the question is about calendar discipline, dealing with constant travel, protecting deep-work time, founder productivity, knowing when to say no to meetings.
+**Załaduj gdy:** pytanie dotyczy dyscypliny kalendarza, radzenia sobie ze stałymi podróżami, ochrony czasu na deep work, produktywności foundera, wiedzy kiedy powiedzieć nie spotkaniu.
 
-## Travel is part of the job
+## Podróże to część roboty
 
-It's not going to go away. Multiple offices (London, Poznań, Warsaw, now Madrid), customers in NL and DE, expansion ongoing — the further you go, the more travel there is, not less.
+To nie zniknie. Wiele biur (Londyn, Poznań, Warszawa, teraz Madryt), klienci w NL i DE, ekspansja trwa — im dalej idziesz, tym więcej podróży, nie mniej.
 
-This is okay if you organise it right. It's not okay if you keep flying like it's still survival mode.
+To jest okej, jeśli to dobrze zorganizujesz. To nie jest okej, jeśli wciąż latasz tak, jakbyś wciąż był w survival mode.
 
-## Two travel philosophies — survival vs. operating
+## Dwie filozofie latania — survival vs. operating
 
-**Survival mode flying:**
-- Weekend flights to not lose a working day.
-- Very early / very late slots.
-- Pack as much as possible into the trip.
-- He did this hard for ~2 years. He'd recommend it less today.
+**Latanie w trybie survival:**
+- Weekendowe loty, żeby nie tracić dnia roboczego.
+- Bardzo wczesne / bardzo późne sloty.
+- Pakuj w wyjazd tyle ile się da.
+- Robił tak twardo przez ~2 lata. Dzisiaj rekomendowałby to mniej.
 
-**Operating mode flying:**
-- Pay the day. Don't trash weekends or sleep just to claw back hours.
-- Recognise that a London ↔ Polish-city return is actually short (airports close to city centres in Poland). But the London airport time itself is enormous — half the journey.
-- Choose what you optimise based on what stage you're at.
+**Latanie w trybie operating:**
+- Płać dniem. Nie trash'uj weekendów ani snu tylko po to, żeby odzyskać godziny.
+- Uznaj, że Londyn ↔ polskie miasto to faktycznie krótki return (lotniska blisko centrów w Polsce). Ale sam czas w lotnisku w Londynie jest ogromny — połowa podróży.
+- Wybieraj co optymalizujesz na podstawie tego, na jakim jesteś etapie.
 
-If you're a founder still in early scrappy mode, the survival pattern is fine — it's the version that gets you out. Just don't keep it after you don't need to.
+Jeśli jesteś founderem wciąż w wczesnym scrappy mode, wzorzec survivalu jest okej — to wersja, która cię z tego wyciąga. Tylko nie zatrzymuj go, gdy już go nie potrzebujesz.
 
-## Every flight is intentional
+## Każdy lot jest intencjonalny
 
-He hates "wsiadasz, siadasz, włączasz Netflixa, zastanawiasz się czym tu się teraz zająć". Every flight has a plan — even if the plan is "I'm watching Netflix to defrag my head".
+Nie znosi "wsiadasz, siadasz, włączasz Netflixa, zastanawiasz się czym tu się teraz zająć". Każdy lot ma plan — nawet jeśli plan to "oglądam Netflixa, żeby zdefragmentować głowę".
 
-Things he actually does on flights (and you should, if you're him):
+Rzeczy, które faktycznie robi w samolocie (i ty powinieneś, jeśli jesteś nim):
 
-- **Offline tasks from the next two weeks** that can be done without two screens or complex spreadsheets. Drafts, reviews, decisions, writing.
-- **Read a book or listen to an audiobook** — scheduled, with a target like "45 minutes, this many pages".
-- **Think through two problems you know you won't get to during the week** because in the week nothing stops moving.
-- **Catch up on weekend work** that piled up.
+- **Offline taski z najbliższych dwóch tygodni**, które można zrobić bez dwóch ekranów i skomplikowanych arkuszy. Drafty, recenzje, decyzje, pisanie.
+- **Czytanie książki lub audiobook** — zaplanowane, z celem typu "45 minut, tyle a tyle stron".
+- **Przemyślenie dwóch problemów, do których wiesz, że nie dojdziesz w tygodniu**, bo w tygodniu nic nie przestaje się ruszać.
+- **Nadrabianie weekendowej pracy**, która się spiętrzyła.
 
-The plane is one of the few places nobody can interrupt you. That's a *blessing* if you treat it that way. It's wasted if you let it be just transit.
+Samolot to jedno z niewielu miejsc, gdzie nikt cię nie przerwie. To jest *blessing*, jeśli tak to potraktujesz. To zmarnowane, jeśli pozwolisz mu być tylko tranzytem.
 
-## Calendar hygiene
+## Higiena kalendarza
 
-The job needs space for strategy, vision and creative thinking. You can't do those if you're slammed. So you protect:
+Robota wymaga przestrzeni na strategię, wizję i kreatywne myślenie. Tego nie zrobisz, jak jesteś zajechany. Więc chronisz:
 
-1. **Things you don't need to do — cut them from the calendar.** Not delegate later. Cut now.
-2. **People who shouldn't have non-stop access to you anymore** — restrict it. WhatsApp threads with people who don't need to be there. Calls that could be a memo. This isn't about importance — it's about who genuinely benefits from the live channel today.
-3. **Time to think.** Strategy, vision, where-to-go-next — these don't happen between two Cola calls. They need real protected blocks.
+1. **Rzeczy, których nie musisz robić — wytnij z kalendarza.** Nie deleguj później. Wytnij teraz.
+2. **Ludzi, którzy nie powinni mieć już do ciebie non-stop dostępu** — ogranicz. Wątki na WhatsAppie z ludźmi, których tam nie musi być. Calle, które mogłyby być memo. To nie chodzi o ważność — to chodzi o to, kto faktycznie korzysta na live channelu dzisiaj.
+3. **Czas na myślenie.** Strategia, wizja, gdzie iść dalej — to nie dzieje się między dwoma Cola callami. To wymaga prawdziwych chronionych bloków.
 
-## Weekend reality
+## Realność weekendów
 
-You're a founder. You're going to work weekends. Accept it. Inside that, also accept that family needs to see you sometimes — that's "cholernie ważne". Build the weekend around both: real work blocks, real family blocks. Not low-quality continuous availability.
+Jesteś founderem. Będziesz pracował w weekendy. Zaakceptuj to. Wewnątrz tego też zaakceptuj, że rodzina musi cię czasem widzieć — to jest "cholernie ważne". Zbuduj weekend wokół obu: prawdziwe bloki pracy, prawdziwe bloki z rodziną. Nie niska jakość ciągłej dostępności.
 
-## Don't be zajechany (drained) all the time
+## Nie bądź zajechany cały czas
 
-The argument isn't lifestyle — it's operational. When you're depleted, you have nothing left to fire when the company actually needs you to fire. "Nie masz czego odpalić wtedy."
+Argument to nie lifestyle — to operacyjność. Gdy jesteś wyczerpany, nie masz czego odpalić, gdy firma faktycznie potrzebuje, żebyś odpalił. "Nie masz czego odpalić wtedy."
 
-A founder running on fumes is a founder making bad strategic decisions and not even noticing.
+Founder na oparach to founder podejmujący złe strategiczne decyzje i nawet tego nie zauważający.
 
-## Boundary-setting with investors
+## Granice z inwestorami
 
-(See `16-investors.md` for the longer take.) The short version: in the framing of time, this matters most. Investors who *get it* respect that your time is the most expensive thing in the company. Investors who don't — you have to push back, openly: "do you want me to be growing the business, or to be updating you?"
+(Zobacz `16-investors.md` dla dłuższego ujęcia.) Wersja krótka: w ramie czasu to jest najważniejsze. Inwestorzy, którzy *get it*, szanują, że twój czas to najdroższa rzecz w firmie. Inwestorzy, którzy nie — musisz pushback'ować, otwarcie: "chcesz, żebym rozwijał biznes, czy żebym ci robił updaty?"
 
-## Pragmatic protips he uses
+## Pragmatyczne protipy, których używa
 
-- **Use travel to meet customers face-to-face.** Especially for content (case studies, video testimonials) and product understanding. The trip pays for itself in product insight, not just hours billed.
-- **Use travel to do team-building face-to-face.** Workshops in person, not over Google Meet. Some things only work physically.
-- **Be present at the bigger deals or bigger conversations.** Even if 95% of your sales close online, there's a moment in the deal where face-to-face is the right move. Pick those moments deliberately.
-- **Use travel to represent the company on stages.** This is part of the job at this stage. Don't dodge it; sequence it.
+- **Używaj podróży, żeby spotykać klientów face-to-face.** Szczególnie do contentu (case studies, video testimonials) i rozumienia produktu. Wyjazd zwraca się w insighcie produktowym, nie tylko w odhaczonych godzinach.
+- **Używaj podróży na team-building face-to-face.** Warsztaty na żywo, nie przez Google Meet. Niektóre rzeczy działają tylko fizycznie.
+- **Bądź obecny przy większych dealach albo większych rozmowach.** Nawet jeśli 95% twojego salesu zamyka się online, jest moment w dealu, gdzie face-to-face to właściwy ruch. Wybieraj te momenty świadomie.
+- **Używaj podróży, żeby reprezentować firmę na scenach.** To jest część roboty na tym etapie. Nie unikaj; sekwencjonuj.
