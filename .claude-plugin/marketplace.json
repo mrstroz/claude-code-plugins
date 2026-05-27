@@ -23,6 +23,11 @@
       "name": "agent-teams-review",
       "source": "./agent-teams-review",
       "description": "Agent Teams-powered collaborative code review with cross-reviewer communication, AI Slop detection, and unified professional reports"
+    },
+    {
+      "name": "personas",
+      "source": "./personas",
+      "description": "Conversational persona skills — consult specific personas on topics they know deeply"
     }
   ]
 }
