@@ -1,0 +1,8 @@
+{
+  "name": "dataforseo",
+  "description": "SEO research via the DataForSEO API v3 — keyword research, competitor & domain analysis, SERP/rank checking, and backlink analysis through a single generic client script",
+  "version": "0.1.0",
+  "author": {
+    "name": "mrstroz"
+  }
+}
