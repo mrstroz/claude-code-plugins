@@ -28,6 +28,11 @@
       "name": "personas",
       "source": "./personas",
       "description": "Conversational persona skills — consult specific personas on topics they know deeply"
+    },
+    {
+      "name": "dataforseo",
+      "source": "./dataforseo",
+      "description": "SEO research via the DataForSEO API v3 — keyword research, competitor & domain analysis, SERP/rank checking, and backlink analysis"
     }
   ]
 }
