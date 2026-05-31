@@ -2,7 +2,7 @@
 
 ## 1. Issue ID Prefixes
 
-Use reviewer-specific prefixes. NEVER use generic prefixes like `HIGH-001` or `MED-001`.
+Use reviewer-specific prefixes, not generic ones like `HIGH-001` or `MED-001` — the prefix tells the reader (and the triage step) which reviewer found it, which is information a severity-based prefix throws away.
 
 | Reviewer | Prefix |
 |----------|--------|
@@ -24,7 +24,11 @@ Each reviewer has its own counter (001, 002...). Prefix = reviewer, NOT severity
 | 0 | 1-3 | APPROVED WITH COMMENTS |
 | 0 | 0 | APPROVED |
 
-## 3. Severity Mapping
+## 3. Finding Markers: Severity · Confidence · Effort
+
+Every finding carries three markers. Severity alone is not enough — triage needs to know how sure the reviewer is and how expensive the fix is, otherwise it has to re-derive both by hand.
+
+**Severity** — judged by real impact on the running app:
 
 | Severity | Description |
 |----------|-------------|
@@ -32,6 +36,24 @@ Each reviewer has its own counter (001, 002...). Prefix = reviewer, NOT severity
 | High | Significant issue that should be fixed, race condition with real impact |
 | Medium | Notable issue, fix recommended |
 | Low | Minor suggestion, optional fix |
+
+**Confidence** — how sure the reviewer is the issue is real. This is the antidote to crying wolf: a hunch is `Low`, not an inflated severity.
+
+| Confidence | Meaning |
+|------------|---------|
+| High | Confirmed by reading the code; the issue is real |
+| Medium | Likely, but depends on context the reviewer could not fully see |
+| Low | "Worth a look" — flag it without inflating severity |
+
+**Effort** — rough fix cost, so triage's effort dimension reads the marker instead of guessing:
+
+| Effort | Meaning |
+|--------|---------|
+| ~5min | Trivial: rename, remove import, add constant, add type hint |
+| ~30min | Moderate: add index, wrap in transaction, extract a small method |
+| ~1h+ | Significant: refactor, redesign, new subsystem |
+
+Write each finding's header line as: `[PREFIX-NNN] Title — file:line — Severity · Confidence · Effort`.
 
 ## 4. AI Slop Score Integration
 
@@ -61,6 +83,7 @@ When multiple reviewers find overlapping issues:
 **PR:** [Branch name or PR title]
 **Date:** [YYYY-MM-DD]
 **Team:** [List of active reviewers]
+**Scope:** Quick (Critical-only) | Standard | Full (deep)
 
 **Verdict:** BLOCKED | CHANGES REQUESTED | APPROVED WITH COMMENTS | APPROVED
 **AI Slop:** X/10 — [Heavy Slop / Moderate Slop / Light Slop / Clean]
@@ -79,24 +102,28 @@ When multiple reviewers find overlapping issues:
 
 ## Action Items
 
+> Each line carries `Severity · Confidence · Effort` so the list is scannable by a human and parseable by triage.
+
 ### Critical
 
-- [ ] `[SC-001]` **Issue title** — `file/path.php:42` _(Security Sentinel)_
+- [ ] `[SC-001]` **Issue title** — `file/path.php:42` — Critical · High · ~30min _(Security Sentinel)_
 
 ### High (N)
 
-- [ ] `[BE-001]` **Issue title** — `file/path.php:67` _(Backend Solidifier)_
-- [ ] `[VM-001]` **Issue title** CROSS _(flagged by BE -> VM)_ — `file/path.php:52`
+- [ ] `[BE-001]` **Issue title** — `file/path.php:67` — High · High · ~30min _(Backend Solidifier)_
+- [ ] `[VM-001]` **Issue title** CROSS _(flagged by BE -> VM)_ — `file/path.php:52` — High · Medium · ~5min
 
 ### Medium (N)
 
-- [ ] `[QA-001]` **Issue title** — `file/path.php:30` _(Quality Purist)_
-- [ ] `[FE-001]` **Issue title** — `components/File.vue:45` _(Frontend Virtuoso)_
+- [ ] `[QA-001]` **Issue title** — `file/path.php:30` — Medium · High · ~5min _(Quality Purist)_
+- [ ] `[FE-001]` **Issue title** — `components/File.vue:45` — Medium · Medium · ~30min _(Frontend Virtuoso)_
 
 ### Low (N)
 
-- [ ] `[QA-002]` **Issue title** — `file/path.php:95` _(Quality Purist)_
-- [ ] `[BE-002]` **Issue title** — `migrations/file.php:35` _(Backend Solidifier)_
+- [ ] `[QA-002]` **Issue title** — `file/path.php:95` — Low · High · ~5min _(Quality Purist)_
+- [ ] `[BE-002]` **Issue title** — `migrations/file.php:35` — Low · Low · ~5min _(Backend Solidifier)_
+
+> At **Quick** scope, the Medium and Low groups are replaced by a single line: `_Medium: N · Low: N — suppressed at Quick scope; rerun at Standard to see them._`
 
 ---
 
@@ -106,7 +133,7 @@ When multiple reviewers find overlapping issues:
 
 #### `path/to/file.php`
 
-##### [SC-001] Issue Title
+##### [SC-001] Issue Title — Critical · High · ~30min
 _Security Sentinel_
 
 Description of the problem and why it matters.
@@ -163,6 +190,22 @@ _Frontend Virtuoso_ — Missing loading state on save button. UX issue.
 
 ##### [FE-002] Issue Title
 _Frontend Virtuoso_ — Avatar preview missing alt text. Accessibility.
+
+---
+
+## Impact Analysis
+
+> _(Full scope only. Omit this section at Quick and Standard scope.)_
+
+Because the review went beyond the diff, this section reports whether the functions the PR touched still hold up against their callers and callees.
+
+| Touched symbol | Used by (callers) | Depends on (callees) | Still works end-to-end? | Notes |
+|----------------|-------------------|----------------------|-------------------------|-------|
+| `Service::method()` | `Controller:34`, `ApiController:55` | `helperA()`, `Model::save()` | ⚠️ At risk | Second caller untested for the new path |
+| `getThing()` | `Widget:12` | `Model::find()` | ✅ Yes | Signature unchanged, callers unaffected |
+
+**Ripple risks** (findings about code outside the diff that the change endangers):
+- `[DV-002]` **API caller bypasses new validation** — `ApiController.php:55` — High · Medium · ~30min _(Devil's Advocate)_
 
 ---
 

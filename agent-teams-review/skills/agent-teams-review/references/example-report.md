@@ -3,6 +3,7 @@
 **PR:** feature/user-profile-settings
 **Date:** 2026-02-28
 **Team:** Virtual Mariusz, Backend Solidifier, Frontend Virtuoso, Quality Purist, Security Sentinel
+**Scope:** Standard
 
 **Verdict:** APPROVED WITH COMMENTS _(was: CHANGES REQUESTED, updated after triage)_
 **AI Slop:** 6/10 — Light Slop
@@ -27,25 +28,25 @@
 
 ### High (3)
 
-- [ ] `[BE-001]` **N+1 query in settings loader** — `models/UserSettings.php:67` _(Backend Solidifier)_
-- [ ] `[BE-002]` **Missing transaction in profile+avatar update** — `services/UserProfileService.php:89` _(Backend Solidifier)_
-- [ ] `[VM-001]` **Debug var_dump left in production code** — `services/UserProfileService.php:52` _(Virtual Mariusz)_
+- [ ] `[BE-001]` **N+1 query in settings loader** — `models/UserSettings.php:67` — High · High · ~30min _(Backend Solidifier)_
+- [ ] `[BE-002]` **Missing transaction in profile+avatar update** — `services/UserProfileService.php:89` — High · High · ~30min _(Backend Solidifier)_
+- [ ] `[VM-001]` **Debug var_dump left in production code** — `services/UserProfileService.php:52` — High · High · ~5min _(Virtual Mariusz)_
 
 ### Medium (5)
 
-- [ ] `[SC-002]` **Avatar file upload path traversal** CROSS _(flagged by BE -> SC)_ — `services/UserProfileService.php:110`
-- [ ] `[BE-003]` **Missing index on user_settings.category** — `migrations/m240228_create_user_settings.php` _(Backend Solidifier)_
-- [ ] `[QA-001]` **Method doTheUpdate() — misleading name** — `services/UserProfileService.php:30` _(Quality Purist)_
-- [ ] `[QA-002]` **Magic number 5242880 without constant** — `services/UserProfileService.php:95` _(Quality Purist)_
-- [ ] `[FE-001]` **Missing loading state on save button** — `components/ProfileForm.vue:45` _(Frontend Virtuoso)_
+- [ ] `[SC-002]` **Avatar file upload path traversal** CROSS _(flagged by BE -> SC)_ — `services/UserProfileService.php:110` — Medium · High · ~5min
+- [ ] `[BE-003]` **Missing index on user_settings.category** — `migrations/m240228_create_user_settings.php` — Medium · High · ~5min _(Backend Solidifier)_
+- [ ] `[QA-001]` **Method doTheUpdate() — misleading name** — `services/UserProfileService.php:30` — Medium · High · ~5min _(Quality Purist)_
+- [ ] `[QA-002]` **Magic number 5242880 without constant** — `services/UserProfileService.php:95` — Medium · High · ~5min _(Quality Purist)_
+- [ ] `[FE-001]` **Missing loading state on save button** — `components/ProfileForm.vue:45` — Medium · Medium · ~30min _(Frontend Virtuoso)_
 
 ### Low (5)
 
-- [ ] `[SC-003]` **Verbose error messages expose stack trace** — `controllers/UserProfileController.php:70` _(Security Sentinel)_
-- [ ] `[VM-003]` **Unused import ArrayHelper** — `controllers/UserProfileController.php:5` _(Virtual Mariusz)_
-- [ ] `[BE-004]` **Migration down() method is empty** — `migrations/m240228_create_user_settings.php:35` _(Backend Solidifier)_
-- [ ] `[FE-002]` **Avatar preview missing alt text** — `components/AvatarUpload.vue:12` _(Frontend Virtuoso)_
-- [ ] `[QA-003]` **Inconsistent method visibility order** — `services/UserProfileService.php` _(Quality Purist)_
+- [ ] `[SC-003]` **Verbose error messages expose stack trace** — `controllers/UserProfileController.php:70` — Low · Medium · ~5min _(Security Sentinel)_
+- [ ] `[VM-003]` **Unused import ArrayHelper** — `controllers/UserProfileController.php:5` — Low · High · ~5min _(Virtual Mariusz)_
+- [ ] `[BE-004]` **Migration down() method is empty** — `migrations/m240228_create_user_settings.php:35` — Low · High · ~5min _(Backend Solidifier)_
+- [ ] `[FE-002]` **Avatar preview missing alt text** — `components/AvatarUpload.vue:12` — Low · High · ~5min _(Frontend Virtuoso)_
+- [ ] `[QA-003]` **Inconsistent method visibility order** — `services/UserProfileService.php` — Low · Medium · ~5min _(Quality Purist)_
 
 ---
 
@@ -59,7 +60,7 @@
 
 #### `models/UserSettings.php`
 
-##### [BE-001] N+1 Query in Settings Loader
+##### [BE-001] N+1 Query in Settings Loader — High · High · ~30min
 _Backend Solidifier_
 
 `getUserSettings()` loads each setting category in a separate query inside a loop. For 5 categories = 5 queries instead of 1.
@@ -83,7 +84,7 @@ $grouped = ArrayHelper::index($settings, null, 'category');
 
 #### `services/UserProfileService.php`
 
-##### [BE-002] Missing Transaction in Profile + Avatar Update
+##### [BE-002] Missing Transaction in Profile + Avatar Update — High · High · ~30min
 _Backend Solidifier_
 
 Profile data and avatar are saved in separate operations without a transaction. If avatar save fails, profile is updated but avatar is stale — inconsistent state.
@@ -107,7 +108,7 @@ try {
 }
 ```
 
-##### [VM-001] Debug var_dump Left in Production Code
+##### [VM-001] Debug var_dump Left in Production Code — High · High · ~5min
 _Virtual Mariusz_
 
 `var_dump($settings)` at line 52 will output raw data to the browser in non-CLI context.

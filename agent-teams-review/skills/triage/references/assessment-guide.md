@@ -35,14 +35,14 @@ Wide blast radius amplifies real impact. A Medium-severity finding with wide bla
 
 ### 3. Effort
 
-How long will the fix actually take?
+How long will the fix actually take? Newer reports carry an **Effort marker** (`~5min` / `~30min` / `~1h+`) on each finding — read it instead of re-estimating, and only second-guess it when it clearly mismatches the described fix.
 
-| Effort level | Time | Examples |
-|-------------|------|----------|
-| **Trivial** | < 5 min | Remove unused import, add constant, rename variable, add type hint |
-| **Quick** | 5-15 min | Add database index, wrap in transaction, add input validation |
-| **Moderate** | 15 min - 1h | Extract service class, add loading state to component, fix N+1 query |
-| **Significant** | 1h+ | Refactor controller architecture, redesign state management, add rate limiting system |
+| Effort level | Time | Marker | Examples |
+|-------------|------|--------|----------|
+| **Trivial** | < 5 min | `~5min` | Remove unused import, add constant, rename variable, add type hint |
+| **Quick** | 5-15 min | `~30min` | Add database index, wrap in transaction, add input validation |
+| **Moderate** | 15 min - 1h | `~30min` | Extract service class, add loading state to component, fix N+1 query |
+| **Significant** | 1h+ | `~1h+` | Refactor controller architecture, redesign state management, add rate limiting system |
 
 **The quick-win rule:** Trivial and Quick fixes go to Fix Now regardless of severity, because the cost of tracking and scheduling them later exceeds the cost of just doing them. You spend more time writing the JIRA ticket than fixing the code.
 
@@ -97,6 +97,18 @@ The type of issue affects urgency regardless of other factors:
 | **Performance** — slow queries, excessive rendering | Fix Later (unless already causing user-visible lag) |
 | **Code quality** — structure, patterns, SOLID principles | Fix Later |
 | **Stylistic** — naming, formatting, comment quality | Skip (unless trivial to fix while in the file) |
+
+---
+
+## Reading the Confidence Marker
+
+Newer reports tag each finding with a **Confidence** level. It is not a dimension you compute — it is the reviewer's own honesty signal, and it modulates the other seven:
+
+| Confidence | How it shifts triage |
+|------------|----------------------|
+| **High** | Trust the finding as described. Assess normally. |
+| **Medium** | The reviewer was unsure about context. Sanity-check the real-impact scenario before committing it to Fix Now. |
+| **Low** | The reviewer is saying "maybe". Default toward Skip or "verify first" — unless the *potential* impact is severe (security/data-loss), in which case move it to Fix Later with a "confirm, then fix" note. A Low-confidence finding should not silently land in Fix Now. |
 
 ---
 

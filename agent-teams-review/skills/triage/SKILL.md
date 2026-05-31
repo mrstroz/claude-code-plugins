@@ -47,6 +47,13 @@ This context matters because findings in changed code deserve more attention tha
 
 ### Step 3: Assess Each Finding
 
+Reports from `agent-teams-review` v1.8+ tag each finding with `Severity · Confidence · Effort` (e.g. `High · Medium · ~30min`). Use those markers instead of re-deriving them:
+- **Effort** — read it directly; do not re-estimate from scratch (verify it only if it looks obviously wrong for the described fix).
+- **Confidence** — a `Low` confidence finding is the reviewer telling you it might be a false positive. Lean it toward Skip or "verify first" unless its real impact would be severe. Do not let a Low-confidence finding sit in Fix Now without a reason.
+- Older reports without markers: estimate effort and treat confidence as Medium.
+
+Note the **Scope** line in the report header. A **Quick** report contains only Critical/High (Medium/Low were suppressed) — triage is usually thin. A **Full** report includes an **Impact Analysis** section with ripple-risk findings about code outside the diff; weigh those with the Location dimension (they are "distant" by definition but may be exactly why the PR is dangerous).
+
 For every active finding (not in Won't Implement), evaluate it across seven dimensions. Read [references/assessment-guide.md](references/assessment-guide.md) for detailed criteria and examples.
 
 The seven dimensions:
