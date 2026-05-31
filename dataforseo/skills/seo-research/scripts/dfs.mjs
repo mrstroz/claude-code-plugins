@@ -17,7 +17,9 @@
 //   --payload-file <path>  Read the request body from a file (use this for complex payloads).
 //   (stdin)                If neither --payload nor --payload-file is given (POST only), read body from stdin.
 //   --method <GET|POST>    HTTP method (default POST). Use GET for locations/languages and *_get endpoints.
-//   --output <path>        Save the full raw JSON response here. Defaults to /tmp/dfs-<endpoint>-<ts>.json.
+//   --output <path>        Save the full raw JSON response here. Defaults to /tmp/dfs-raw-<endpoint>-<ts>.json.
+//                          The saved file is the deliverable — the full response is preserved verbatim
+//                          (no extraction), so it can be analysed later without losing any fields.
 //   --preview <N>          Include the first N items of tasks[0].result[0].items in the summary (shape check).
 //   --sandbox              Use the sandbox host (returns dummy data with identical structure, no charge).
 //   --raw                  Print the full raw response JSON to stdout instead of the compact summary.
@@ -106,7 +108,7 @@ function resolveBody(cfg) {
 
 function defaultOutput(endpoint) {
   const slug = endpoint.replace(/^\/v3\//, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '');
-  return `/tmp/dfs-${slug}-${Date.now()}.json`;
+  return `/tmp/dfs-raw-${slug}-${Date.now()}.json`;
 }
 
 function summarize(data, endpoint, host, httpStatus, outputFile, previewN) {

@@ -85,9 +85,9 @@ Each API namespace has its own list endpoint (GET). Examples:
 
 List-endpoint items include `location_code`, `location_name`, `country_iso_code`, `location_type`, and `available_languages[]`. Russia and Belarus locations are no longer supported.
 
-## Reading big responses efficiently
+## Reading big responses
 
-Responses can be hundreds of KB (e.g. 1000 ranked keywords with deep nesting). The script always saves the full JSON to a file; pull only the fields you need with `jq` rather than reading the whole file into context:
+Responses can be hundreds of KB (e.g. 1000 ranked keywords with deep nesting). The script always saves the **full, unextracted** JSON to a file — that file is the source of truth, so nothing is ever dropped at fetch time. Read it whole when you need to, or use `jq` as a convenient way to slice out just the rows you want to present:
 
 ```bash
 # top organic keywords a domain ranks for: keyword + position + volume

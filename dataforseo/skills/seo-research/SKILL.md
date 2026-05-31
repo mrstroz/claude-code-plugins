@@ -2,13 +2,15 @@
 name: seo-research
 description: Pull SEO metrics from the DataForSEO API v3 — keyword research (search volume, CPC, keyword difficulty, search intent, keyword ideas), competitor & domain analysis (which keywords a domain ranks for, organic traffic estimates, competitors, keyword gaps, top pages), live Google SERP & rank checking, and backlink profiles (referring domains, anchors, link quality). Use this whenever the user wants SEO data, keyword metrics, search volume, keyword difficulty, SERP positions, rankings, competitor research, traffic estimates, or backlink analysis for any website or project — and especially whenever DataForSEO is mentioned. Routes the request to the right endpoint and runs it via a generic client script using DATAFORSEO_LOGIN / DATAFORSEO_PASSWORD from the environment. Triggers on requests like "how much search volume does X get", "what keywords does competitor.com rank for", "find SEO competitors for my site", "check our Google ranking for Y", "analyze the backlinks of Z", "keyword research for this project", or any SEO metrics / keyword / ranking / backlink question.
 user-invocable: true
-allowed-tools: [Bash, Read, Write, Glob, Grep, AskUserQuestion, WebFetch]
+allowed-tools: [Bash, Read, Write, Glob, Grep, AskUserQuestion, WebFetch, Task]
 argument-hint: describe the SEO research you need, e.g. "keywords competitor.com ranks for in the UK" or "search volume for these 5 keywords"
 ---
 
 # DataForSEO SEO Research
 
-Answer SEO questions by routing them to the right DataForSEO API v3 endpoint, calling it through a generic client script, and extracting the relevant metrics. DataForSEO is a paid API — every call costs money (reported in the response), so pick the right endpoint and confirm scope before running broad/expensive queries.
+Answer SEO questions by routing them to the right DataForSEO API v3 endpoint(s), fetching the **full raw response** to a file, and analysing that file. DataForSEO is a paid API — every call costs money (reported in the response), so pick the right endpoint and confirm scope before running broad/expensive queries.
+
+The core principle: **fetch raw, save to `/tmp`, then analyse the saved file.** Never try to slim or pre-extract the API response on the way in — the responses are rich and the schema changes as DataForSEO adds fields, so anything you drop at fetch time is data you can't get back. With a large context window there's no need to extract; read the whole raw file and pull what you need from it during analysis.
 
 ## Prerequisites
 
@@ -34,41 +36,66 @@ Glob: **/seo-research/scripts/dfs.mjs   → store as SCRIPT_PATH
 ```
 The install path varies across systems, so resolve it with Glob rather than hardcoding.
 
-### 2. Pick the endpoint
-Use the routing table below to map the user's question to an endpoint and its reference file. Read that reference file to get the exact parameters and returned fields before building the payload.
+### 2. Plan the fetches
+Map the user's question to one or more endpoints using the routing table below. A single question often needs several endpoints (e.g. "research these competitors" → `ranked_keywords` + `competitors_domain` + `domain_rank_overview`). For each one, read its reference file to get the exact parameters before building the payload.
 
-### 3. Build the payload
-Construct the JSON array of task objects per the reference. Resolve location/language: if the user named a country/market, use it; otherwise ask (via `AskUserQuestion`) or default to the project's primary market and say so. For broad or potentially expensive queries (large `limit`, `depth`, many tasks, SERP `live/advanced`), show the user the endpoint + payload and confirm before running.
+Resolve location/language: if the user named a country/market, use it; otherwise ask (via `AskUserQuestion`) or default to the project's primary market and say so.
 
-For anything beyond a trivial payload, write it to a temp file and pass `--payload-file` to avoid shell-quoting issues:
+Present the plan as a short checklist so the user can see what will run and what it will roughly cost:
 ```
-Write /tmp/dfs-payload.json  →  [ { ...task... } ]
+Planned fetches:
+1. ranked_keywords      — keywords nike.com ranks for (US/en, limit 500)
+2. competitors_domain   — nike.com organic competitors (US/en, limit 50)
+3. domain_rank_overview — nike.com traffic/positions scorecard (US/en)
 ```
+For broad or potentially expensive queries (large `limit`/`depth`, many tasks, SERP `live/advanced`), confirm before running.
 
-### 4. Run
+### 3. Fetch — raw to `/tmp`
+
+**Build each payload** as a JSON array of task objects per the reference. For anything beyond a trivial payload, write it to a temp file to avoid shell-quoting issues.
+
+**One endpoint → run it directly** with `Bash`:
 ```bash
 node "$SCRIPT_PATH" \
   --endpoint "/v3/dataforseo_labs/google/ranked_keywords/live" \
-  --payload-file /tmp/dfs-payload.json \
-  --output /tmp/dfs-result.json
+  --payload-file /tmp/dfs-payload-ranked.json \
+  --output /tmp/dfs-raw-ranked-$(date +%s).json
 ```
-The script prints a compact summary (status, cost, per-task `result_count`/`items_count`) to stdout, the cost to stderr, and saves the full response to `--output`. Add `--preview 5` to peek at the first items' shape, `--sandbox` to test free, `--raw` to print the whole response. For GET utility endpoints (locations/languages, `task_get`) add `--method GET`.
+The script saves the **full raw response** to `--output`, prints a compact summary (status, cost, per-task `result_count`/`items_count`) to stdout, and the cost to stderr. Add `--sandbox` to test free, `--method GET` for GET utility endpoints (locations/languages, `task_get`).
 
-### 5. Extract & present
-Responses are large — pull only what you need from the saved file with `jq` (don't read the whole file into context). Each reference lists the relevant fields; build the `jq` path from `tasks[0].result[0].items[]`. Example:
+**Two or more endpoints → fetch them in parallel via subagents.** Don't run them one after another — DataForSEO calls have real latency, so dispatch all of them in the **same turn** as parallel `Task` (general-purpose) subagents and let the responses come back asynchronously. Each subagent does the heavy plumbing (reads its reference, builds the payload, runs the script, handles errors) in its own context, so the main context stays clean. Give each subagent this brief:
+
+```
+You are fetching one DataForSEO endpoint. Do exactly this, nothing more:
+- Read the reference file: <path to references/*.md for this endpoint>
+- Endpoint: <path>
+- Goal: <what to fetch, e.g. "keywords nike.com ranks for">
+- Constraints: location=<...>, language=<...>, limit=<...>, plus any filters
+- Build the JSON-array payload, write it to /tmp/dfs-payload-<slug>.json
+- Run: node "<SCRIPT_PATH>" --endpoint "<path>" --payload-file <payload> --output /tmp/dfs-raw-<slug>-<unique>.json
+- Return ONLY: the endpoint, the output file path, status_code, cost, and items_count.
+- Do NOT read, summarise, or paste the response body. Do NOT use --raw. The raw file on disk is the deliverable.
+```
+
+Collect the returned file paths and costs. If a subagent reports a non-20000 status, surface its error and stop — don't retry blindly.
+
+### 4. Analyse the raw files
+Read the saved raw file(s) directly and answer the user's question from them — every field DataForSEO returned is there, nothing was dropped on the way in. The data lives under `tasks[] → result[] → items[]`; each reference describes what those items contain.
+
+For large files, `jq` is a convenient way to slice out the rows you want to present (it's a tool for *reading* the saved raw, not for pre-extraction):
 ```bash
 jq -r '.tasks[0].result[0].items[]
         | [.keyword_data.keyword,
            .ranked_serp_element.serp_item.rank_absolute,
-           .keyword_data.keyword_info.search_volume] | @tsv' /tmp/dfs-result.json | head -50
+           .keyword_data.keyword_info.search_volume] | @tsv' /tmp/dfs-raw-ranked-*.json | head -50
 ```
-Present results as a compact table relevant to the question, and report the cost. If `jq` is unavailable, use a short `node -e` snippet or `Read` the file with a small `limit`.
+If `jq` is unavailable, use a short `node -e` snippet or `Read` the file. Present results as a compact table relevant to the question, and report the total cost across all fetches.
 
 ---
 
 ## Endpoint routing table
 
-Pick by what the user wants to know. Paths are appended to `https://api.dataforseo.com`.
+Pick by what the user wants to know. Paths are appended to `https://api.dataforseo.com`. Read the linked reference to build the payload.
 
 ### Keyword research → `references/labs-keyword-research.md` (+ `keywords-data.md`)
 
