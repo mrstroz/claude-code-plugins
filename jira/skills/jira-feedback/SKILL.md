@@ -77,7 +77,7 @@ If no issue key was provided, skip this step entirely.
 The user's input may be rough, unstructured, or dictated by voice. Transform it into a clear, well-written comment:
 
 - **Clean up grammar and structure** — proper capitalization, punctuation, and sentence boundaries; remove filler words and false starts
-- **Simple language** — write in plain, straightforward language that is easy to read for non-native speakers
+- **International English** — the readers are developers from many countries, and English is a second language for most of them. Write so they can read fast without a dictionary. Keep sentences short and one idea each. Use common, everyday words instead of fancy ones (say "happens again" not "reproduces", "makes" not "triggers", "matches" not "aligns with", "easy to read" not "human-readable", "find it later" not "for easier identification"). Avoid idioms, phrasal verbs that are hard to parse, and long noun chains. It is fine if the result sounds a bit plain or simple — clear beats clever. The goal is text that a non-native programmer would write themselves: direct, concrete, no decoration.
 - **Deduplicate** — merge repeated or rephrased versions of the same idea into one clear statement
 - **Preserve intent and tone** — keep the user's meaning, emphasis, and level of urgency intact
 - **Use domain terminology** — if the JIRA issue was fetched, replace vague references with specific terms from the issue (e.g., "that thing" → the actual feature/component name)
@@ -165,15 +165,21 @@ Example: [references/example-pr-review.md](references/example-pr-review.md)
 
 ## Presentation (Step 5)
 
-Always present the draft inside a clearly marked block and ask:
+Show the draft as plain text the user can copy straight into JIRA — do **not** wrap the comment in a blockquote (`>`). Blockquotes add `>` markers to every line and break copy-paste. Put the comment in a fenced code block instead, so the user gets clean, ready-to-paste text.
 
-> **JIRA Comment Draft — please review:**
->
-> [comment content]
->
-> Confirm to send, or let me know what to change.
+Use this layout:
 
-When thread context was used (comments existed on the issue), include a brief context note above the draft so the user knows what influenced the tone and framing:
+````
+**JIRA Comment Draft — please review:**
+
+```
+[comment content]
+```
+
+Confirm to send, or let me know what to change.
+````
+
+When thread context was used (comments existed on the issue), add a short context note above the draft so the user knows what shaped the tone and framing. This note is meta-information about the draft, not part of the comment, so a blockquote is fine here:
 
 > **Thread context:** Last 3 comments discuss staging regression. Most recent (Anna, 2h ago) asks for confirmation on the date filter. Draft framed as a direct answer.
 

@@ -19,9 +19,9 @@
 **Draft:**
 
 ```
-Confirmed on staging — same 500 error with the date range filter. It triggers when both `startDate` and `endDate` are passed together. Using either parameter alone works fine, so the issue is specifically the combination.
+Confirmed on staging — same 500 error with the date range filter. It happens when we send both `startDate` and `endDate` together. With only one of them it works fine, so the problem is the two filters together.
 
-This aligns with Piotr's theory about the `BETWEEN` clause in the SQL builder — the paired parameters are likely where the string-vs-DateTime mismatch causes the failure.
+This matches Piotr's idea about the `BETWEEN` clause in the SQL builder — these two params are probably where the string-vs-DateTime mismatch breaks the query.
 ```
 
 Compare with [example-comment.md](example-comment.md) — same user input, but the thread-aware version directly answers Anna's two questions and references Piotr's SQL builder analysis rather than being a standalone observation.

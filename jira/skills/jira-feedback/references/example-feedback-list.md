@@ -7,11 +7,11 @@
 **Draft:**
 
 ```
-Reviewed the CSV export for monthly reports. Here is the feedback:
+I checked the CSV export for monthly reports. Here is my feedback:
 
-- Date columns export as Unix timestamps instead of human-readable dates — this is a blocker for end users
-- Decimal numbers use dot separators instead of commas — needs to follow the locale format our users expect
-- Column headers use internal field names (e.g., `created_at`) instead of the display names shown in the UI
-- Export filename is generic `export.csv` — should include the report title for easier identification
-- Export takes ~20 seconds for a monthly report — worth checking if this is within expected range
+- Date columns export as Unix timestamps, not normal dates people can read — this is a blocker for users
+- Decimal numbers use a dot, but our users expect a comma — we need to follow their local format
+- Column headers use internal field names (for example `created_at`) instead of the names shown in the UI
+- The file name is always `export.csv` — it should include the report title so users can find it later
+- The export takes about 20 seconds for one monthly report — please check if this is normal or too slow
 ```

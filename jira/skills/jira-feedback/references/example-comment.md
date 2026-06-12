@@ -9,7 +9,7 @@
 **Draft:**
 
 ```
-Confirmed — the same 500 error reproduces on staging. It triggers when using the date range filter with both `startDate` and `endDate` parameters together.
+Confirmed — the same 500 error happens on staging too. It happens when the date range filter uses both `startDate` and `endDate` at the same time.
 
-Passing only one of the two parameters works fine. The issue is specifically the combination of both date range filters in the same request.
+If we pass only one of them, it works fine. So the problem is the two date filters together in one request.
 ```
