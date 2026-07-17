@@ -1,6 +1,7 @@
 ---
 name: jira-task
 description: Create well-structured JIRA tasks for any software project. Use when the user describes a feature, bug, improvement, or any work item that needs to become a JIRA ticket. Analyzes the project codebase to provide accurate technical details. Always drafts the task for user review before sending to JIRA. Triggers on any request to create a task, ticket, story, bug report, or JIRA issue.
+argument-hint: "[describe the feature, bug, or work item]"
 ---
 
 # JIRA Task Creator
@@ -15,7 +16,7 @@ Create well-structured JIRA tasks by analyzing the project codebase and drafting
 4. **Clarify architectural decisions** — Before drafting, ask the user about any ambiguities or open design questions discovered during codebase analysis (see below)
 5. **Draft the task** — Write the JIRA task in the chosen language and type
 6. **Present for review** — Show the draft to the user and wait for confirmation
-7. **Resolve JIRA configuration** — After user confirms the draft, resolve `cloudId` and `projectKey` (see below)
+7. **Resolve JIRA configuration** — After user confirms the draft, resolve domain, `projectKey`, and `cloudId` (see below)
 8. **Send to JIRA** — Only after configuration is resolved
 
 ## Initial Setup (Step 1)
@@ -190,13 +191,19 @@ Technical Details provide **architectural guidance**, not implementation-level c
 
 ## Presentation
 
-Always present the draft inside a clearly marked block and ask:
+Show the draft as plain text the user can copy straight into JIRA — do **not** wrap it in a blockquote (`>`). Blockquotes add `>` markers to every line and break copy-paste. Put the task in a fenced code block instead, so the user gets clean, ready-to-paste text.
 
-> **JIRA Task Draft — please review:**
->
-> [task content]
->
-> Confirm to send, or let me know what to change.
+Use this layout:
+
+````
+**JIRA Task Draft — please review:**
+
+```
+[task content]
+```
+
+Confirm to send, or let me know what to change.
+````
 
 Do NOT send to JIRA until the user explicitly confirms.
 
@@ -204,19 +211,21 @@ Do NOT send to JIRA until the user explicitly confirms.
 
 After the user confirms the draft, resolve the JIRA connection before sending.
 
-The skill needs a JIRA `cloudId` (e.g. `mycompany.atlassian.net`) and `projectKey` (e.g. `PROJ`).
+The skill needs the JIRA domain (e.g. `mycompany.atlassian.net`), the `projectKey` (e.g. `PROJ`), and a `cloudId` for the MCP call.
 
-**Resolution order:**
+**Resolution order for domain and project key:**
 
 1. Check the project's `CLAUDE.md` for a JIRA config block:
    ```
    ## JIRA
-   - Cloud: mycompany.atlassian.net
+   - Domain: mycompany.atlassian.net
    - Project key: PROJ
    ```
 2. If not found, ask the user via `AskUserQuestion` (header: "JIRA config") for both values.
 
-Store the resolved values for the rest of the session.
+**cloudId** is not the domain — it is the UUID identifying the Atlassian cloud instance. Resolve it by calling the `getAccessibleAtlassianResources` MCP tool once and picking the resource that matches the domain.
+
+Store all resolved values for the rest of the session.
 
 ## Sending to JIRA (Step 8)
 
@@ -228,4 +237,4 @@ After configuration is resolved, use the `createJiraIssue` MCP tool:
 - **summary**: task title (without `##` prefix)
 - **description**: full markdown body (everything below the title line — Description, Acceptance Criteria, Technical Details, Steps to Reproduce, Features, Links)
 
-Reference format for related issues: `[{projectKey}-1234](https://{cloudId}/browse/{projectKey}-1234)`
+Reference format for related issues: `[{projectKey}-1234](https://{domain}/browse/{projectKey}-1234)`

@@ -23,11 +23,11 @@ Generate a concise testing guide for a release version by combining Jira issue d
 
 ## Initial Setup (Step 1)
 
-Use a single `AskUserQuestion` call with three questions:
+Check the available branches first (`git branch --show-current` and `git branch -a`), then use a single `AskUserQuestion` call with three questions:
 
 - **Language** (header: "Language"): English (Recommended) | Spanish | Polish | German
-- **Feature branch** (header: "Feature branch"): The branch containing release changes (default: `quality`). Pre-fill with current branch if it is not `master`/`main`.
-- **Base branch** (header: "Base branch"): The branch to compare against (default: `master`)
+- **Feature branch** (header: "Feature branch"): the branch containing release changes. Offer 2-4 real branch names as options — the current branch (if it is not `master`/`main`), `quality` if it exists, and other likely release branches. Mark the most likely one (Recommended); the built-in "Other" option covers anything else.
+- **Base branch** (header: "Base branch"): the branch to compare against — offer `master` (Recommended) and `main`; the built-in "Other" option covers anything else.
 
 If `$ARGUMENTS` contains a version number (e.g., `2.1.0`, `v3.0`), extract it for use in Step 3.
 
@@ -74,18 +74,19 @@ node "${SCRIPT_PATH}" \
   --output "/tmp/jira-testing-release-${VERSION}-$(date +%Y%m%d-%H%M%S).json"
 ```
 
-**If no version was provided**, discover available versions first:
+**If no version was provided**, discover available versions first. Use `--summaries-only` — it skips descriptions and comments, so discovery stays cheap even when the JQL matches a project's entire history:
 
 ```bash
 node "${SCRIPT_PATH}" \
   --domain "${DOMAIN}" \
   --jql "project = ${PROJECT_KEY} AND fixVersion IS NOT EMPTY ORDER BY fixVersion DESC" \
+  --summaries-only \
   --output "/tmp/jira-testing-versions-$(date +%Y%m%d-%H%M%S).json"
 ```
 
 Read the JSON output and extract unique version names from the `fixVersions` field across all issues. Present discovered versions to the user via `AskUserQuestion` (header: "Version") as selectable options. Allow free text input for a version not in the list.
 
-After the user selects a version, filter the already-fetched data to keep only issues where `fixVersions` includes the selected version. No second fetch needed — the discovery data already contains full issue details.
+After the user selects a version, run the targeted fetch above with that version — the summaries-only discovery data lacks the descriptions needed for scenario generation.
 
 If the script fails, show the error and stop. Common issues: missing `JIRA_EMAIL` or `JIRA_API_TOKEN` env vars.
 

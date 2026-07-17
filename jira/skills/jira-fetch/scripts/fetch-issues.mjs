@@ -4,7 +4,11 @@
 // Zero dependencies — requires Node 18+ (built-in fetch)
 //
 // Usage:
-//   node fetch-issues.mjs --domain <domain> --jql <jql> --output <path>
+//   node fetch-issues.mjs --domain <domain> --jql <jql> --output <path> [--summaries-only]
+//
+// --summaries-only skips per-issue requests (no descriptions/comments) and
+// returns search results directly — one request per 1000 issues. Use for
+// discovery-style queries that may match a project's entire history.
 //
 // Env vars:
 //   JIRA_EMAIL     — Atlassian account email
@@ -21,6 +25,13 @@ const ISSUE_FIELDS = [
   'description', 'created', 'updated', 'reporter',
 ];
 
+// Fields for --summaries-only mode — all resolvable straight from search
+// results, so no per-issue requests are needed.
+const SUMMARY_FIELDS = [
+  'summary', 'status', 'assignee', 'priority',
+  'issuetype', 'labels', 'fixVersions', 'components', 'updated',
+];
+
 // ---------------------------------------------------------------------------
 // CLI args
 // ---------------------------------------------------------------------------
@@ -29,13 +40,15 @@ function parseArgs() {
   const args = process.argv.slice(2);
   const parsed = {};
   for (let i = 0; i < args.length; i++) {
-    if (args[i].startsWith('--') && i + 1 < args.length) {
+    if (args[i] === '--summaries-only') {
+      parsed.summariesOnly = true;
+    } else if (args[i].startsWith('--') && i + 1 < args.length) {
       parsed[args[i].slice(2)] = args[++i];
     }
   }
 
   if (!parsed.domain || !parsed.jql || !parsed.output) {
-    console.error('Usage: node fetch-issues.mjs --domain <domain> --jql <jql> --output <path>');
+    console.error('Usage: node fetch-issues.mjs --domain <domain> --jql <jql> --output <path> [--summaries-only]');
     process.exit(1);
   }
 
@@ -78,25 +91,25 @@ async function jiraRequest(baseUrl, method, path, auth, body = null) {
 }
 
 // ---------------------------------------------------------------------------
-// Search — collect issue keys only
+// Search — collect issues with the requested fields
 // ---------------------------------------------------------------------------
 
-async function searchIssueKeys(baseUrl, jql, auth) {
-  const keys = [];
+async function searchIssues(baseUrl, jql, auth, fields) {
+  const issues = [];
 
   // Try the new /search/jql endpoint first (cursor-based pagination)
   try {
     let nextPageToken = null;
     do {
-      const body = { jql, maxResults: 1000, fields: ['key'] };
+      const body = { jql, maxResults: 1000, fields };
       if (nextPageToken) body.nextPageToken = nextPageToken;
 
       const data = await jiraRequest(baseUrl, 'POST', '/rest/api/3/search/jql', auth, body);
-      for (const issue of data.issues || []) keys.push(issue.key);
+      issues.push(...(data.issues || []));
       nextPageToken = data.nextPageToken || null;
     } while (nextPageToken);
 
-    return keys;
+    return issues;
   } catch (err) {
     // Fall back to legacy endpoint only on 404/405 (endpoint doesn't exist)
     if (!err.message.includes('404') && !err.message.includes('405')) throw err;
@@ -111,13 +124,13 @@ async function searchIssueKeys(baseUrl, jql, auth) {
       jql,
       maxResults: 1000,
       startAt,
-      fields: ['summary'],
+      fields,
     });
     total = data.total || 0;
-    for (const issue of data.issues || []) keys.push(issue.key);
+    issues.push(...(data.issues || []));
     startAt += (data.issues?.length) || 1000;
   }
-  return keys;
+  return issues;
 }
 
 // ---------------------------------------------------------------------------
@@ -206,6 +219,26 @@ async function fetchIssue(baseUrl, key, auth) {
 }
 
 // ---------------------------------------------------------------------------
+// Summaries-only extraction — from search results, no per-issue requests
+// ---------------------------------------------------------------------------
+
+function extractSummary(issue) {
+  const f = issue.fields || {};
+  return {
+    key: issue.key,
+    type: f.issuetype?.name || '',
+    status: f.status?.name || '',
+    priority: f.priority?.name || '',
+    assignee: f.assignee?.displayName || '',
+    labels: f.labels || [],
+    fixVersions: (f.fixVersions || []).map((v) => v.name),
+    components: (f.components || []).map((c) => c.name),
+    summary: f.summary || '',
+    updated: (f.updated || '').substring(0, 16),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Concurrency limiter with fail-fast
 // ---------------------------------------------------------------------------
 
@@ -236,24 +269,46 @@ async function withConcurrency(items, limit, fn) {
 // Main
 // ---------------------------------------------------------------------------
 
+function writeOutput(config, issues, mode) {
+  const output = {
+    meta: {
+      jql: config.jql,
+      domain: config.domain,
+      fetched: new Date().toISOString(),
+      count: issues.length,
+      ...(mode ? { mode } : {}),
+    },
+    issues,
+  };
+
+  mkdirSync(dirname(config.output), { recursive: true });
+  writeFileSync(config.output, JSON.stringify(output, null, 2));
+  console.log(config.output);
+  console.error(`Done -> ${config.output}`);
+}
+
 async function main() {
   const config = parseArgs();
   const baseUrl = `https://${config.domain}`;
   const auth = makeAuth(config.email, config.token);
 
-  // Step 1: Search for issue keys
   console.error(`Searching: ${config.jql}`);
-  const keys = await searchIssueKeys(baseUrl, config.jql, auth);
+
+  // Summaries-only: search results already carry every needed field — one
+  // request per 1000 issues instead of 2+ per issue.
+  if (config.summariesOnly) {
+    const found = await searchIssues(baseUrl, config.jql, auth, SUMMARY_FIELDS);
+    console.error(`Found ${found.length} issues (summaries only)`);
+    writeOutput(config, found.map(extractSummary), 'summaries-only');
+    return;
+  }
+
+  // Step 1: Search for issue keys
+  const keys = (await searchIssues(baseUrl, config.jql, auth, ['key'])).map((i) => i.key);
   console.error(`Found ${keys.length} issues`);
 
   if (keys.length === 0) {
-    const output = {
-      meta: { jql: config.jql, domain: config.domain, fetched: new Date().toISOString(), count: 0 },
-      issues: [],
-    };
-    mkdirSync(dirname(config.output), { recursive: true });
-    writeFileSync(config.output, JSON.stringify(output, null, 2));
-    console.log(config.output);
+    writeOutput(config, []);
     return;
   }
 
@@ -267,20 +322,7 @@ async function main() {
   });
 
   // Step 3: Write output
-  const output = {
-    meta: {
-      jql: config.jql,
-      domain: config.domain,
-      fetched: new Date().toISOString(),
-      count: issues.length,
-    },
-    issues,
-  };
-
-  mkdirSync(dirname(config.output), { recursive: true });
-  writeFileSync(config.output, JSON.stringify(output, null, 2));
-  console.log(config.output);
-  console.error(`Done -> ${config.output}`);
+  writeOutput(config, issues);
 }
 
 main().catch((err) => {

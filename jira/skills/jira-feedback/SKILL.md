@@ -15,7 +15,7 @@ Add comments and feedback to existing JIRA issues. Transforms raw input into cle
 3. **Read the JIRA issue** *(optional)* — If an issue key was found, fetch the issue from JIRA for context
 4. **Draft the comment** — Write the comment in the chosen language and format, applying writing clarity rules
 5. **Present for review** — Show the draft to the user and wait for confirmation
-6. **Resolve JIRA configuration** — After user confirms the draft, resolve `cloudId` (see below)
+6. **Resolve JIRA configuration** — Resolve `cloudId` if it was not already resolved in Step 3 (see below)
 7. **Send to JIRA** — Only after configuration is resolved
 
 ## Initial Setup (Step 1)
@@ -56,7 +56,7 @@ Examples:
 
 If an issue key was found in Step 2, use the `getJiraIssue` MCP tool to fetch the issue:
 
-- **cloudId**: resolved from CLAUDE.md or ask the user (see JIRA Configuration below)
+- **cloudId**: resolve it now via the JIRA Configuration section below — this is the first point that needs it
 - **issueKey**: extracted in Step 2
 
 Read the issue summary, description, and existing comments to understand the context. Use the issue's domain terminology in your draft.
@@ -187,24 +187,24 @@ Do NOT send to JIRA until the user explicitly confirms.
 
 ## JIRA Configuration (Step 6)
 
-After the user confirms the draft, resolve the JIRA connection before sending.
+Resolve the JIRA connection at the first point that needs it: in Step 3 when an issue key was found (reading the issue requires it), otherwise now — after the user confirms the draft, before sending. Resolve once and reuse for the rest of the session.
 
-The skill needs a JIRA `cloudId` (e.g. `mycompany.atlassian.net`). The `projectKey` is not needed — the issue key already identifies the project.
+The skill needs the JIRA domain and a `cloudId`. The `projectKey` is not needed — the issue key already identifies the project.
 
-**Resolution order:**
+**Resolution order for the domain:**
 
 1. Check the project's `CLAUDE.md` for a JIRA config block:
    ```
    ## JIRA
-   - Cloud: mycompany.atlassian.net
+   - Domain: mycompany.atlassian.net
    ```
-2. If not found, ask the user via `AskUserQuestion` (header: "JIRA config") for the cloud ID.
+2. If not found, ask the user via `AskUserQuestion` (header: "JIRA config") for the domain.
 
-Store the resolved value for the rest of the session.
+**cloudId** is not the domain — it is the UUID identifying the Atlassian cloud instance. Resolve it by calling the `getAccessibleAtlassianResources` MCP tool once and picking the resource that matches the domain.
 
 ## Sending to JIRA (Step 7)
 
-After configuration is resolved, use the `addJiraComment` MCP tool:
+After configuration is resolved, use the `addCommentToJiraIssue` MCP tool:
 
 - **cloudId**: resolved in Step 6
 - **issueKey**: extracted in Step 2, or ask the user via `AskUserQuestion` (header: "Issue key") if not provided earlier

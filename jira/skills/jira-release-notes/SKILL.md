@@ -76,18 +76,19 @@ node "${SCRIPT_PATH}" \
   --output "/tmp/jira-release-notes-${VERSION}-$(date +%Y%m%d-%H%M%S).json"
 ```
 
-**If no version was provided**, discover available versions first:
+**If no version was provided**, discover available versions first. Use `--summaries-only` — it skips descriptions and comments, so discovery stays cheap even when the JQL matches a project's entire history:
 
 ```bash
 node "${SCRIPT_PATH}" \
   --domain "${DOMAIN}" \
   --jql "project = ${PROJECT_KEY} AND fixVersion IS NOT EMPTY ORDER BY fixVersion DESC" \
+  --summaries-only \
   --output "/tmp/jira-release-versions-$(date +%Y%m%d-%H%M%S).json"
 ```
 
 Read the JSON output and extract unique version names from the `fixVersions` field across all issues. Present discovered versions to the user via `AskUserQuestion` (header: "Version") as selectable options. Allow free text input for a version not in the list.
 
-After the user selects a version, filter the already-fetched data to keep only issues where `fixVersions` includes the selected version. No second fetch needed — the discovery data already contains full issue details.
+After the user selects a version, run the targeted fetch above with that version — the summaries-only discovery data lacks the descriptions and comments needed for business-value summaries.
 
 If the script fails, show the error and stop. Common issues: missing `JIRA_EMAIL` or `JIRA_API_TOKEN` env vars.
 
@@ -114,7 +115,7 @@ Apply these filtering rules to determine which issues appear in the release note
 | Bug, Hotfix | Minor, Trivial | Skip (unless it affects a visible user workflow) |
 | Sub-task, Chore | Any | Skip |
 
-**Keyword exclusion** — skip issues whose summary contains any of these terms (case-insensitive): `refactor`, `chore`, `cleanup`, `ci/cd`, `pipeline`, `dependency update`, `bump`, `internal`, `tech debt`, `lint`, `formatting`.
+**Keyword exclusion** — skip issues whose summary contains any of these terms (case-insensitive): `refactor`, `chore`, `cleanup`, `ci/cd`, `pipeline`, `dependency update`, `bump`, `internal`, `tech debt`, `lint`, `formatting`. If the summary also clearly describes a user-facing improvement (e.g., "Refactor checkout to support saved payment methods"), keep the issue — the keyword list is meant to catch routine internal work, not features that happen to mention it.
 
 ## Categorize into Themes (Step 5)
 
@@ -231,7 +232,7 @@ If the user confirms, write the file.
 
 ### Confluence Output
 
-Confluence publishing requires a `cloudId`. Resolve it now by calling `getAccessibleAtlassianResources` MCP tool — this is the only MCP call in this skill, and only when Confluence output was selected.
+Confluence publishing is the only part of this skill that uses MCP tools, and only when Confluence output was selected. Resolve the `cloudId` first — call the `getAccessibleAtlassianResources` MCP tool once and pick the resource that matches the domain.
 
 Use the available Confluence MCP tools to publish:
 

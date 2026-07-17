@@ -66,12 +66,13 @@ pattern: **/jira-fetch/scripts/fetch-issues.mjs
 
 ### Discover Versions
 
-Run jira-fetch to get all issues with version assignments:
+Run jira-fetch in lightweight mode to list issues with version assignments — `--summaries-only` skips descriptions and comments, so discovery stays cheap even when the JQL matches a project's entire history:
 
 ```bash
 node "${SCRIPT_PATH}" \
   --domain "${DOMAIN}" \
   --jql "project = ${PROJECT_KEY} AND fixVersion IS NOT EMPTY ORDER BY fixVersion DESC" \
+  --summaries-only \
   --output "/tmp/jira-roadmap-versions-$(date +%Y%m%d-%H%M%S).json"
 ```
 
@@ -81,21 +82,29 @@ If the script fails, show the error and stop. Common issues: missing `JIRA_EMAIL
 
 ### Fetch Per-Version Data
 
-The discovery data already contains full issue details. Filter it by each selected version — for each version, extract the subset of issues where `fixVersions` includes that version.
+After the user confirms the version list, run one full fetch covering just those versions — the summaries-only discovery data lacks descriptions:
 
-For each selected version, compute aggregate stats:
+```bash
+node "${SCRIPT_PATH}" \
+  --domain "${DOMAIN}" \
+  --jql "project = ${PROJECT_KEY} AND fixVersion IN (\"2.1.0\", \"2.0.0\") ORDER BY priority DESC" \
+  --output "/tmp/jira-roadmap-issues-$(date +%Y%m%d-%H%M%S).json"
+```
+
+For each selected version, extract the subset of issues where `fixVersions` includes that version and compute aggregate stats:
 - **Total issues**: count of all issues
 - **By status**: count of Done/In Progress/Planned
 - **By type**: count of Epic/Story/Bug/Task
 - **Top items**: highest-priority Epics and Stories (for generating highlights)
 
-Descriptions are available directly from the JSON data for the top 5 issues per version (by priority: Epics and Stories first, then remaining by priority descending). Having descriptions available enables accurate client-focused version summaries without subagent extraction.
+Descriptions are available for every fetched issue; use them for the top 5 issues per version (Epics and Stories first, then remaining by priority descending) when writing summaries and highlights — the top items carry the release theme, and reading every description adds cost without changing the result.
 
 ---
 
 ## Check for Existing Release Notes Pages (Step 4)
 
 ### If output is Confluence:
+- Resolve the `cloudId` first — call the `getAccessibleAtlassianResources` MCP tool once, pick the resource that matches the domain, and cache it for publishing in Step 8
 - Search Confluence for existing pages matching `[Project] Release Notes — Version {version}` pattern using `searchConfluenceUsingCql`
 - Also search for the legacy pattern `[Project] Roadmap — Version {version}` for backward compatibility
 - Store found page URLs for linking in the main roadmap
@@ -175,7 +184,7 @@ If the user confirms, write the file.
 
 ### Confluence Output
 
-Confluence publishing requires a `cloudId`. Resolve it now by calling `getAccessibleAtlassianResources` MCP tool — this is the only MCP call in this skill, and only when Confluence output was selected.
+Confluence access (page search in Step 4 and publishing here) is the only part of this skill that uses MCP tools, and only when Confluence output was selected. Use the `cloudId` resolved in Step 4, or call `getAccessibleAtlassianResources` now if it is not yet known.
 
 Use the available Confluence MCP tools to publish:
 

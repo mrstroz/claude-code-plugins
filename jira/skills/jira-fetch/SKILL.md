@@ -1,7 +1,6 @@
 ---
 name: jira-fetch
 description: Fetch JIRA issues via REST API and save as minimal extracted JSON. Bypasses MCP tools for maximum data efficiency and token minimization. Use when the user wants to download, fetch, pull, export, or cache JIRA data locally. Triggers on requests to fetch issues, download tasks, export JIRA data, get issues from JIRA, pull sprint/version/project data, cache JIRA issues, dump JIRA to file, or any variation like "give me data from JIRA", "I need issues from...", "pull tasks for sprint X", "get me everything from version Y". Also triggers when the user needs JIRA data saved to a file for offline analysis or for other skills to consume. Does NOT use MCP — calls JIRA REST API v3 directly via Node.js script.
-user-invocable: true
 allowed-tools: [Bash, Read, Write, AskUserQuestion, Glob, Grep]
 argument-hint: describe what to fetch, e.g. "sprint 5 of project PROJ" or "all bugs in version 2.0"
 ---
@@ -10,7 +9,7 @@ argument-hint: describe what to fetch, e.g. "sprint 5 of project PROJ" or "all b
 
 Fetch JIRA issues via REST API v3 and save as minimal extracted JSON. Uses a zero-dependency Node.js script that calls JIRA directly — no MCP tools, no subagents, no token overhead.
 
-**Output per issue:** key, type, status, priority, assignee, reporter, labels, fixVersions, summary, created, updated, description (plaintext), comments (up to 50, plaintext with author/datetime). All nested objects flattened, all HTML stripped.
+**Output per issue:** key, type, status, priority, assignee, reporter, labels, fixVersions, components, summary, created, updated, description (plaintext), comments (up to 50, plaintext with author/datetime). All nested objects flattened, all HTML stripped.
 
 ## Prerequisites
 
@@ -99,6 +98,8 @@ node "${SCRIPT_PATH}" \
 ```
 
 The JQL argument must be properly quoted to handle spaces, parentheses, and special characters.
+
+**Lightweight mode** — when the user only needs an issue list or version discovery (no descriptions or comments), add `--summaries-only`. The script then returns search results directly (key, type, status, priority, assignee, labels, fixVersions, components, summary, updated) at a cost of one API request per 1000 issues instead of 2+ requests per issue — a large difference on projects with years of history.
 
 The script prints progress to stderr and the output file path to stdout. If it exits with non-zero status, show the error message and stop — do not retry.
 
