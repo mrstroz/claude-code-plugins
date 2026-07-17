@@ -17,7 +17,7 @@ Environment variables:
 - `JIRA_EMAIL` — Atlassian account email
 - `JIRA_API_TOKEN` — API token from https://id.atlassian.com/manage/api-tokens
 
-If either is missing, tell the user which one and how to set it. Do not proceed without both.
+If either is missing, tell the user which one and how to set it permanently — add `export JIRA_EMAIL=...` and `export JIRA_API_TOKEN=...` to `~/.zshrc` or `~/.bashrc` and restart the shell. Do not proceed without both.
 
 ---
 
@@ -134,3 +134,32 @@ If saving to `docs/jira/`:
 3. Show the saved path
 
 After saving (or keeping), mention that the file is ready for use by other skills or direct reading.
+
+---
+
+## Raw API Access
+
+For one-off operations the script does not cover (project metadata, workflow transitions, sprints), call the REST API directly with the same credentials. Reads are safe to run freely; anything `POST`/`PUT`/`DELETE` changes JIRA state — confirm with the user first, same as the send steps in the other jira skills. For writes prefer the MCP tools (`addCommentToJiraIssue`, `createJiraIssue`) — see the ADF gotcha below.
+
+**Auth** — Basic auth with the same env vars the script uses:
+
+```bash
+curl -s -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
+  -H "Accept: application/json" \
+  "https://${DOMAIN}/rest/api/3/myself"   # cheap credentials check
+```
+
+**Useful endpoints beyond issue search:**
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /rest/api/3/project/{key}/versions` | List fixVersions directly — faster than scanning issues |
+| `GET /rest/api/3/issue/{key}/transitions` | Available workflow transitions (IDs are instance-specific) |
+| `POST /rest/api/3/issue/{key}/transitions` | Move an issue through the workflow |
+| `GET /rest/agile/1.0/board?projectKeyOrId={key}` | Boards; `/rest/agile/1.0/board/{id}/sprint` lists sprints |
+| `GET /rest/api/3/myself` | Verify credentials / current account |
+
+**Gotchas:**
+
+- **Writes need ADF, not markdown** — REST v3 write bodies (comments, descriptions) must be Atlassian Document Format JSON. A plain-text comment body looks like `{"body":{"type":"doc","version":1,"content":[{"type":"paragraph","content":[{"type":"text","text":"..."}]}]}}`. This is why the jira skills route writes through MCP tools, which accept plain text.
+- **Search endpoint migration** — `/rest/api/3/search` (offset-based) is legacy; new instances use `/rest/api/3/search/jql` (cursor-based, `nextPageToken`). The bundled script already handles both, so prefer the script for issue searches.
