@@ -41,6 +41,15 @@ This repo demonstrates two distinct patterns for multi-agent code review:
 - **Subagent pattern** (`pr-review/`): invoke pre-registered agents via Task tool in parallel, aggregate independently-produced findings in the orchestrating skill
 - **Agent Teams pattern** (`agent-teams-review/`): use TeamCreate, SendMessage, and shared task lists so teammates communicate during review and flag cross-domain findings with `↔️CROSS` notation; spawn teammates with Sonnet to optimize token costs
 
+## Documentation Convention Plugin
+
+`project-docs/` packages the spec/ADR/plan documentation method used in sibling repos (`transhans-mobile/docs/`, `tesoro-huella/docs/`) as three cooperating skills:
+
+- `docs-init` scaffolds `docs/{spec,adr,plan}`, `docs-task` runs a plan task and closes the documentation loop, `docs-style` holds the writing rules
+- `docs-init` and `docs-task` invoke `project-docs:docs-style` rather than restating its rules, so the style guide has one home
+- Doc skeletons live in `docs-init/references/templates.md` with their rules adjacent, not in `assets/` — they are read and adapted per project, and each one needs its constraints ("never renumber, append", the length budget) in view while it is filled in. Use `assets/` instead when a file is copied verbatim into the user's repo for them to fill in by hand, as `utils:humanize-content` does with `assets/humanize.template.md`
+- The tree is language-neutral: one set of skeletons plus a PL/EN vocabulary table in `docs-init/references/headings.md`; a third language is a new column, not a second skeleton set
+
 ## Conventions
 
 - Save review reports to `docs/pr-reviews/` or `docs/reviews/` as `{branch}-{YYYY-MM-DD}.md`, replacing branch slashes with hyphens

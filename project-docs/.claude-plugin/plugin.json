@@ -1,0 +1,8 @@
+{
+  "name": "project-docs",
+  "description": "Spec/ADR/plan documentation system — scaffold it, keep it in sync with the code, and write it so a human reads it fast",
+  "version": "0.1.0",
+  "author": {
+    "name": "mrstroz"
+  }
+}
