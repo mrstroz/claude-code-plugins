@@ -50,6 +50,16 @@ This repo demonstrates two distinct patterns for multi-agent code review:
 - Doc skeletons live in `docs-init/references/templates.md` with their rules adjacent, not in `assets/` — they are read and adapted per project, and each one needs its constraints ("never renumber, append", the length budget) in view while it is filled in. Use `assets/` instead when a file is copied verbatim into the user's repo for them to fill in by hand, as `utils:humanize-content` does with `assets/humanize.template.md`
 - The tree is language-neutral: one set of skeletons plus a PL/EN vocabulary table in `docs-init/references/headings.md`; a third language is a new column, not a second skeleton set
 
+## Payload CMS Plugin
+
+`payload-cms/` moves content in and out of Payload CMS projects over REST, as two skills that share one set of scripts and references:
+
+- `payload-content` writes (create/update/delete, media, rich text, translations); `payload-query` reads only and passes `--read-only` to the client, which refuses any non-GET request
+- Scripts and references live under `payload-content/`; `payload-query` reaches them by glob (`**/payload-content/scripts/payload-api.mjs`), the same cross-skill pattern `docs-style` uses. Discovery is one file with a "stop after step 4 for read-only work" marker rather than two copies that drift
+- The split is not read-vs-write for its own sake — most writes begin with a read, and a read that precedes a write belongs in `payload-content`. It exists so the write skill's guard rails are not competing for attention with `where`-operator syntax
+- Nothing about a project's content model is hardcoded. Two real Payload projects shared three collection slugs and one block slug whose fields differed entirely, so the skills discover collections, blocks and locales at runtime and treat the live API as the schema oracle (`?locale=all` reveals which fields are localized, at any nesting depth)
+- Safety lives in `payload-api.mjs`, not in prose: writes to a non-localhost host refuse without `--yes`, `update`/`delete` snapshot the document to `.payload-backups/` first, and `whoami` exits non-zero when credentials resolve to no user. An instruction the model can forget is not a safeguard
+
 ## Conventions
 
 - Save review reports to `docs/pr-reviews/` or `docs/reviews/` as `{branch}-{YYYY-MM-DD}.md`, replacing branch slashes with hyphens

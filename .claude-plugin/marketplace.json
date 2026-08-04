@@ -38,6 +38,11 @@
       "name": "project-docs",
       "source": "./project-docs",
       "description": "Spec/ADR/plan documentation system — scaffold it, keep it in sync with the code, and write it so a human reads it fast"
+    },
+    {
+      "name": "payload-cms",
+      "source": "./payload-cms",
+      "description": "Read and write Payload CMS content over the REST API — discovers each project's collections, blocks and locales at runtime, composes blocks and Lexical rich text, uploads media, and guards every write with a backup, a diff and a re-read"
     }
   ]
 }

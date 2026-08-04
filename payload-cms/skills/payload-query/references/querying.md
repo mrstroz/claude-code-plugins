@@ -1,0 +1,123 @@
+# Querying the Payload REST API
+
+`payload-api.mjs` takes `--where` either as JSON or as a shorthand, and serializes it into Payload's bracket query syntax. Both of these produce the same request:
+
+```bash
+--where 'slug=oferta'
+--where '{"slug":{"equals":"oferta"}}'
+```
+
+Shorthand covers the common case: `field=value` means `equals`, `field:operator=value` picks another operator, and several clauses joined with `&` are combined with `and`.
+
+```bash
+--where 'title:like=LED&localeReady=true'
+```
+
+Anything beyond that — `or`, mixed nesting — is easier as JSON.
+
+## Operators
+
+| Operator | Matches |
+|---|---|
+| `equals` / `not_equals` | Exact value |
+| `greater_than` / `greater_than_equal` | Numbers and dates |
+| `less_than` / `less_than_equal` | Numbers and dates |
+| `like` | Contains the words, case-insensitive — the usual choice for text search |
+| `contains` | Contains the string |
+| `in` / `not_in` | A comma-separated list. The client turns a JSON array into one |
+| `all` | An array field containing all the given values |
+| `exists` | `true` / `false` — has a value at all |
+| `near` | Point fields, `<lng>,<lat>,<maxMeters>,<minMeters>` |
+
+## Combining
+
+```json
+{"and": [
+  {"category": {"equals": 3}},
+  {"or": [
+    {"publishedAt": {"greater_than": "2026-01-01"}},
+    {"featured": {"equals": true}}
+  ]}
+]}
+```
+
+`and` and `or` take arrays of clause objects and nest freely.
+
+## Paths into nested data
+
+Dot notation reaches into groups, arrays and across relationships:
+
+```bash
+--where 'meta.title:like=cennik'          # into a group
+--where 'categories.slug=led'             # across a relationship, by the related doc's field
+--where 'hero.slides.image=42'            # into an array inside a block — useful for reference checks
+```
+
+**Except `blockType`.** `where[layout.blockType][equals]=heroSlider` returns **HTTP 500** on the D1/SQLite adapter, for a real block type and a nonexistent one alike. To find which documents use a block, fetch a page of documents at `--depth 0` and scan them in Node:
+
+```bash
+node "$API_SCRIPT" find pages --read-only --limit 50 --depth 0 --out /tmp/p.json --raw > /dev/null
+node -e "
+for (const d of require('/tmp/p.json').docs)
+  for (const b of [...(d.hero||[]), ...(d.layout||d.sections||[])])
+    if (b.blockType==='heroSlider') { console.log(d.id, d.slug); break; }
+"
+```
+
+## A malformed filter widens the match
+
+A `where` Payload cannot parse is ignored rather than rejected, so a broken filter returns **everything** and looks like a legitimate result. When a count comes back suspiciously large or suspiciously round, verify the filter before believing the answer — and before letting it drive a bulk operation.
+
+## Shaping the response
+
+| Option | Effect |
+|---|---|
+| `--depth 0` | Relationships stay as ids. The default, and the right choice for audits and anything that will become a write |
+| `--depth 1` | One level populated — enough to read a page's media alt text or a related title |
+| `--select a,b,c` | Only those fields. On a listing question, the difference between 2 KB and 200 KB |
+| `--limit` / `--page` | Default limit is 10. `--limit 0` returns everything, which on a large collection is rarely what you want |
+| `--sort field` | Prefix `-` for descending: `--sort -publishedAt` |
+
+Depth cost compounds: at `--depth 2` every relationship of every relationship is inlined, and a page with a dozen media references becomes hundreds of kilobytes. Raise depth for one document, never for a listing.
+
+## Counting
+
+`find` reports `totalDocs` regardless of how many documents it returns, so the cheapest count is:
+
+```bash
+node "$API_SCRIPT" find articles --read-only --where 'category=3' --limit 1 --select id
+```
+
+The response also carries `totalPages`, `page`, `hasNextPage`, `hasPrevPage`.
+
+## Locales
+
+`--locale all` returns every localized field as `{pl: …, en: …}`, at every nesting depth — including localized leaves inside a block array whose array is not itself localized. It is the only way to answer "what is translated": at a single locale, `fallback` serves the other language and an untranslated field looks filled.
+
+An untranslated field either omits its locale key or holds `null`:
+
+```jsonc
+{"title": {"pl": "Home v2"},   // no `en` key — untranslated
+ "slug":  {"pl": null}}        // present, empty — also untranslated
+```
+
+`--fallback-locale none` shows the holes at a single locale instead.
+
+## Globals
+
+```bash
+node "$API_SCRIPT" get-global footer --read-only --depth 1 --locale all
+```
+
+Globals have no ids and no listing — one document per slug.
+
+## Exporting
+
+Save the raw response and work from the file rather than from a paste:
+
+```bash
+node "$API_SCRIPT" find articles --read-only --limit 0 --depth 0 --locale all \
+  --out ./articles-export.json --raw > /dev/null
+```
+
+For a spreadsheet, convert after the fact — `--select` first so the columns are decided by the query rather than by trimming afterwards.
