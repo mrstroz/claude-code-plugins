@@ -50,12 +50,15 @@
 //   --read-only             Refuse any non-GET request. payload-query always passes this.
 //   --no-cache              Do not read or write the cached JWT.
 //   --raw                   Print the full response instead of the compact summary.
+//   --api-route <path>      API prefix when the project overrides `routes.api` (default /api).
+//   --auth-collection <s>   Collection carrying `auth: true` (default users).
 //   --timeout <ms>          Default 30000.
 //
 // Env:
 //   PAYLOAD_BASE_URL              Base URL, if --base is not given.
 //   PAYLOAD_API_KEY               → Authorization: <collection> API-Key <key>
-//   PAYLOAD_API_KEY_COLLECTION    Auth collection slug (default "users").
+//   PAYLOAD_AUTH_COLLECTION       Collection carrying `auth: true` (default "users").
+//   PAYLOAD_API_ROUTE             API route prefix if the project overrides `routes.api` (default "/api").
 //   PAYLOAD_TOKEN                 → Authorization: JWT <token>
 //   PAYLOAD_EMAIL / PAYLOAD_PASSWORD   Fallback: log in, then cache the JWT.
 //
@@ -137,8 +140,17 @@ function serializeInto(params, value, prefix) {
   params.append(prefix, String(value));
 }
 
+const OPERATORS = new Set([
+  'equals', 'not_equals', 'greater_than', 'greater_than_equal', 'less_than', 'less_than_equal',
+  'like', 'contains', 'in', 'not_in', 'all', 'exists', 'near', 'within', 'intersects',
+]);
+
 // Shorthand so the common case does not need JSON: `slug=oferta`, `title:like=foo`,
 // or several joined with `&`. Anything starting with `{` is parsed as JSON.
+//
+// Both checks below exist because Payload ignores a filter it cannot parse rather
+// than rejecting it — so a malformed `where` returns the WHOLE collection and reads
+// as a legitimate result. Failing here is the only place that mistake is visible.
 function parseWhere(input) {
   const text = input.trim();
   if (text.startsWith('{')) {
@@ -154,6 +166,16 @@ function parseWhere(input) {
     const left = pair.slice(0, eq);
     const value = pair.slice(eq + 1);
     const [field, operator = 'equals'] = left.split(':');
+    if (/[[\]]/.test(field)) {
+      die(2, [
+        `--where: "${field}" contains a bracket, so it is bracket syntax written into the shorthand.`,
+        `The shorthand takes the operator after a colon — write "${field.replace(/\[([^\]]*)\]/, ':$1')}"`,
+        `or pass the JSON form: --where '{"${field.split('[')[0]}":{"${(field.match(/\[([^\]]*)\]/) || [, 'equals'])[1]}":${JSON.stringify(value)}}}'`,
+      ].join('\n'));
+    }
+    if (!OPERATORS.has(operator)) {
+      die(2, `--where: "${operator}" is not a Payload operator. Available: ${[...OPERATORS].join(', ')}.`);
+    }
     return { [field]: { [operator]: value } };
   });
   return clauses.length === 1 ? clauses[0] : { and: clauses };
@@ -182,8 +204,13 @@ function tokenCachePath(base, email) {
   return join(tmpdir(), `payload-api-token-${id}.json`);
 }
 
-async function resolveAuth(base, opts) {
-  const collection = process.env.PAYLOAD_API_KEY_COLLECTION || 'users';
+async function resolveAuth(base, api, opts) {
+  // Payload's auth collection is conventionally `users`, but nothing requires it —
+  // it is whichever collection carries `auth: true`, and discovery reports the name.
+  const collection = opts['auth-collection']
+    || process.env.PAYLOAD_AUTH_COLLECTION
+    || process.env.PAYLOAD_API_KEY_COLLECTION
+    || 'users';
 
   if (process.env.PAYLOAD_API_KEY) {
     // An API key authenticates against whichever database holds that user. A
@@ -200,7 +227,7 @@ async function resolveAuth(base, opts) {
   if (!email || !password) {
     die(2, [
       'No credentials. Set one of:',
-      '  PAYLOAD_API_KEY          (+ PAYLOAD_API_KEY_COLLECTION if the auth collection is not "users")',
+      '  PAYLOAD_API_KEY          (+ PAYLOAD_AUTH_COLLECTION if the auth collection is not "users")',
       '  PAYLOAD_TOKEN            an existing JWT',
       '  PAYLOAD_EMAIL + PAYLOAD_PASSWORD',
       'A project keeping its key in a gitignored .env can pass --env-file <path>.',
@@ -217,14 +244,21 @@ async function resolveAuth(base, opts) {
     } catch { /* a corrupt cache is not worth reporting — just log in again */ }
   }
 
-  const res = await fetch(`${base}/api/${collection}/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
+  let res;
+  try {
+    res = await fetch(`${base}${api}/${collection}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+      signal: AbortSignal.timeout(Number(opts.timeout || 30000)),
+    });
+  } catch (e) {
+    die(3, `Cannot reach ${base}${api}/${collection}/login — ${e.message}\n`
+      + '  Check that the server is running and that --base and --api-route are right.');
+  }
   const body = await res.json().catch(() => ({}));
   if (!res.ok || !body.token) {
-    die(2, `Login failed at ${base}/api/${collection}/login (HTTP ${res.status}): ${body?.errors?.[0]?.message || 'no token returned'}`);
+    die(2, `Login failed at ${base}${api}/${collection}/login (HTTP ${res.status}): ${body?.errors?.[0]?.message || 'no token returned'}`);
   }
   if (!opts['no-cache']) {
     try {
@@ -281,19 +315,27 @@ function reportHttpError(res, bodyText, body, ctx) {
 const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
-// A path-level summary, not a JSON dump. A diff too big to read is not a safety
-// measure — it just launders the write through a wall of text.
-function summarizeDiff(before, after) {
-  const lines = [];
-  const warnings = [];
-  for (const key of Object.keys(after)) {
-    const a = before?.[key];
-    const b = after[key];
-    if (same(a, b)) { lines.push(`  ${key}: unchanged`); continue; }
+const isRichText = (v) => isObj(v) && isObj(v.root);
 
-    const rowArrays = Array.isArray(a) && Array.isArray(b) && a.every(isObj) && b.every(isObj);
-    if (!rowArrays) { lines.push(`  ${key}: changed`); continue; }
+function fmtValue(v) {
+  if (v === undefined) return '(absent)';
+  if (v === null) return 'null';
+  if (typeof v === 'string') return JSON.stringify(v.length > 60 ? `${v.slice(0, 57)}…` : v);
+  if (Array.isArray(v)) return `[${v.length} item${v.length === 1 ? '' : 's'}]`;
+  if (isRichText(v)) return `rich text (${v.root.children?.length ?? 0} blocks)`;
+  if (isObj(v)) return `{${Object.keys(v).length} keys}`;
+  return JSON.stringify(v);
+}
 
+// A path-level summary that reaches the leaves. A group reported as "meta: changed"
+// tells you nothing about which of its fields moved, and on a database without
+// version history the diff is the last chance to notice a change you did not intend.
+// A diff too big to read is not a safety measure either, so values are truncated and
+// rich text is summarized rather than expanded.
+function walkDiff(a, b, path, lines, warnings, depth) {
+  if (same(a, b)) { if (depth === 0) lines.push(`  ${path}: unchanged`); return; }
+
+  if (Array.isArray(a) && Array.isArray(b) && a.every(isObj) && b.every(isObj)) {
     const idsBefore = a.map((r) => r.id).filter((v) => v !== undefined && v !== null);
     const idsAfter = b.map((r) => r.id).filter((v) => v !== undefined && v !== null);
     const identical = idsBefore.length === idsAfter.length
@@ -301,22 +343,43 @@ function summarizeDiff(before, after) {
 
     const changed = [];
     for (let i = 0; i < Math.max(a.length, b.length); i++) if (!same(a[i], b[i])) changed.push(i);
-
     const label = b.map((r, i) => (r.blockType && changed.includes(i) ? `${i} (${r.blockType})` : null)).filter(Boolean);
     const rows = (n) => `${n} row${n === 1 ? '' : 's'}`;
-    lines.push(`  ${key}: ${rows(a.length)} in → ${rows(b.length)} out; row ids ${identical ? 'IDENTICAL' : '*** CHANGED ***'}`);
+
+    lines.push(`  ${path}: ${rows(a.length)} in → ${rows(b.length)} out; row ids ${identical ? 'IDENTICAL' : '*** CHANGED ***'}`);
     if (changed.length) lines.push(`    rows touched: ${label.length ? label.join(', ') : changed.join(', ')}`);
+    for (const i of changed) {
+      if (a[i] && b[i]) walkDiff(a[i], b[i], `${path}[${i}]`, lines, warnings, depth + 1);
+    }
 
     if (idsBefore.length && idsAfter.length < idsBefore.length) {
       const missing = idsBefore.length - idsAfter.length;
       warnings.push(
-        `  ${key}: ${missing} outgoing ${missing === 1 ? 'row carries' : 'rows carry'} no \`id\`.\n` +
+        `  ${path}: ${missing} outgoing ${missing === 1 ? 'row carries' : 'rows carry'} no \`id\`.\n` +
         '    Payload treats an id-less row as NEW. Rows recreated this way lose the localized values\n' +
         "    stored against the old rows in whatever locale you are not currently looking at.\n" +
         '    Unless you are deliberately replacing this array, re-send each existing row with its `id`.',
       );
     }
+    return;
   }
+
+  // Recurse through groups, block rows and the {pl, en} wrappers a locale=all read
+  // produces — but stop at rich text, which would expand into hundreds of lines.
+  if (isObj(a) && isObj(b) && !isRichText(a) && !isRichText(b) && depth < 6) {
+    for (const key of Object.keys(b)) {
+      walkDiff(a[key], b[key], `${path}.${key}`, lines, warnings, depth + 1);
+    }
+    return;
+  }
+
+  lines.push(`  ${path}: ${fmtValue(a)} → ${fmtValue(b)}`);
+}
+
+function summarizeDiff(before, after) {
+  const lines = [];
+  const warnings = [];
+  for (const key of Object.keys(after)) walkDiff(before?.[key], after[key], key, lines, warnings, 0);
   return { lines, warnings };
 }
 
@@ -401,7 +464,9 @@ async function main() {
     ].join('\n'));
   }
 
-  const ctx = { base, timeout: Number(opts.timeout || 30000), auth: await resolveAuth(base, opts) };
+  // `routes.api` is configurable in payload.config.ts; `/api` is only the default.
+  const api = `/${(opts['api-route'] ?? process.env.PAYLOAD_API_ROUTE ?? '/api').replace(/^\/+|\/+$/g, '')}`;
+  const ctx = { base, api, timeout: Number(opts.timeout || 30000), auth: await resolveAuth(base, api, opts) };
   const query = buildQuery(opts);
   const out = (obj) => {
     if (opts.out) { mkdirSync(dirname(opts.out), { recursive: true }); writeFileSync(opts.out, JSON.stringify(obj, null, 2)); }
@@ -410,7 +475,7 @@ async function main() {
 
   switch (command) {
     case 'whoami': {
-      const me = await request(ctx, { method: 'GET', path: `/api/${ctx.auth.collection}/me` });
+      const me = await request(ctx, { method: 'GET', path: `${ctx.api}/${ctx.auth.collection}/me` });
       out(me);
       process.stdout.write(`base:  ${base}\nauth:  ${ctx.auth.mode}\n`);
       process.stdout.write(isLocal ? 'target: LOCAL\n' : 'target: *** NOT LOCAL — writes here are live ***\n');
@@ -437,8 +502,27 @@ async function main() {
 
     case 'find': {
       if (!arg1) die(2, 'find needs a collection slug.');
-      const res = await request(ctx, { method: 'GET', path: `/api/${arg1}`, query });
+      const res = await request(ctx, { method: 'GET', path: `${ctx.api}/${arg1}`, query });
       out(res);
+
+      // Payload ignores a filter it cannot resolve instead of rejecting it, so a
+      // mistyped field name silently returns the whole collection. One cheap
+      // unfiltered count makes that visible instead of leaving it to be noticed.
+      if (opts.where) {
+        const total = await request(ctx, {
+          method: 'GET', path: `${ctx.api}/${arg1}`, query: '?limit=1&depth=0&select[id]=true',
+        });
+        if (res.totalDocs > 0 && res.totalDocs === total.totalDocs) {
+          process.stderr.write(
+            `\nCHECK THE FILTER — it matched every document in ${arg1} (${res.totalDocs} of ${total.totalDocs}).\n` +
+            '  That is a legitimate result if the condition really is true of all of them. It is also\n' +
+            '  exactly what a filter Payload could not resolve looks like, because an unresolvable\n' +
+            '  path is ignored rather than rejected. Confirm the field name before acting on this,\n' +
+            '  especially before a bulk write.\n\n',
+          );
+        }
+      }
+
       if (opts.raw) break;
       process.stdout.write(`${res.totalDocs} doc(s) in ${arg1}; page ${res.page}/${res.totalPages}, ${res.docs?.length ?? 0} returned\n`);
       const body = JSON.stringify(res.docs ?? [], null, 2);
@@ -457,7 +541,7 @@ async function main() {
 
     case 'get': {
       if (!arg1 || !arg2) die(2, 'get needs a collection slug and a document id.');
-      const doc = await request(ctx, { method: 'GET', path: `/api/${arg1}/${arg2}`, query });
+      const doc = await request(ctx, { method: 'GET', path: `${ctx.api}/${arg1}/${arg2}`, query });
       out(doc);
       if (!opts.raw) process.stdout.write(`${JSON.stringify(doc, null, 2)}\n`);
       break;
@@ -465,7 +549,7 @@ async function main() {
 
     case 'get-global': {
       if (!arg1) die(2, 'get-global needs a global slug.');
-      const doc = await request(ctx, { method: 'GET', path: `/api/globals/${arg1}`, query });
+      const doc = await request(ctx, { method: 'GET', path: `${ctx.api}/globals/${arg1}`, query });
       out(doc);
       if (!opts.raw) process.stdout.write(`${JSON.stringify(doc, null, 2)}\n`);
       break;
@@ -475,10 +559,10 @@ async function main() {
       if (!arg1) die(2, 'create needs a collection slug.');
       const data = readBody(opts);
       if (opts['dry-run']) {
-        process.stdout.write(`DRY RUN — POST ${base}/api/${arg1}${query}\n${JSON.stringify(data, null, 2)}\n`);
+        process.stdout.write(`DRY RUN — POST ${base}${ctx.api}/${arg1}${query}\n${JSON.stringify(data, null, 2)}\n`);
         break;
       }
-      const res = await request(ctx, { method: 'POST', path: `/api/${arg1}`, query, body: data });
+      const res = await request(ctx, { method: 'POST', path: `${ctx.api}/${arg1}`, query, body: data });
       out(res);
       process.stdout.write(`created ${arg1}/${res?.doc?.id} at ${base}\n`);
       break;
@@ -491,16 +575,16 @@ async function main() {
       // Always compare against locale=all: a single-locale read cannot show what a
       // write is about to do to the other locale.
       const current = await request(ctx, {
-        method: 'GET', path: `/api/${arg1}/${arg2}`, query: '?depth=0&locale=all',
+        method: 'GET', path: `${ctx.api}/${arg1}/${arg2}`, query: '?depth=0&locale=all',
       });
       const { lines, warnings } = summarizeDiff(current, data);
-      process.stdout.write(`${opts['dry-run'] ? 'DRY RUN — ' : ''}PATCH ${base}/api/${arg1}/${arg2}${query}\n`);
+      process.stdout.write(`${opts['dry-run'] ? 'DRY RUN — ' : ''}PATCH ${base}${ctx.api}/${arg1}/${arg2}${query}\n`);
       process.stdout.write(`${lines.join('\n')}\n`);
       if (warnings.length) process.stderr.write(`\nWARNING\n${warnings.join('\n')}\n\n`);
       if (opts['dry-run']) break;
 
       if (!opts['no-backup']) process.stdout.write(`backup: ${saveBackup(opts, arg1, arg2, current)}\n`);
-      const res = await request(ctx, { method: 'PATCH', path: `/api/${arg1}/${arg2}`, query, body: data });
+      const res = await request(ctx, { method: 'PATCH', path: `${ctx.api}/${arg1}/${arg2}`, query, body: data });
       out(res);
       process.stdout.write(`updated ${arg1}/${arg2} at ${base}\n`);
       break;
@@ -509,14 +593,14 @@ async function main() {
     case 'update-global': {
       if (!arg1) die(2, 'update-global needs a global slug.');
       const data = readBody(opts);
-      const current = await request(ctx, { method: 'GET', path: `/api/globals/${arg1}`, query: '?depth=0&locale=all' });
+      const current = await request(ctx, { method: 'GET', path: `${ctx.api}/globals/${arg1}`, query: '?depth=0&locale=all' });
       const { lines, warnings } = summarizeDiff(current, data);
-      process.stdout.write(`${opts['dry-run'] ? 'DRY RUN — ' : ''}POST ${base}/api/globals/${arg1}${query}\n${lines.join('\n')}\n`);
+      process.stdout.write(`${opts['dry-run'] ? 'DRY RUN — ' : ''}POST ${base}${ctx.api}/globals/${arg1}${query}\n${lines.join('\n')}\n`);
       if (warnings.length) process.stderr.write(`\nWARNING\n${warnings.join('\n')}\n\n`);
       if (opts['dry-run']) break;
 
       if (!opts['no-backup']) process.stdout.write(`backup: ${saveBackup(opts, `global-${arg1}`, 'current', current)}\n`);
-      const res = await request(ctx, { method: 'POST', path: `/api/globals/${arg1}`, query, body: data });
+      const res = await request(ctx, { method: 'POST', path: `${ctx.api}/globals/${arg1}`, query, body: data });
       out(res);
       process.stdout.write(`updated global ${arg1} at ${base}\n`);
       break;
@@ -524,13 +608,13 @@ async function main() {
 
     case 'delete': {
       if (!arg1 || !arg2) die(2, 'delete needs a collection slug and a document id.');
-      const current = await request(ctx, { method: 'GET', path: `/api/${arg1}/${arg2}`, query: '?depth=0&locale=all' });
+      const current = await request(ctx, { method: 'GET', path: `${ctx.api}/${arg1}/${arg2}`, query: '?depth=0&locale=all' });
       if (opts['dry-run']) {
-        process.stdout.write(`DRY RUN — DELETE ${base}/api/${arg1}/${arg2}\nwould delete: ${JSON.stringify(current).length} bytes of document\n`);
+        process.stdout.write(`DRY RUN — DELETE ${base}${ctx.api}/${arg1}/${arg2}\nwould delete: ${JSON.stringify(current).length} bytes of document\n`);
         break;
       }
       if (!opts['no-backup']) process.stdout.write(`backup: ${saveBackup(opts, arg1, arg2, current)}\n`);
-      const res = await request(ctx, { method: 'DELETE', path: `/api/${arg1}/${arg2}`, query });
+      const res = await request(ctx, { method: 'DELETE', path: `${ctx.api}/${arg1}/${arg2}`, query });
       out(res);
       process.stdout.write(`deleted ${arg1}/${arg2} at ${base}\n`);
       break;
@@ -546,13 +630,13 @@ async function main() {
       // in a `_payload` part holding the document JSON as a string.
       const data = opts.data || opts['data-file'] ? readBody(opts) : {};
       if (opts['dry-run']) {
-        process.stdout.write(`DRY RUN — POST ${base}/api/${arg1}${query}\nfile: ${name} (${type}, ${buf.length} bytes)\n_payload: ${JSON.stringify(data)}\n`);
+        process.stdout.write(`DRY RUN — POST ${base}${ctx.api}/${arg1}${query}\nfile: ${name} (${type}, ${buf.length} bytes)\n_payload: ${JSON.stringify(data)}\n`);
         break;
       }
       const form = new FormData();
       form.append('file', new Blob([buf], { type }), name);
       form.append('_payload', JSON.stringify(data));
-      const res = await request(ctx, { method: 'POST', path: `/api/${arg1}`, query, formData: form });
+      const res = await request(ctx, { method: 'POST', path: `${ctx.api}/${arg1}`, query, formData: form });
       out(res);
       const doc = res?.doc ?? res;
       process.stdout.write(`uploaded ${arg1}/${doc.id} — ${doc.filename} → ${doc.url}\n`);

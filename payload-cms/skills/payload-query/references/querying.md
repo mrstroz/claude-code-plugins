@@ -10,7 +10,7 @@
 Shorthand covers the common case: `field=value` means `equals`, `field:operator=value` picks another operator, and several clauses joined with `&` are combined with `and`.
 
 ```bash
---where 'title:like=LED&localeReady=true'
+--where 'title:like=cennik&published=true'
 ```
 
 Anything beyond that — `or`, mixed nesting — is easier as JSON.
@@ -49,24 +49,47 @@ Dot notation reaches into groups, arrays and across relationships:
 
 ```bash
 --where 'meta.title:like=cennik'          # into a group
---where 'categories.slug=led'             # across a relationship, by the related doc's field
+--where 'categories.slug=news'             # across a relationship, by the related doc's field
 --where 'hero.slides.image=42'            # into an array inside a block — useful for reference checks
 ```
 
-**Except `blockType`.** `where[layout.blockType][equals]=heroSlider` returns **HTTP 500** on the D1/SQLite adapter, for a real block type and a nonexistent one alike. To find which documents use a block, fetch a page of documents at `--depth 0` and scan them in Node:
+### `blockType` — the field has to match the block
+
+Filtering by block type works, but the block must belong to the block set of the field you name:
+
+| Query | Result |
+|---|---|
+| `hero.blockType=heroBanner` — a hero block on the hero field | 200 |
+| `layout.blockType=textWithImage` — a body block on the body field | 200 |
+| `layout.blockType=heroBanner` — a hero block on the body field | **500** |
+| `hero.blockType=textWithImage` — a body block on the hero field | **500** |
+| `layout.blockType=noSuchBlock` — a block that exists nowhere | **500** |
+| `where[layout][blockType][equals]=…` — the nested form | **400** |
+
+Payload builds the query against the tables joined for that field, so a block that field never accepts has nothing to match and the query fails outright. **A 500 here means you named the wrong field, not that filtering is unavailable** — check the block index for which field lists that block and re-query.
+
+Fall back to fetch-and-scan only when you need several fields at once, or do not know which field holds the block:
 
 ```bash
 node "$API_SCRIPT" find pages --read-only --limit 50 --depth 0 --out /tmp/p.json --raw > /dev/null
 node -e "
 for (const d of require('/tmp/p.json').docs)
   for (const b of [...(d.hero||[]), ...(d.layout||d.sections||[])])
-    if (b.blockType==='heroSlider') { console.log(d.id, d.slug); break; }
+    if (b.blockType==='heroBanner') { console.log(d.id, d.slug); break; }
 "
 ```
 
 ## A malformed filter widens the match
 
-A `where` Payload cannot parse is ignored rather than rejected, so a broken filter returns **everything** and looks like a legitimate result. When a count comes back suspiciously large or suspiciously round, verify the filter before believing the answer — and before letting it drive a bulk operation.
+A `where` Payload cannot resolve is ignored rather than rejected, so a broken filter returns **everything** and looks like a legitimate result. `alt[exists]=false` — bracket syntax written into the shorthand — used to sail through and return the whole media library.
+
+Three things now catch this:
+
+- The client **rejects a field name containing `[` or `]`**, which is always a bracket form in the wrong place, and shows the two correct spellings.
+- The client **rejects an unknown operator**, so `title:contain=x` fails instead of matching nothing in particular.
+- Whenever `--where` is given, the client runs one extra unfiltered count and **warns if the filter matched every document in the collection**. That is sometimes legitimate, which is why it is a warning and not an error — but it is also exactly what an ignored filter looks like, so confirm the field name before acting on it.
+
+None of that catches a well-formed filter on a field that does not exist. When a count comes back suspiciously round, check it against the collection before letting it drive a bulk operation.
 
 ## Shaping the response
 
@@ -97,7 +120,7 @@ The response also carries `totalPages`, `page`, `hasNextPage`, `hasPrevPage`.
 An untranslated field either omits its locale key or holds `null`:
 
 ```jsonc
-{"title": {"pl": "Home v2"},   // no `en` key — untranslated
+{"title": {"pl": "Cennik"},    // no `en` key — untranslated
  "slug":  {"pl": null}}        // present, empty — also untranslated
 ```
 

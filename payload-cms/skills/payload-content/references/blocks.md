@@ -10,18 +10,30 @@ Everything below is either how to do that, or what to do when you cannot.
 
 ## 1. Find an existing instance of the block
 
-Fetch documents and scan them locally:
+Filter for it — but **the block must belong to the block set of the field you name**:
+
+```bash
+# heroBanner is in the hero field's block list, so query it on `hero`
+node payload-api.mjs find pages --where 'hero.blockType=heroBanner' --select slug --limit 1
+
+# textWithImage is a body block, so query it on `layout` (or `sections`)
+node payload-api.mjs find pages --where 'layout.blockType=textWithImage' --depth 0 --limit 1
+```
+
+Naming the wrong field for that block — a hero block on the body field, or the reverse — answers **HTTP 500**, as does a block type that exists nowhere. Payload builds the query against the tables joined for that field, and there is no table to match against. So a 500 here means *wrong field*, not "filtering does not work": check the block index for which field lists that block, then re-query.
+
+The nested form `where[layout][blockType][equals]=…` answers 400. Use the dotted path.
+
+When you need blocks across several fields at once, or the field is not known, fetch and scan instead:
 
 ```bash
 node payload-api.mjs find pages --limit 30 --depth 0 --locale all --out /tmp/pages.json --raw > /dev/null
 node -e "
 const d=require('/tmp/pages.json').docs;
 for (const doc of d) for (const b of [...(doc.hero||[]), ...(doc.layout||doc.sections||[])])
-  if (b.blockType==='sectionTextImage') { console.log(JSON.stringify(b,null,2)); process.exit(0); }
+  if (b.blockType==='textWithImage') { console.log(JSON.stringify(b,null,2)); process.exit(0); }
 "
 ```
-
-**Do not filter by block type in the query.** `where[layout.blockType][equals]=x` looks like it should work — `blockType` is a real column — but on the D1/SQLite adapter it answers **HTTP 500**, for a real block type and a nonexistent one alike. Fetch a page of documents and scan them in Node instead. It is one request either way.
 
 ## 2. The instance is your template
 
@@ -53,7 +65,7 @@ This is the failure-prone path.
 
 > **A block file that calls a field factory does not show you that field's shape. Open the factory.**
 
-A block that lists `actionsField()` among its fields tells you a field called `actions` exists and nothing else. The factory is where the array's name, its `maxRows`, its `label`/`href`/`variant`/`size` sub-fields and the exact set of allowed `variant` values are defined. Read the block, note every imported helper, and read those too. Factories cluster in `src/fields/` or `src/blocks/fields/` — the discovery block index points at them.
+A block that lists `actionsField()` among its fields tells you a field called `actions` exists and nothing else. The factory is where the array's name, its `maxRows`, its `label`/`href`/`variant`/`size` sub-fields and the exact set of allowed `variant` values are defined. Read the block, note every imported helper, and read those too. Where factories live is the project's choice — a shared `fields/` directory, a `fields/` folder beside the blocks, or the block file itself. Follow the imports at the top of the block rather than guessing a path.
 
 Then build the block from the factory definitions, and be explicit with the user about which fields you guessed.
 
@@ -61,11 +73,11 @@ Then build the block from the factory definitions, and be explicit with the user
 
 | Rule | Why |
 |---|---|
-| **`blockType` on every element**, exactly equal to the block's `slug` | Take it from the block index, never from the filename — the file is `SectionTextImage.ts` and the slug is `sectionTextImage` |
+| **`blockType` on every element**, exactly equal to the block's `slug` | Take it from the block index, never from the filename — the file is `TextWithImage.ts` and the slug is `textWithImage` |
 | **Keep the `id` of every existing row** | The destructive one. See §6 |
 | **Omit `id` on genuinely new rows** | Payload mints one |
 | **Relationship and upload fields carry ids, not objects** | A `depth=0` read gives a bare id (or `{relationTo, value}` when polymorphic). Writing back a *populated* object from a `depth>=1` read is how a related document gets rewritten. **Read at `depth=0` whenever the read will become a write** |
-| **Strip every key ending in `Html`** | Some projects pair each rich-text field with a `virtual: true` `<name>Html` sibling computed on read. The API emits them and refuses to accept them. The suffix rule catches all of them without hardcoding names; confirm the general case with `rg "virtual: true" src/` |
+| **Strip every key ending in `Html`** | Some projects pair each rich-text field with a `virtual: true` `<name>Html` sibling computed on read. The API emits them and refuses to accept them. The suffix rule catches all of them without hardcoding names; confirm the general case with `rg "virtual: true" <source-root>` |
 | **`select` values are identifiers; labels are prose** | The user says "przycisk magenta", the field wants `primary`. Map through the factory's options list. Never infer a value from a label |
 | **`tabs` are presentational** | A collection may wrap `hero` and `layout` in tabs, but in the JSON they are top-level keys. Do not look for a `tabs` key — there isn't one |
 | **`blockName` is optional** | An admin-only label. Safe to omit or copy through |

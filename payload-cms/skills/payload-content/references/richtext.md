@@ -76,7 +76,7 @@ Pass the same restriction to the converter:
 node lexical-md.mjs --project-dir <project> --headings h2,h3,h4 --in body.md
 ```
 
-**A `#` in the markdown then becomes a plain paragraph, silently** — the text survives but stops being a heading. So write the markdown at the levels the block allows: start at `##`. Check for per-field `editor:` overrides with `rg -n "lexicalEditor" src/` before converting a long body.
+**A `#` in the markdown then becomes a plain paragraph, silently** — the text survives but stops being a heading. So write the markdown at the levels the block allows: start at `##`. Check for per-field `editor:` overrides with `rg -n "lexicalEditor" <source-root>` before converting a long body.
 
 ## The `<name>Html` sibling
 

@@ -33,7 +33,9 @@ The path is the fix. Common causes, in the order worth checking:
 
 ## HTTP 500 on a read
 
-The query itself is malformed in a way the adapter cannot execute. The known case: **filtering by `blockType`** — `where[layout.blockType][equals]=heroSlider` returns 500 on the D1/SQLite adapter, for real and nonexistent block types alike. Fetch a page of documents and scan them locally instead.
+The query names something the adapter cannot join against. The known case: **filtering by `blockType` on the wrong field.** `layout.blockType=heroBanner` fails when `heroBanner` belongs to the hero field's block set, and `hero.blockType=textWithImage` fails the other way round; a block type that exists nowhere fails too. The fix is the field name, not the approach — check the block index for which field lists that block and re-query. `hero.blockType=heroBanner` and `layout.blockType=textWithImage` both answer 200.
+
+The nested form `where[layout][blockType][equals]=…` answers 400 rather than 500. Use the dotted path.
 
 ## The response was not JSON
 

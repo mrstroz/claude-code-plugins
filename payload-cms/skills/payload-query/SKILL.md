@@ -1,6 +1,6 @@
 ---
 name: payload-query
-description: Read and search content in a Payload CMS project through its REST API without changing anything — find documents by any field, filter with where-operators, count, paginate, read a document across all locales, dump rich text as readable markdown, inspect which blocks a collection allows and what fields a block has, and audit content for missing translations, empty fields or broken references. Discovers the project's collections, globals, blocks and locales at runtime from payload.config.ts and the live API, so it works on any Payload 3 project rather than assuming a template. Use this whenever the user asks what is IN the CMS — "znajdź wszystkie realizacje z kategorią X", "ile mamy wpisów na blogu", "pokaż mi stronę oferta", "co jest w hero na stronie kontakt", "jakie bloki są na stronie głównej", "jakie bloki są w ogóle dostępne", "które strony mają wersję angielską", "czego brakuje w tłumaczeniu", "wypisz media bez alt", "gdzie używamy bloku heroSlider", "sprawdź globala stopka", "sprawdź czy ten slug jest zajęty", "wyeksportuj artykuły do JSON", "find all pages using block X", "list the blog posts", "show me what's on this page", "which documents are missing an EN translation", "count the realizations", "export the media library", "what blocks are available" — and to audit content before a bulk edit or a migration. This skill only reads — it passes --read-only to the API client, which refuses any non-GET request. To create, change, upload, translate or delete anything, use payload-cms:payload-content instead.
+description: Read and search content in a Payload CMS project through its REST API without changing anything — find documents by any field, filter with where-operators, count, paginate, read a document across all locales, dump rich text as readable markdown, inspect which blocks a collection allows and what fields a block has, and audit content for missing translations, empty fields or broken references. Discovers the project's collections, globals, blocks and locales at runtime from payload.config.ts and the live API, so it works on any Payload 3 project rather than assuming a template. Use this whenever the user asks what is IN the CMS — "znajdź wszystkie realizacje z kategorią X", "ile mamy wpisów na blogu", "pokaż mi stronę oferta", "co jest w hero na stronie kontakt", "jakie bloki są na stronie głównej", "jakie bloki są w ogóle dostępne", "które strony mają wersję angielską", "czego brakuje w tłumaczeniu", "wypisz media bez alt", "gdzie używamy bloku heroBanner", "sprawdź globala stopka", "sprawdź czy ten slug jest zajęty", "wyeksportuj artykuły do JSON", "find all pages using block X", "list the blog posts", "show me what's on this page", "which documents are missing an EN translation", "count the articles", "export the media library", "what blocks are available" — and to audit content before a bulk edit or a migration. This skill only reads — it passes --read-only to the API client, which refuses any non-GET request. To create, change, upload, translate or delete anything, use payload-cms:payload-content instead.
 allowed-tools: [Bash, Read, Glob, Grep, AskUserQuestion]
 argument-hint: "[what to find, e.g. \"realizacje z kategorią LED\" or \"pages without an EN version\"]"
 ---
@@ -21,7 +21,7 @@ They live under the sibling skill because the write path needs all of them; reso
 
 ## 2. Map the project
 
-Run steps 1–4 of the discovery routine — find the project, read `payload.config.ts`, list collection and global slugs, index the block slugs. That is the whole read-side subset; the remaining steps exist to make writes safe.
+Run steps 1–4 of the discovery routine — find the project, read `payload.config.ts`, index every slug in the source tree, resolve the base URL. That is the whole read-side subset; the remaining steps exist to make writes safe.
 
 ```
 Glob: **/payload-content/references/discovery.md
@@ -32,8 +32,8 @@ Reads fall back to `http://localhost:3000` when no base is given. Say which base
 ## 3. Query
 
 ```bash
-node "$API_SCRIPT" find realizations --read-only \
-  --where 'categories.slug=led' --select 'title,slug,publishedAt' --sort -publishedAt --limit 20
+node "$API_SCRIPT" find articles --read-only \
+  --where 'categories.slug=news' --select 'title,slug,publishedAt' --sort -publishedAt --limit 20
 ```
 
 Operators, nesting, pagination and the rest: [references/querying.md](references/querying.md).
@@ -69,9 +69,9 @@ The conversion round-trips faithfully for everything markdown can express — he
 
 ## Two traps worth knowing before you query
 
-**Do not filter by block type.** `where[layout.blockType][equals]=heroSlider` looks right and returns **HTTP 500** on the D1/SQLite adapter, for real and nonexistent block types alike. To find which documents use a block, fetch a page of documents at `--depth 0` and scan them in Node.
+**Filtering by `blockType` needs the right field.** `hero.blockType=heroBanner` and `layout.blockType=textWithImage` both work; naming a field whose block set does not contain that block — a hero block on the body field, or the reverse — answers **HTTP 500**, as does a block type that exists nowhere. A 500 here means wrong field, not "filtering is unavailable": check the block index for which field lists that block. The nested form `where[layout][blockType][equals]` answers 400; use the dotted path.
 
-**A malformed `where` does not error — it widens the match.** A filter Payload cannot parse is ignored, and you get everything back looking like a legitimate result. When a count comes back suspiciously round or suspiciously large, check the filter before believing it.
+**A malformed `where` does not error — it widens the match.** A filter Payload cannot resolve is ignored, and everything comes back looking like a legitimate result. The client now rejects field names containing brackets and unknown operators, and warns when a filter matches every document in the collection. That warning is sometimes a true result, so read it rather than dismissing it — and never let an unverified count drive a bulk operation.
 
 ## When the question is actually a write
 

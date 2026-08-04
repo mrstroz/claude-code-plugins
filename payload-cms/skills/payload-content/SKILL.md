@@ -15,11 +15,13 @@ The other thing that shapes every decision here: these projects typically have *
 
 `payload-api.mjs` resolves auth in this order:
 
-- `PAYLOAD_API_KEY` (+ `PAYLOAD_API_KEY_COLLECTION` if the auth collection is not `users`)
+- `PAYLOAD_API_KEY` — the header is `<auth-collection> API-Key <key>`
 - `PAYLOAD_TOKEN` — an existing JWT
 - `PAYLOAD_EMAIL` + `PAYLOAD_PASSWORD` — logs in and caches the token
 
 A project keeping its key in a gitignored `.env` that nothing loads can pass `--env-file .env`. If none of these is set, name all three routes and stop — do not try to work around missing credentials.
+
+Two defaults are conventions rather than rules, and discovery tells you when they do not hold: the auth collection is `users` (`--auth-collection <slug>` otherwise) and the API lives at `/api` (`--api-route <path>` when the config overrides `routes.api`).
 
 If the project has no API key support and the user wants one, that is an edit to the auth collection plus a migration. Describe what is needed and hand it back; do not make the change.
 
@@ -118,7 +120,7 @@ No drafts, no versions, no warning in the admin. The symptom appears days later 
 
 - **Read at `depth=0` whenever the read will become a write.** A `depth>=1` read returns populated relationship objects, and writing one back rewrites the related document. `--depth 0` is the script's default for exactly this reason.
 - **Confirm before**: any write to a blocks array, any delete, any bulk (`where`-scoped) write, any write to a non-local base, any global write, and anything that publishes a locale.
-- **List before bulk.** Run the same `where` as a `find`, show the ids and the count, and get a yes. One request, N documents, no undo.
+- **List before bulk.** Run the same `where` as a `find`, show the ids and the count, and get a yes. One request, N documents, no undo. A filter Payload cannot resolve is ignored rather than rejected, so it silently matches everything — the client rejects bracketed field names and unknown operators and warns when a filter matches the whole collection, but a well-formed filter on a field that does not exist still slips through. Read the ids, not just the count.
 - **Never retry a failed write.** On Workers/D1 a timeout can mean the write committed; a retried `POST` duplicates the document. Verify with a read, then decide.
 - **Ask which locale** whenever the request does not name one. A user writing Polish on a project whose default locale is English will hit the English field by default, and the mistake is invisible until someone visits the site.
 - **Strip every key ending in `Html`** from a copied template. Those are computed on read and rejected on write.

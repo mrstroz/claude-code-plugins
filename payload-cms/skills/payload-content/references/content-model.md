@@ -43,7 +43,7 @@ The `?locale=all` trick resolves at every nesting level, not just the top. A loc
 
 **`join`** — read-only, computed from the other side of a relationship. Never write it.
 
-**`virtual: true`** — computed on read, rejected on write. A frequent pattern pairs a rich-text field with a `<name>Html` sibling that runs the Lexical→HTML conversion in an `afterRead` hook. Strip every key ending in `Html` from a copied template, and confirm the general case with `rg "virtual: true" src/`.
+**`virtual: true`** — computed on read, rejected on write. A frequent pattern pairs a rich-text field with a `<name>Html` sibling that runs the Lexical→HTML conversion in an `afterRead` hook. Strip every key ending in `Html` from a copied template, and confirm the general case with `rg "virtual: true" <source-root>`.
 
 ## Fields added by plugins
 

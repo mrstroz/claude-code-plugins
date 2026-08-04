@@ -7,7 +7,7 @@
 An untranslated field either **omits the locale key entirely** or holds `null`:
 
 ```jsonc
-{ "title": { "pl": "Home v2" },          // no `en` key — not translated
+{ "title": { "pl": "Cennik" },           // no `en` key — not translated
   "slug":  { "pl": null } }              // present but empty — also not translated
 ```
 
@@ -42,6 +42,6 @@ That last point is a live trap: a user writing Polish, on a project whose defaul
 
 ## Publishing a locale is a separate decision
 
-A project may gate a language behind its own field — a localized `localeReady` checkbox, a status, a per-locale publish flag — and that field, not the presence of translated text, is what mints the public URL.
+A project may gate a language behind its own field — a localized "ready" checkbox, a status, a per-locale publish flag — and that field, not the presence of translated text, is what mints the public URL.
 
 Ticking it is a publishing decision, not a side effect of translating. Confirm it separately, and say plainly what it will do: after this, `/en/...` goes live.
