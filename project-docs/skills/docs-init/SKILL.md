@@ -62,7 +62,9 @@ Skeletons for all ten: [references/templates.md](references/templates.md).
 
 ### Do not write the whole plan
 
-Write the **current milestone in full** — every task, with its spec links and done-conditions. Write later milestones as a goal and an end-of-milestone line only, with their tasks left for when they are next.
+Write the **current milestone in full** — every task, with its spec links, done-conditions and priority tokens. Write later milestones as a goal and an end-of-milestone line only, with their tasks left for when they are next.
+
+Priority is assigned as the tasks are written, not configured up front. `(^)` goes on what the rest of the milestone waits on, `(v)` on what the milestone could close without, `(=)` on everything else — which is most of it. At most a third of a milestone may be `(^)`; `(^)` on everything necessary sorts nothing, because a milestone is made of necessary tasks.
 
 A task written six weeks early is written against a spec that will have changed by then, so it gets rewritten or, worse, followed. The roadmap's milestones table still lists them all, so nothing is lost from the overview.
 
@@ -89,6 +91,6 @@ Then the milestones table with progress counters (`0/6`), "Why this order" as pr
 
 ## 5. Hand back
 
-Report what was created and where the entry point is: `docs/plan/roadmap.md`, section "State today". Name the first task and offer to run it with `project-docs:docs-task`.
+Report what was created and where the entry point is: `docs/plan/roadmap.md`, section "State today". Name the first task and offer to run it with `project-docs:docs-task`. For the whole plan as one table later on, `project-docs:docs-summary` prints it.
 
 Say plainly what you could not verify — spec sections built on the brief rather than on code, decisions recorded as open questions, areas of the codebase you did not read. That list is the most useful thing in a fresh documentation tree, because it is the part somebody has to fix.

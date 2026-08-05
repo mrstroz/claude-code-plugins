@@ -156,28 +156,36 @@ tracked as INFRA-2 in [06 §1](../spec/06-dependencies.md#1-status).
 
 ## Tasks
 
-- [x] **WH-08** `POST /webhook`: signature check, parse, always 2xx
+- [x] (^) **WH-08** `POST /webhook`: signature check, parse, always 2xx
       Spec: [04 §1](../spec/04-ingestion.md#1-the-endpoint) · Depends on: WH-03
       Done when: an unparseable body answers 200, not 400
       **Done 2026-03-12.** The signature check runs before the parse, because a
       forged body should never reach the parser.
 
-- [x] **WH-09** Deduplicate on `event.id`
+- [x] (=) **WH-09** Deduplicate on `event.id`
       Spec: [04 §3](../spec/04-ingestion.md#3-duplicates) · ADR: [0003](../adr/0003-reject-duplicates-by-event-id.md) · Depends on: WH-08
       Done when: the same event delivered twice writes one payments row
 
-- [ ] **WH-10** Audit row written in the same commit as the payment row
+- [ ] (=) **WH-10** Audit row written in the same commit as the payment row
       Spec: [04 §4](../spec/04-ingestion.md#4-the-two-table-write) · Depends on: WH-09
 
-- [ ] **WH-19** Retention job for `processed_events`
+- [ ] (v) **WH-19** Retention job for `processed_events`
       Spec: [04 §3](../spec/04-ingestion.md#3-duplicates) · Depends on: WH-09
       Done when: rows older than 90 days are gone after one scheduled run
+
+- [-] (=) **WH-21** ~~Replay endpoint for failed events~~
+      **Rejected 2026-03-14.** Stripe replays from its own dashboard, so this
+      only added a second way to produce duplicates.
 
 ## Notes
 
 WH-10 came out of WH-09 rather than being planned: the unique constraint made
 the ordering of the two writes matter, which it had not before.
 ```
+
+Only WH-08 is `(^)`, although WH-09 and WH-10 are both named in the end-of-milestone line. That is the distinction the marker carries: all three are necessary, but the endpoint is what the other two wait on. Marking all three would have sorted nothing.
+
+WH-21 keeps its number and its priority token after rejection, and the reason is mandatory — a struck-through line with no explanation invites the next reader to put it back.
 
 ---
 
@@ -203,7 +211,7 @@ Within a week this cell is the longest thing in the repository, and the one plac
 
 | Field | Value |
 |---|---|
-| **Milestone** | M1. Ingestion — 2 of 4. M0 closed 2026-03-11 |
+| **Milestone** | M1. Ingestion — 2 of 4, 1 rejected. M0 closed 2026-03-11 |
 | **Last completed** | [WH-09](02-ingestion.md) deduplication on `event.id`, unique index rather than check-then-insert ([ADR-0003](../adr/0003-reject-duplicates-by-event-id.md)) |
 | **Next** | [WH-10](02-ingestion.md) the two-table write. WH-19 is unblocked and can go in parallel |
 

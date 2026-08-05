@@ -260,11 +260,20 @@ touch the specification.
 ## Task format
 
 ```markdown
-- [ ] **<PREFIX>-12** <what comes into existence>
+- [ ] (^) **<PREFIX>-12** <what comes into existence>
       Spec: [02 §1](../spec/02-<name>.md#1-<anchor>) · Depends on: <PREFIX>-11
       Done when: <one condition, checkable>
+
+- [-] (v) **<PREFIX>-14** ~~<what we decided not to build>~~
+      **Rejected YYYY-MM-DD.** <why, in one or two sentences>
 ```
 
+- **The checkbox** carries the state: `[ ]` open, `[x]` done, `[-]` rejected.
+- **The priority** sits between the checkbox and the id. `(^)`: everything else
+  in the milestone waits on it. `(=)`: the default — required, but nothing is
+  held up by it. `(v)`: the milestone closes without it. A missing token reads
+  as `(=)`. `(^)` marks what goes *first*, not what is *necessary*; almost
+  every task in a milestone is necessary. At most a third may carry it.
 - **The title** says what comes into existence, not how.
 - **Spec** and **ADR**: relative links, with the section number in the text.
   When a heading changes and the anchor stops working, `02 §1` still leads to
@@ -275,12 +284,17 @@ touch the specification.
   blocked task can only be started once that row's status is done.
 - **Done when**: only where the condition does not follow directly from the
   title. One condition, checkable in a test or against the running system.
+- **Rejected**: `[-]`, the title struck through, and a dated
+  `**Rejected YYYY-MM-DD.**` note saying *why* — not "not needed" — in at most
+  two sentences. The id stays: numbers are never reused, and somebody will come
+  looking for this one.
 
 ## Identifiers and commits
 
 `<PREFIX>-NN` numbering runs continuously through the whole project,
 independent of file and milestone. Numbers are never reused: an abandoned task
-stays on the list with a note, a moved task keeps its number.
+becomes `[-]` with a dated reason and stays on the list, a moved task keeps its
+number.
 
 One task is one commit with the identifier in the message. Commit messages in
 English, for example `feat: <PREFIX>-11 <what was built>`.
@@ -322,7 +336,7 @@ new task rather than inflating the current one.
 
 ## Tasks
 
-- [ ] **<PREFIX>-NN** <title>
+- [ ] (^) **<PREFIX>-NN** <title>
       Spec: [NN §N](../spec/NN-<name>.md#n-<anchor>) · Depends on: <PREFIX>-NN
       Done when: <one checkable condition>
 
@@ -334,6 +348,8 @@ deliberate.>
 ```
 
 **Rules.** Under 150 lines; past that the milestone should have been two. A ticked task may carry a `**Done YYYY-MM-DD.**` annotation of at most two sentences — it earns its place when it stops someone "fixing" something deliberate, or records a measurement nobody will repeat. Longer than that and it belongs in `## Notes`; most of it belongs nowhere.
+
+A rejected task keeps its place in the list as `- [-]` with its title struck through and a `**Rejected YYYY-MM-DD.**` note. Unlike the completion note, that one is mandatory: a struck-through line with no reason invites somebody to put the task back.
 
 Only the current milestone is written out in full. Later ones get their goal and end-of-milestone line, and their tasks when they are next.
 
@@ -360,6 +376,7 @@ needs to look at the start of a session.
 | Milestone | File | Goal | What works at the end | Progress |
 |---|---|---|---|---|
 | **M0** | [01-<name>](01-<name>.md) | <goal> | <observable outcome> | 0/6 |
+| **M1** | [02-<name>](02-<name>.md) | <goal> | <observable outcome> | 4/6, 1 rejected |
 
 <N> tasks in total. One task is one session and one commit.
 
@@ -382,6 +399,8 @@ anything absent by decision rather than by scope, with the ADR that decided it.>
 ```
 
 **Rules.** Under 120 lines. "State today" is **replaced**, never appended to — a cell that accumulates one entry per session becomes the longest thing in the repository inside a week, and then the one place everyone was told to start is the one place nobody reads. Three rows are mandatory; add a fourth only for a fact needed at the start of every session that lives nowhere else.
+
+A rejected task leaves the progress denominator and is counted after it: `4/6, 1 rejected`, never `4/7`. Otherwise the milestone can never reach its own total and the counter stops meaning anything.
 
 Retired risks stay in the table with the outcome struck through, because what a probe found is often more useful than the risk itself.
 

@@ -43,10 +43,13 @@ This repo demonstrates two distinct patterns for multi-agent code review:
 
 ## Documentation Convention Plugin
 
-`project-docs/` packages the spec/ADR/plan documentation method used in sibling repos (`transhans-mobile/docs/`, `tesoro-huella/docs/`) as three cooperating skills:
+`project-docs/` packages the spec/ADR/plan documentation method used in sibling repos (`transhans-mobile/docs/`, `tesoro-huella/docs/`) as four cooperating skills:
 
-- `docs-init` scaffolds `docs/{spec,adr,plan}`, `docs-task` runs a plan task and closes the documentation loop, `docs-style` holds the writing rules
+- `docs-init` scaffolds `docs/{spec,adr,plan}`, `docs-task` runs a plan task and closes the documentation loop, `docs-summary` prints the plan back as one table, `docs-style` holds the writing rules
 - `docs-init` and `docs-task` invoke `project-docs:docs-style` rather than restating its rules, so the style guide has one home
+- `docs-summary` is read-only (`allowed-tools: Read, Glob, Grep, AskUserQuestion`) and writes no file — a generated snapshot committed next to the plan goes stale on the next ticked checkbox. Its trigger boundary against `docs-task` matters: "co teraz" / "next task" means run the work, "co jest do roboty" / "what's left" means list it
+- Task state lives in the checkbox (`[ ]` open, `[x]` done, `[-]` rejected) and priority in an ASCII token after it (`(^)` `(=)` `(v)`). Both sit after the checkbox so existing greps (`^- \[x\]`, `\*\*WH-[0-9]+\*\*`) keep working, and a missing priority token reads as `(=)` so plans predating the marker stay valid. Rejected tasks are never deleted — the number is never reused — and they leave the roadmap progress denominator (`4/6, 1 rejected`)
+- `(^)` means the rest of the milestone waits on this task, not that the task is important; almost every task in a milestone is necessary, so "important" sorts nothing. The one-third cap is what keeps that honest
 - Doc skeletons live in `docs-init/references/templates.md` with their rules adjacent, not in `assets/` — they are read and adapted per project, and each one needs its constraints ("never renumber, append", the length budget) in view while it is filled in. Use `assets/` instead when a file is copied verbatim into the user's repo for them to fill in by hand, as `utils:humanize-content` does with `assets/humanize.template.md`
 - The tree is language-neutral: one set of skeletons plus a PL/EN vocabulary table in `docs-init/references/headings.md`; a third language is a new column, not a second skeleton set
 

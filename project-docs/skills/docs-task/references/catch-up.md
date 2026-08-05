@@ -42,6 +42,8 @@ Then apply, in the usual closing order: spec, then ADRs, then the cross-repo sta
 
 **Do not renumber and do not reuse numbers.** If work was done that clearly should have been three tasks, add three, with the numbers that are free now. Their being out of chronological order is expected and fine.
 
+**Work that was quietly dropped becomes `- [-]`, not a deleted line.** The drift window often contains a decision nobody wrote down: a task overtaken by a different approach, or one whose reason disappeared. Mark it rejected with the date from `git log` and the reason the user gives you. And a rejected task that comes back is the *old* entry reopened with a note, never a new number — a second id for the same work makes every earlier reference ambiguous.
+
 **Dates come from git, never from memory or from today.** `git log -1 --format=%ad --date=short <commit>`.
 
 ## 5. Drift checks
@@ -49,9 +51,13 @@ Then apply, in the usual closing order: spec, then ADRs, then the cross-repo sta
 Run these regardless of what the diff showed. They catch the rot that no commit introduced.
 
 ```bash
-# Ticked and unticked tasks per milestone file — compare against the roadmap counters
+# Task state per milestone file — compare against the roadmap counters
 rg -c '^- \[x\]' docs/plan/*.md
 rg -c '^- \[ \]' docs/plan/*.md
+rg -c '^- \[-\]' docs/plan/*.md
+
+# Tasks with no priority token: the id follows the checkbox directly
+rg -n '^- \[[ x-]\] \*\*' docs/plan/*.md
 
 # Every spec/ADR path referenced from the plan — anything printed here is a broken link
 rg -o '\]\(\.\./[a-z]+/[^)]+\)' docs/plan/ | sed 's/.*(\.\.\///;s/)//' | sort -u \
@@ -66,7 +72,9 @@ rg -o '`[a-zA-Z0-9_./-]+\.(ts|js|php|dart|py|go|rs|vue|tsx)`' docs/spec/ \
   | while read -r p; do [ -e "$p" ] || echo "STALE PATH: $p"; done
 ```
 
-The last one produces false positives for files in sibling repositories, which are written as plain text precisely because they live elsewhere. Check before deleting a reference.
+The roadmap counter is ticked over ticked-plus-unticked; rejected tasks are counted separately after it (`4/6, 1 rejected`), so a counter that matches the total number of task lines is wrong wherever a `[-]` exists. Missing priority tokens are only worth fixing if the rest of the plan has them — a plan written before the marker existed reads as all-normal and is not broken.
+
+The last check produces false positives for files in sibling repositories, which are written as plain text precisely because they live elsewhere. Check before deleting a reference.
 
 Also read the roadmap end to end. If "State today" has grown into a chain of "before that…" entries, replace it with the current three rows and move anything worth keeping onto the individual tasks as `**Done**` annotations. That cell is the one place everyone is told to start, and its only job is to be short.
 

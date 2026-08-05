@@ -26,7 +26,13 @@ Both end in the same closing sequence. That sequence is the point of this skill.
 
 Start at `docs/plan/roadmap.md`, section "State today". It names the current milestone and what is next. Then open the milestone file and find the entry.
 
-With no task id given ("next task", "co teraz"), take the first unticked task whose "Depends on" entries are all ticked and whose "Blocker", if it has one, is done in the cross-repo status table. Say which task you are taking and why before you start — if the choice is wrong, that sentence is where the user catches it, and it costs nothing.
+With no task id given ("next task", "co teraz"), collect the tasks that are **ready** — unticked, every "Depends on" entry ticked, and the "Blocker" row, if there is one, done in the cross-repo status table. Among those take the highest priority: `(^)`, then `(=)`, then `(v)`, with a missing token counting as `(=)`. Ties break on plan order.
+
+Two guards, because priority must not quietly rewrite a dependency-ordered plan. Never reach into a later milestone while the current one still has ready work — priority sorts within the milestone, it does not skip it. And never offer a `- [-]` task: that work was rejected on purpose, and picking it up is a decision the user makes explicitly, not something a selection rule does for them.
+
+Say which task you are taking and why before you start — if the choice is wrong, that sentence is where the user catches it, and it costs nothing.
+
+For an overview of everything left rather than the next thing to do, that is `project-docs:docs-summary`.
 
 ### 2. Four checks before a line of code
 
@@ -43,7 +49,7 @@ The plan entry is a pointer, not a specification. All four checks are cheap; ski
 
 **Verify claims about other repositories against their code, not from memory.** Documentation here was true when it was written; sibling repositories move. Finding a mismatch and fixing the document is part of the task, not a detour from it.
 
-**Hold the scope.** Work that surfaces mid-task and does not belong to it becomes a new task with the next free id, in whichever milestone fits. Inflating the current task hides the cost and breaks the one-task-one-commit rhythm.
+**Hold the scope.** Work that surfaces mid-task and does not belong to it becomes a new task with the next free id and a priority token, in whichever milestone fits. Inflating the current task hides the cost and breaks the one-task-one-commit rhythm.
 
 ### 4. Close the loop
 
@@ -66,7 +72,8 @@ Then put every change in exactly one bucket:
 | How the system behaves | The spec section that describes it. Correct that section; do not append a new one |
 | A choice with a rejected alternative | A new ADR, or `## Amendment (YYYY-MM-DD)` on an existing one if it is a factual correction rather than a change of mind |
 | Work that was a plan task | Tick its checkbox |
-| Work that was never in the plan | Add it to the plan with the next free id, already ticked, so the numbering and the history stay honest |
+| Work that was never in the plan | Add it to the plan with the next free id and a priority token, already ticked, so the numbering and the history stay honest |
+| Work we decided not to do | Its checkbox becomes `- [-]`, its title is struck through, and a `**Rejected YYYY-MM-DD.**` note says why. Never delete the entry and never reuse the number |
 | A dependency in another repository moved | Its row's status column |
 | None of the above | **Nothing.** Say so and move on |
 
@@ -85,8 +92,8 @@ The order follows from the spec being the source and everything else pointing at
 1. **`docs/spec/`** — if the implemented behaviour differs from what is written. Always first. Correct the section that owns the behaviour; do not add a parallel one.
 2. **`docs/adr/`** — only if a decision was involved. An accepted ADR is not rewritten: a factual correction goes in as `## Amendment (YYYY-MM-DD)`, a change of mind becomes a new ADR that supersedes it, and the old one's status changes. Update the register table in `docs/adr/README.md` and the ADR table in `docs/README.md` when a new one is added or a status changes.
 3. **Cross-repo status column** — if something moved in another repository.
-4. **The task checkbox** — `- [ ]` to `- [x]`. If the task deserves a note, add `**Done YYYY-MM-DD.**` after it, capped at two sentences: it earns its place when it stops someone "fixing" something deliberate, or records a measurement nobody will repeat.
-5. **`docs/plan/roadmap.md`** — **replace** the "State today" rows, do not append to them. One task in "Last completed", not a history. The milestone progress counter in the milestones table changes too.
+4. **The task checkbox** — `- [ ]` to `- [x]`. If the task deserves a note, add `**Done YYYY-MM-DD.**` after it, capped at two sentences: it earns its place when it stops someone "fixing" something deliberate, or records a measurement nobody will repeat. A task that was dropped rather than finished goes `- [ ]` to `- [-]` instead, with its title struck through and a `**Rejected YYYY-MM-DD.**` note — that one is mandatory, and "not needed" is not a reason.
+5. **`docs/plan/roadmap.md`** — **replace** the "State today" rows, do not append to them. One task in "Last completed", not a history. The milestone progress counter in the milestones table changes too: rejected tasks leave the denominator and are counted after it, `4/6, 1 rejected`, so the milestone can still reach its own total.
 6. **Stage and propose, do not commit.** `git add` everything, propose a commit message in English carrying the task id (`feat: WH-09 deduplicate webhook events by event id`), and stop. The user reviews the staged changes and approves the commit themselves. Documentation goes in the same commit as the code — that is what keeps the two from drifting.
 
 **If the task ends unfinished:** say what is done, leave the checkbox unticked, and annotate the task with the reason (`Blocker: …`). A plan ticked optimistically lies, and a lying plan is worse than an empty one.
@@ -99,7 +106,9 @@ Grep the whole of `docs/plan/` for the prefix, take the highest number, add one:
 rg -o '\*\*WH-[0-9]+\*\*' docs/plan/ | rg -o '[0-9]+' | sort -n | tail -1
 ```
 
-Never count tasks and never restart numbering per milestone. Numbers run continuously through the project and are never reused: an abandoned task stays on the list with a note, a moved task keeps its number. Reusing a number silently breaks every reference to the old one.
+Never count tasks and never restart numbering per milestone. Numbers run continuously through the project and are never reused: an abandoned task stays on the list as `- [-]` with a dated reason, a moved task keeps its number. Reusing a number silently breaks every reference to the old one.
+
+A new task carries a priority token from the start. `(^)` only when the rest of the milestone waits on it — what goes first, not what is necessary, since almost everything in a milestone is necessary. No more than a third of a milestone's tasks, or the marker stops meaning anything.
 
 ## Writing the documents
 

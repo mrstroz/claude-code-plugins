@@ -41,10 +41,24 @@ Three rows are mandatory in "State today": the current milestone, the last compl
 | `spec/NN-*.md` | Numbered sections `## N. Title`. A short opening with no ceremony, tables for anything enumerable, "Out of scope" at the end. The section number is an address: never renumber, append |
 | `adr/NNNN-*.md` | The template in `adr/template.md`: status table, Context, Decision, Consequences split into positive / negative / requirements, Options considered with the reason each was rejected, When to revisit |
 | `plan/NN-*.md` | Goal, end of milestone, external dependencies, the task list, optional Notes |
-| One task | Checkbox, id, title, a link to the spec section carrying its number, "Depends on", "Done when" where the condition is not obvious from the title |
+| One task | Checkbox, priority token, id, title, a link to the spec section carrying its number, "Depends on", "Done when" where the condition is not obvious from the title. State lives in the checkbox — `[ ]` open, `[x]` done, `[-]` rejected — and nowhere else |
 | `README.md` anywhere | A map and nothing else: what lives where, and where to start. No content that has its own document |
 
 An optional `**Done YYYY-MM-DD.**` annotation may follow a ticked task, capped at two sentences. It earns its place when it stops someone "fixing" something that was deliberate, or records a measurement nobody will repeat. Anything longer belongs in the milestone's `## Notes`, and most of it belongs nowhere.
+
+## Priority and rejected tasks
+
+Two markers, both of them ASCII, both of them after the checkbox so that every grep written against `- [x]` keeps working:
+
+```markdown
+- [ ] (^) **APP-12** The /webhooks endpoint accepts events
+- [-] (v) **APP-14** ~~CSV export of events~~
+      **Rejected 2026-08-05.** The client exports from BI; a second export served nobody.
+```
+
+**Priority says what goes first, not what is necessary.** Almost every task in a milestone is necessary — that is why it is in the milestone — so "important" sorts nothing. `(^)` means everything else waits on this one: it is the spine of the milestone, and the day it slips the whole milestone slips. `(=)` is the default: required, but nothing is held up by it. `(v)` means the milestone closes without it, and it is the first thing moved out when the milestone gets tight. **At most a third of a milestone's tasks may be `(^)`** — a list where everything is urgent orders nothing. A missing token reads as `(=)`, so plans written before the marker existed stay valid.
+
+**A rejected task is never deleted.** It becomes `- [-]`, its title struck through, with a mandatory `**Rejected YYYY-MM-DD.**` note giving the reason — "not needed" is not a reason. The id and the priority token stay: numbers are never reused, and every reference to this one has to keep resolving. Rejected tasks leave the roadmap's progress denominator and are counted after it, `4/6, 1 rejected`, so the milestone can still reach its own total.
 
 ## Four structural rules
 

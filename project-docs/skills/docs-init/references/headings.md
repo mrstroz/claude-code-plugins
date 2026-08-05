@@ -95,6 +95,9 @@ Adding a third language means adding a column, not a second set of templates.
 | **task: blocker** | Blocker | Blokada |
 | **task: condition** | Done when | Gotowe, gdy |
 | **task: completion note** | Done YYYY-MM-DD. | Zrobione RRRR-MM-DD. |
+| **task: rejection note** | Rejected YYYY-MM-DD. | Odrzucone RRRR-MM-DD. |
+| **task: priority** | Priority | Priorytet |
+| **priority values** | high / normal / low | wysoki / normalny / niski |
 | spec link label | Spec | Spec |
 | ADR link label | ADR | ADR |
 | milestone goal | Goal | Cel |
@@ -125,6 +128,24 @@ Adding a third language means adding a column, not a second set of templates.
 | when column | When | Kiedy |
 | absent from plan | What is not in the plan | Czego w planie nie ma |
 
+## Summary table
+
+Printed by `project-docs:docs-summary`, never written to a file.
+
+| Slot | English | Polski |
+|---|---|---|
+| id column | Nr | Nr |
+| priority column | P | P |
+| title column | What needs doing | Co jest do roboty |
+| milestone column | Milestone | Etap |
+| state column | State | Stan |
+| blocked suffix | blocked: <XX-N> | blokada: <XX-N> |
+| open count | <N> open | <N> otwartych |
+| done count | <N> done | <N> zrobionych |
+| rejected count | <N> rejected | <N> odrzuconych |
+| current milestone line | Current milestone M2 — 4 of 6 | Bieżący etap M2 — 4 z 6 |
+| truncation note | <N> more (v) tasks not shown | <N> zadań (v) nie pokazano |
+
 ## What never translates
 
 - `CLAUDE.md` — its content stays English, because it is read from sibling repositories where that convention already holds.
@@ -132,5 +153,6 @@ Adding a third language means adding a column, not a second set of templates.
 - Code identifiers, file paths, field names, endpoint paths, and anything inside a code block.
 - The date format `YYYY-MM-DD`. Polish documents may *describe* it as `RRRR-MM-DD` in prose, but the dates themselves are written `2026-08-04`.
 - The task id prefix and the milestone labels `M0`, `M1`.
+- The task markers themselves: the checkbox states `[ ]`, `[x]`, `[-]`, the priority tokens `(^)`, `(=)`, `(v)`, and the `Nr` and `P` column headers of the summary table. They are symbols, not words, and every skill that reads a plan matches on them literally.
 
 Everything else translates, including ADR filenames: `0002-native-auth-and-session-bridge.md` becomes `0002-uwierzytelnianie-natywne-i-most-sesji.md`.

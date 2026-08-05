@@ -37,7 +37,7 @@
     {
       "name": "project-docs",
       "source": "./project-docs",
-      "description": "Spec/ADR/plan documentation system — scaffold it, keep it in sync with the code, and write it so a human reads it fast"
+      "description": "Spec/ADR/plan documentation system — scaffold it, keep it in sync with the code, read the plan back as one table, and write it so a human reads it fast"
     },
     {
       "name": "payload-cms",
