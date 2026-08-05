@@ -15,7 +15,7 @@ The examples use a fictional project: a webhook worker that receives Stripe even
 
 ## 1. A complete ADR
 
-62 lines, inside the 40–80 budget. Every claim in Context points at a file. Options considered is a table, not prose. "When to revisit" states a condition, not a date.
+62 lines, under the 80-line ceiling. Every claim in Context points at a file. Options considered is a table, not prose. "When to revisit" states a condition, not a date. A shorter ADR would be fine — what makes this one work is the measurement in Context and the four rejected options, not the length.
 
 ```markdown
 # ADR-0003: Reject duplicate events by `event.id`, not by payload hash
@@ -168,6 +168,8 @@ tracked as INFRA-2 in [06 §1](../spec/06-dependencies.md#1-status).
 
 - [ ] (=) **WH-10** Audit row written in the same commit as the payment row
       Spec: [04 §4](../spec/04-ingestion.md#4-the-two-table-write) · Depends on: WH-09
+      Came out of WH-09: the unique constraint made the ordering of the two
+      writes matter, which it had not before.
 
 - [ ] (v) **WH-19** Retention job for `processed_events`
       Spec: [04 §3](../spec/04-ingestion.md#3-duplicates) · Depends on: WH-09
@@ -176,14 +178,11 @@ tracked as INFRA-2 in [06 §1](../spec/06-dependencies.md#1-status).
 - [-] (=) **WH-21** ~~Replay endpoint for failed events~~
       **Rejected 2026-03-14.** Stripe replays from its own dashboard, so this
       only added a second way to produce duplicates.
-
-## Notes
-
-WH-10 came out of WH-09 rather than being planned: the unique constraint made
-the ordering of the two writes matter, which it had not before.
 ```
 
-Only WH-08 is `(^)`, although WH-09 and WH-10 are both named in the end-of-milestone line. That is the distinction the marker carries: all three are necessary, but the endpoint is what the other two wait on. Marking all three would have sorted nothing.
+Only WH-08 is `(^)`, although WH-09 and WH-10 are both named in the end-of-milestone line. That is the distinction the marker carries: all three are necessary, but the endpoint is what the other two wait on. Marking all three would have sorted nothing. The cap is one third of the milestone's *open* tasks, so ticking WH-08 and WH-09 does not suddenly put the file over it.
+
+WH-10's context line is doing the work `## Notes` used to: it says why the task exists at all, on the task, where whoever picks it up will read it. Notes is still there for what belongs to the milestone rather than to one task, but most of what people put there is one line about one task and belongs under it.
 
 WH-21 keeps its number and its priority token after rejection, and the reason is mandatory — a struck-through line with no explanation invites the next reader to put it back.
 

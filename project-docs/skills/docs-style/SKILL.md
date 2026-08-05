@@ -15,20 +15,24 @@ Two readers open these documents: a person who needs an answer in thirty seconds
 
 **No padding.** If cutting a sentence loses nothing, that sentence carried nothing. This is not the same as being terse: the reason behind a decision earns its space, an announcement that a reason is coming does not.
 
-## Length budgets
+## Length ceilings
 
 Rules without numbers do not hold. A document drifts one paragraph at a time, and nobody ever notices the paragraph that broke it — so the limits are explicit:
 
-| File | Budget | Past the budget means |
+| File | Ceiling | Past it means |
 |---|---|---|
-| `adr/NNNN-*.md` | 40–80 lines | The decision is really two decisions, or Context has become a history lesson |
-| `spec/NN-*.md` | 120–280 lines | The area should be split into two numbered documents |
-| `plan/NN-*.md` (milestone) | under 150 lines | The milestone should have been two milestones |
-| `plan/roadmap.md` | under 120 lines | See the roadmap rule below |
-| `plan/README.md` | under 80 lines | Project-specific rules are leaking in from the spec |
-| `docs/README.md` | under 70 lines | It stopped being a map and started holding content |
-| `adr/README.md` | under 40 lines + the register | |
-| One plan task | 2–4 lines | The task is too large; split it |
+| `adr/NNNN-*.md` | 80 lines | The decision is really two decisions, or Context has become a history lesson |
+| `spec/NN-*.md` | 280 lines | The area should be split into two numbered documents |
+| `plan/NN-*.md` (milestone) | 150 lines | The milestone should have been two milestones |
+| `plan/roadmap.md` | 120 lines | See the roadmap rule below |
+| `plan/README.md` | 80 lines | Project-specific rules are leaking in from the spec |
+| `docs/README.md` | 70 lines | It stopped being a map and started holding content |
+| `adr/README.md` | 40 lines plus the register | |
+| One plan task | 4 lines, 5 with a context line | The task is too large; split it |
+
+**Short is not a defect.** These are ceilings, not ranges. A floor would only invite padding into files whose own rule is that nothing goes in that could be deleted, and well-kept trees are full of honest 50-line spec sections and 20-line ADRs. Read brevity as a prompt to check two things rather than to write: an ADR under 40 lines usually means the Options table is missing or Context carries no measurement, and a spec section under 100 usually means the tables are there and the paragraph saying where the boundary falls is not. Check those, then leave it short if it is honest.
+
+**One exception to the ceiling.** A catalog — one entry per block, per endpoint, per screen — legitimately runs long, and splitting it at a line count puts half the entries in one file and half in another, which is worse than a long file. Split it by entry group or leave it long and keep the entries uniform so it stays navigable. An area document at 400 lines is still two areas.
 
 **The roadmap rule.** Whoever finishes a task **replaces** the "State today" cell — never appends to it. History belongs in git and in the per-task annotations. A cell that accumulates one entry per session becomes the longest thing in the repository inside a week, and then nobody reads the one place everyone was supposed to start.
 
@@ -41,10 +45,14 @@ Three rows are mandatory in "State today": the current milestone, the last compl
 | `spec/NN-*.md` | Numbered sections `## N. Title`. A short opening with no ceremony, tables for anything enumerable, "Out of scope" at the end. The section number is an address: never renumber, append |
 | `adr/NNNN-*.md` | The template in `adr/template.md`: status table, Context, Decision, Consequences split into positive / negative / requirements, Options considered with the reason each was rejected, When to revisit |
 | `plan/NN-*.md` | Goal, end of milestone, external dependencies, the task list, optional Notes |
-| One task | Checkbox, priority token, id, title, a link to the spec section carrying its number, "Depends on", "Done when" where the condition is not obvious from the title. State lives in the checkbox — `[ ]` open, `[x]` done, `[-]` rejected — and nowhere else |
+| One task | Checkbox, priority token, id, title, a link to the spec section carrying its number, "Depends on", "Blocker" where something outside the plan has to land first, "Done when" where the condition is not obvious from the title. State lives in the checkbox — `[ ]` open, `[x]` done, `[-]` rejected — and nowhere else |
 | `README.md` anywhere | A map and nothing else: what lives where, and where to start. No content that has its own document |
 
-An optional `**Done YYYY-MM-DD.**` annotation may follow a ticked task, capped at two sentences. It earns its place when it stops someone "fixing" something that was deliberate, or records a measurement nobody will repeat. Anything longer belongs in the milestone's `## Notes`, and most of it belongs nowhere.
+**Blocker** points at something outside the plan that has to land before the task can finish, and its status is tracked in exactly one place: the cross-repo dependencies table where other repositories are involved, the open-questions table in `spec/00` where the project is waiting on a person rather than a repository. `plan/README.md` records which, because a project with no sibling repositories still has blockers and needs somewhere to resolve them.
+
+An optional `**Done YYYY-MM-DD.**` annotation may follow a ticked task, capped at two sentences. It earns its place when it stops someone "fixing" something that was deliberate, or records a measurement nobody will repeat.
+
+An open task may carry **one context line** in the same position: why this task exists at all, or what a measurement showed. It is for the thing that would otherwise be lost — the review finding the task came out of, the number that made it worth doing. It is not room for how the system behaves; that link in the task already points at the spec section which owns it, and a task explaining behaviour is a spec section wearing a checkbox. Anything past one line belongs in the milestone's `## Notes`, and most of it belongs nowhere.
 
 ## Priority and rejected tasks
 
@@ -56,7 +64,7 @@ Two markers, both of them ASCII, both of them after the checkbox so that every g
       **Rejected 2026-08-05.** The client exports from BI; a second export served nobody.
 ```
 
-**Priority says what goes first, not what is necessary.** Almost every task in a milestone is necessary — that is why it is in the milestone — so "important" sorts nothing. `(^)` means everything else waits on this one: it is the spine of the milestone, and the day it slips the whole milestone slips. `(=)` is the default: required, but nothing is held up by it. `(v)` means the milestone closes without it, and it is the first thing moved out when the milestone gets tight. **At most a third of a milestone's tasks may be `(^)`** — a list where everything is urgent orders nothing. A missing token reads as `(=)`, so plans written before the marker existed stay valid.
+**Priority says what goes first, not what is necessary.** Almost every task in a milestone is necessary — that is why it is in the milestone — so "important" sorts nothing. `(^)` means everything else waits on this one: it is the spine of the milestone, and the day it slips the whole milestone slips. `(=)` is the default: required, but nothing is held up by it. `(v)` means the milestone closes without it, and it is the first thing moved out when the milestone gets tight. **At most a third of a milestone's *open* tasks may be `(^)`** — a list where everything is urgent orders nothing. Open is the denominator because priority sorts work that is still ahead of you; finished and rejected tasks keep whatever token they had, and counting them would let a milestone drift over the cap without a single new task. A missing token reads as `(=)`, so plans written before the marker existed stay valid.
 
 **A rejected task is never deleted.** It becomes `- [-]`, its title struck through, with a mandatory `**Rejected YYYY-MM-DD.**` note giving the reason — "not needed" is not a reason. The id and the priority token stay: numbers are never reused, and every reference to this one has to keep resolving. Rejected tasks leave the roadmap's progress denominator and are counted after it, `4/6, 1 rejected`, so the milestone can still reach its own total.
 
@@ -77,6 +85,7 @@ These are not style. They are why the system holds together, and breaking one co
 - Terminology matches the glossary in `spec/00`. One name per thing, everywhere.
 - The em dash belongs only where it is correct punctuation — a genuine aside, or a dropped verb. As universal glue between clauses it is the loudest signal of machine-written text; a colon, a comma or a full stop is almost always better. Inside table cells it is fine.
 - The document's language is recorded in `docs/README.md` under Conventions. Do not mix languages inside one file; literal names of fields and sections are the exception. `CLAUDE.md` stays English regardless, because it is read from sibling repositories.
+- Headings, status words and task labels come from the vocabulary table in `${CLAUDE_PLUGIN_ROOT}/skills/docs-init/references/headings.md`, not from translating on the fly. Every literal written out in these skills is the English column; the tree gets its own. One term per concept, or `spec/`, `plan/` and `adr/` stop reading as one document.
 
 Polish documents carry extra rules — quotation marks `„ "`, and the pauza is stricter than the English em dash. See [references/language-pl.md](references/language-pl.md).
 
@@ -117,7 +126,7 @@ Good: "Done when a 422 with `<br />` joined into the message renders as readable
 4. Section numbering untouched, new content appended rather than wedged between existing numbers.
 5. Links and anchors checked, including the section numbers in the link text.
 6. No sentence that can be deleted without losing information.
-7. Inside its length budget. Over budget is a signal about structure, not a prompt to compress the prose.
+7. Under its length ceiling. Over it is a signal about structure, not a prompt to compress the prose. Under it is not a problem to fix.
 
 A bloated document that is already written goes through `utils:declutter`. A long one that reads stiffly goes through `utils:humanize-content`.
 

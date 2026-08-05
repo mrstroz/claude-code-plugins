@@ -89,7 +89,7 @@ makes the rest of the spec derivable rather than arbitrary.>
 |---|---|---|---|
 ```
 
-**Rules.** 120–280 lines. The glossary is not decoration: every other document uses these terms and only these. Open questions are for decisions deliberately deferred — with the options written down and a criterion for settling them, so a deferral is visible rather than silently forgotten. Sections 5 to 9 are the ones most often skipped and most often needed six months later.
+**Rules.** Under 280 lines; short is fine. The glossary is not decoration: every other document uses these terms and only these. Open questions are for decisions deliberately deferred — with the options written down and a criterion for settling them, so a deferral is visible rather than silently forgotten. Sections 5 to 9 are the ones most often skipped and most often needed six months later.
 
 ---
 
@@ -116,7 +116,9 @@ ceremony, no announcement of what is coming.>
 to where it lives instead.>
 ```
 
-**Rules.** 120–280 lines. Section numbers are addresses: append new sections at the end, never renumber existing ones, because every link in the tree points at a number. Anything enumerable goes in a table. The paragraph under a table says what the table cannot — why the boundary falls there, what happens in the odd case — and never restates its rows.
+**Rules.** Under 280 lines. Section numbers are addresses: append new sections at the end, never renumber existing ones, because every link in the tree points at a number. Anything enumerable goes in a table. The paragraph under a table says what the table cannot — why the boundary falls there, what happens in the odd case — and never restates its rows.
+
+There is no minimum. A finished area document of 60 lines is finished. The one document that may run past 280 is a catalog with one entry per block, endpoint or screen: splitting it on a line count puts half the entries in a second file, which is worse than the long file. Split it by entry group or leave it long.
 
 ---
 
@@ -197,7 +199,9 @@ The conditions under which this decision stops being the right one.
 
 Follows the template exactly. Named `NNNN-short-description.md`, numbered consecutively from `0001`, with the description in the documentation language.
 
-**Rules.** 40–80 lines. One file, one decision — if Context is describing two problems, it is two ADRs. Options considered is a table with a real reason per row; "not a good fit" is not a reason. "When to revisit" states a *condition*, never a date.
+**Rules.** Under 80 lines, and no floor. One file, one decision — if Context is describing two problems, it is two ADRs. Options considered is a table with a real reason per row; "not a good fit" is not a reason. "When to revisit" states a *condition*, never a date.
+
+A 20-line ADR is not automatically thin, but it is worth two checks: whether Options considered actually lists what was rejected, and whether Context carries a fact — a measurement, a constraint, a file — rather than an assertion. If both hold, leave it short. Padding an honest ADR up to some length adds nothing anyone will read.
 
 An accepted ADR is never rewritten. A factual correction goes in as a `## Amendment (YYYY-MM-DD)` section at the end. A change of mind is a new ADR whose status says "Supersedes ADR-XXXX", and the old one's status becomes "Superseded by ADR-YYYY". Old ADRs are never deleted — the point is being able to reconstruct a decision together with what turned out to be wrong about it.
 
@@ -280,10 +284,14 @@ touch the specification.
   the right place. At most two documents per task; more than that means the
   task is too large.
 - **Depends on**: only tasks from this plan.
-- **Blocker**: a row from the dependencies document that we are waiting for. A
-  blocked task can only be started once that row's status is done.
+- **Blocker**: something outside the plan that has to land first, tracked in
+  <the dependencies document's status column / the open questions in
+  `spec/00`>. A blocked task waits until that entry clears.
 - **Done when**: only where the condition does not follow directly from the
   title. One condition, checkable in a test or against the running system.
+- **One context line** is allowed under an open task: why it exists, or what a
+  measurement showed — the review finding or the number that would otherwise be
+  lost. Not how the system behaves; that is what the spec link is for.
 - **Rejected**: `[-]`, the title struck through, and a dated
   `**Rejected YYYY-MM-DD.**` note saying *why* — not "not needed" — in at most
   two sentences. The id stays: numbers are never reused, and somebody will come
@@ -321,6 +329,8 @@ new task rather than inflating the current one.
 
 **Rules.** Under 80 lines. Items 3 and 4 of the definition of done are universal and always present. Everything above them comes from the project's real toolchain — read `package.json`, `pubspec.yaml`, the CI config. A list naming a command the project does not have teaches people to skip the list.
 
+The Blocker bullet is where this file resolves the placeholder: name **one** place, and the same one every time. Other repositories are involved → the dependencies document's status column. They are not → the open questions in `spec/00`, which is where a project waiting on a client decision or an access credential tracks it. Every skill that reads a blocker reads this bullet to know where to look, so leaving both options in is the same as leaving it blank.
+
 ---
 
 ## 8. `plan/NN-milestone.md`
@@ -347,7 +357,7 @@ task moved, what a measurement showed, why something that looks wrong is
 deliberate.>
 ```
 
-**Rules.** Under 150 lines; past that the milestone should have been two. A ticked task may carry a `**Done YYYY-MM-DD.**` annotation of at most two sentences — it earns its place when it stops someone "fixing" something deliberate, or records a measurement nobody will repeat. Longer than that and it belongs in `## Notes`; most of it belongs nowhere.
+**Rules.** Under 150 lines; past that the milestone should have been two. A ticked task may carry a `**Done YYYY-MM-DD.**` annotation of at most two sentences — it earns its place when it stops someone "fixing" something deliberate, or records a measurement nobody will repeat. An open task may carry one context line in the same position: why it exists, or what a measurement showed. Longer than that and it belongs in `## Notes`; most of it belongs nowhere.
 
 A rejected task keeps its place in the list as `- [-]` with its title struck through and a `**Rejected YYYY-MM-DD.**` note. Unlike the completion note, that one is mandatory: a struck-through line with no reason invites somebody to put the task back.
 
@@ -379,6 +389,7 @@ needs to look at the start of a session.
 | **M1** | [02-<name>](02-<name>.md) | <goal> | <observable outcome> | 4/6, 1 rejected |
 
 <N> tasks in total. One task is one session and one commit.
+<Nothing else. This line does not become a changelog.>
 
 ## Why this order
 
@@ -399,6 +410,8 @@ anything absent by decision rather than by scope, with the ADR that decided it.>
 ```
 
 **Rules.** Under 120 lines. "State today" is **replaced**, never appended to — a cell that accumulates one entry per session becomes the longest thing in the repository inside a week, and then the one place everyone was told to start is the one place nobody reads. Three rows are mandatory; add a fourth only for a fact needed at the start of every session that lives nowhere else.
+
+The line under the milestones table is the other half of that rule, and the easier one to lose. History pushed out of "State today" reappears there as "APP-75 arrived after APP-70, APP-73 reopened M1, APP-50 was dropped…" — the same banned cell one section lower. Each of those facts belongs on its own task as a `**Done**` annotation, where the person reading that task will actually find it.
 
 A rejected task leaves the progress denominator and is counted after it: `4/6, 1 rejected`, never `4/7`. Otherwise the milestone can never reach its own total and the counter stops meaning anything.
 
@@ -447,10 +460,18 @@ are never deleted.
 
 Template for a new ADR: [`adr/template.md`](adr/template.md).
 
+## Other directories
+
+<Only if there are any. One row each, so the map covers the whole folder.>
+
+| Directory | What is in it |
+|---|---|
+| `<name>/` | <what it holds, and whether it concerns this project at all> |
+
 ## Conventions
 
 - Documentation is written in <language>. Specification files are numbered
-  `NN-name.md`, ADRs `NNNN-name.md`.
+  `NN-name.md`, ADRs `NNNN-name.md`, milestones `<M>0`, `<M>1`.
 - References to code are paths relative to the repository root, for example
   `src/handlers/webhook.ts:41`.
 - Dates use `YYYY-MM-DD`. No relative expressions such as "next week".
@@ -458,4 +479,6 @@ Template for a new ADR: [`adr/template.md`](adr/template.md).
   naming convention.>
 ```
 
-**Rules.** Under 70 lines, and a map only — no content that has its own document. The language bullet under Conventions is load-bearing: every other skill reads the documentation language from there.
+**Rules.** Under 70 lines, and a map only — no content that has its own document. Two bullets under Conventions are load-bearing, because every other skill reads them from here: the documentation language, and the milestone label.
+
+"Other directories" is what keeps this a map of the whole folder rather than of the three folders this method created. A brandbook, a client's process notes, an archived tracking file — one row each, saying plainly when something is a neighbouring subject rather than part of this project. A reader who finds a folder the map does not mention stops trusting the map.

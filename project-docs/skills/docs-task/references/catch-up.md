@@ -59,22 +59,38 @@ rg -c '^- \[-\]' docs/plan/*.md
 # Tasks with no priority token: the id follows the checkbox directly
 rg -n '^- \[[ x-]\] \*\*' docs/plan/*.md
 
-# Every spec/ADR path referenced from the plan — anything printed here is a broken link
-rg -o '\]\(\.\./[a-z]+/[^)]+\)' docs/plan/ | sed 's/.*(\.\.\///;s/)//' | sort -u \
+# Every spec/ADR file referenced from the plan — anything printed here is a broken link.
+# The anchor is stripped first: the link format is `[04 §3](../spec/04-auth.md#3-session)`,
+# so testing the whole string reports every compliant link as missing.
+rg -o '\]\(\.\./[a-z]+/[^)]+\)' docs/plan/ | sed 's/.*(\.\.\///; s/[)#].*//' | sort -u \
   | while read -r p; do [ -f "docs/$p" ] || echo "MISSING: $p"; done
 
-# ADRs still marked Proposed
-rg -l '\*\*Status\*\* \| Proposed' docs/adr/
+# ADRs still marked Proposed. PROPOSED is the status word from the vocabulary table —
+# `Propozycja` in a Polish tree, where hardcoded English silently matches nothing.
+PROPOSED='Proposed'
+rg -l "\*\*Status\*\* \| *$PROPOSED" docs/adr/
 
-# Code paths cited in the spec that no longer exist
-rg -o '`[a-zA-Z0-9_./-]+\.(ts|js|php|dart|py|go|rs|vue|tsx)`' docs/spec/ \
+# Code paths cited in the spec that no longer exist. Two filters, both needed:
+# a cited path counts as live when any tracked file ends with it, because the spec
+# cites `i18n.ts` and `blocks/sets.ts` as often as full paths; and a path whose
+# first segment is not a top-level directory of this repo is somebody else's file,
+# not a stale one.
+FILES=$(rg --files)
+ROOTS=$(printf '%s\n' "$FILES" | cut -d/ -f1 | sort -u)
+rg -o '`[a-zA-Z0-9_./-]+\.(ts|tsx|js|mjs|astro|vue|svelte|php|dart|py|go|rs|kt|swift|css|json)`' docs/spec/ \
   | sed 's/.*`\(.*\)`/\1/' | sort -u \
-  | while read -r p; do [ -e "$p" ] || echo "STALE PATH: $p"; done
+  | while read -r p; do
+      printf '%s\n' "$FILES" | grep -qE "(^|/)${p}$" && continue
+      case "$p" in */*) printf '%s\n' "$ROOTS" | grep -qx "${p%%/*}" || continue ;; esac
+      echo "STALE PATH: $p"
+    done
 ```
 
 The roadmap counter is ticked over ticked-plus-unticked; rejected tasks are counted separately after it (`4/6, 1 rejected`), so a counter that matches the total number of task lines is wrong wherever a `[-]` exists. Missing priority tokens are only worth fixing if the rest of the plan has them — a plan written before the marker existed reads as all-normal and is not broken.
 
-The last check produces false positives for files in sibling repositories, which are written as plain text precisely because they live elsewhere. Check before deleting a reference.
+**Read the last check's output before acting on it.** What survives both filters is a short list, not a clean one. A bare filename with no directory cannot be judged by repository root, so a sibling repository's `nuxt.config.js` still shows up next to a component of yours that was genuinely renamed. Open each one. What the check is for is the second kind: a path that used to resolve and now does not, which is the spec quietly describing a file nobody can open.
+
+The filters exist because the unfiltered version flags almost everything and gets ignored. On a project whose spec mostly documents *other* repositories, expect most of the remaining lines to be foreign anyway, and weigh the check accordingly — it earns its place on a single-repo tree and mostly produces reading on a cross-repo one.
 
 Also read the roadmap end to end. If "State today" has grown into a chain of "before that…" entries, replace it with the current three rows and move anything worth keeping onto the individual tasks as `**Done**` annotations. That cell is the one place everyone is told to start, and its only job is to be short.
 

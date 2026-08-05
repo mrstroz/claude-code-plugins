@@ -2,13 +2,13 @@
 
 Wszystko z `SKILL.md` obowiązuje tak samo. Tutaj są tylko te reguły, które w polskim tekście wyglądają inaczej niż w angielskim, oraz błędy, które w polskiej dokumentacji pojawiają się najczęściej.
 
-Słownik nagłówków i statusów (co jest odpowiednikiem „Done when", „State today", „Accepted") jest w pliku, który znajdziesz globem `**/docs-init/references/headings.md`. Trzymaj się go dosłownie: jeden termin w całym drzewie, inaczej `spec/`, `plan/` i `adr/` przestają wyglądać jak jeden dokument.
+Słownik nagłówków i statusów (co jest odpowiednikiem „Done when", „State today", „Accepted") leży w `${CLAUDE_PLUGIN_ROOT}/skills/docs-init/references/headings.md`. Trzymaj się go dosłownie: jeden termin w całym drzewie, inaczej `spec/`, `plan/` i `adr/` przestają wyglądać jak jeden dokument.
 
 ## Typografia
 
 - Cudzysłów polski: `„ "`. Nie `" "`, nie `» «`. W blokach kodu i nazwach pól zostaje to, co jest w kodzie.
 - **Pauza (`—`) tylko tam, gdzie jest poprawną polską interpunkcją**: w miejsce opuszczonego orzeczenia („Pierwsza warstwa we froncie, druga — w aplikacji") albo we wtrąceniu. Jako uniwersalny klej między zdaniami składowymi jest najgłośniejszym sygnałem tekstu pisanego maszynowo. Zastępuje ją dwukropek, przecinek albo podział na dwa zdania. W komórkach tabel i w blokach kodu pauza jest w porządku.
-- Półpauza (`–`) w zakresach: `2026-03-01 – 2026-03-13`, `40–80 linii`.
+- Półpauza (`–`) w zakresach: `2026-03-01 – 2026-03-13`, `2–3 zdania`, `sekcje 4–6`.
 - Daty zawsze `RRRR-MM-DD`, nigdy słownie i nigdy względnie. „W przyszłym tygodniu" w pliku nic nie znaczy.
 - Liczby z jednostką bez łamania wiersza między nimi tam, gdzie to możliwe: `90 dni`, `3 próby`.
 

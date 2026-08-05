@@ -128,6 +128,8 @@ Adding a third language means adding a column, not a second set of templates.
 | when column | When | Kiedy |
 | absent from plan | What is not in the plan | Czego w planie nie ma |
 
+**The milestone label does translate.** `M0`, `M1` in an English tree, from *milestone*; a Polish tree using *Etap* numbers them `E1`, `E2`. It is a per-project choice, recorded in `docs/README.md` under Conventions and then used everywhere — the roadmap table, the plan filenames' contents, the summary footer. The number is a number in every language; only the letter moves.
+
 ## Summary table
 
 Printed by `project-docs:docs-summary`, never written to a file.
@@ -143,7 +145,7 @@ Printed by `project-docs:docs-summary`, never written to a file.
 | open count | <N> open | <N> otwartych |
 | done count | <N> done | <N> zrobionych |
 | rejected count | <N> rejected | <N> odrzuconych |
-| current milestone line | Current milestone M2 — 4 of 6 | Bieżący etap M2 — 4 z 6 |
+| current milestone line | Current milestone `<label>`2 — 4 of 6 | Bieżący etap `<label>`2 — 4 z 6 |
 | truncation note | <N> more (v) tasks not shown | <N> zadań (v) nie pokazano |
 
 ## What never translates
@@ -152,7 +154,7 @@ Printed by `project-docs:docs-summary`, never written to a file.
 - Commit messages.
 - Code identifiers, file paths, field names, endpoint paths, and anything inside a code block.
 - The date format `YYYY-MM-DD`. Polish documents may *describe* it as `RRRR-MM-DD` in prose, but the dates themselves are written `2026-08-04`.
-- The task id prefix and the milestone labels `M0`, `M1`.
+- The task id prefix.
 - The task markers themselves: the checkbox states `[ ]`, `[x]`, `[-]`, the priority tokens `(^)`, `(=)`, `(v)`, and the `Nr` and `P` column headers of the summary table. They are symbols, not words, and every skill that reads a plan matches on them literally.
 
 Everything else translates, including ADR filenames: `0002-native-auth-and-session-bridge.md` becomes `0002-uwierzytelnianie-natywne-i-most-sesji.md`.

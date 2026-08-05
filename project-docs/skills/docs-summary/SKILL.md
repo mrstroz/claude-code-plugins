@@ -19,9 +19,9 @@ It reads and reports. It writes no file: a generated snapshot committed next to 
 
 The documentation language is recorded in `docs/README.md` under Conventions. Read it. If the line is missing, take the language of the plan's own headings. Every heading, column name and status word in the output comes from the vocabulary table, so a Polish plan gets a Polish table:
 
-`Glob **/docs-init/references/headings.md` → read the **Plan**, **Roadmap** and **Summary table** sections.
+`${CLAUDE_PLUGIN_ROOT}/skills/docs-init/references/headings.md` → read the **Plan**, **Roadmap** and **Summary table** sections. If that variable is not set, glob `**/docs-init/references/headings.md` and take the highest version number in the path — the plugin cache keeps old copies alongside the current one, and an old one predates half the vocabulary.
 
-The markers themselves — `(^)`, `(=)`, `(v)`, `[-]`, the `P` column header, the task id prefix, `M0`/`M1` — never translate.
+The markers themselves — `(^)`, `(=)`, `(v)`, `[-]`, the `P` column header, the task id prefix — never translate. The milestone label does: this project's own is in `docs/README.md` under Conventions, `M1` in one tree and `E1` in another.
 
 ## 3. The scope
 
@@ -48,7 +48,9 @@ If the request already names it ("pokaż 10 najważniejszych", "co zostało w M2
 
 `<state>` is ` ` open, `x` done, `-` rejected. `<priority>` is `^` high, `=` normal, `v` low, and **a missing token reads as `=`** — older plans predate the marker and are not wrong.
 
-A task is **blocked** when a "Depends on" entry is still unticked, or when its "Blocker" row is not `done` in the cross-repo status table in `docs/spec/NN-dependencies.md`. That is a property worth surfacing, but not worth a column: put it in the title cell as a suffix, `(blocked: BI-2)`.
+A task is **blocked** when a "Depends on" entry is still unticked, or when its "Blocker" has not cleared. Blockers resolve in one place per project and `docs/plan/README.md` says which: the status column of the cross-repo dependencies table, or the open-questions table in `spec/00` for a project waiting on a person rather than another repository. Both statuses are vocabulary words — a Polish tree's cleared value is `gotowe`, not `done`. A single-repo project has no dependencies document and its blockers still resolve, so read `plan/README.md` before looking for a file.
+
+Blocked is worth surfacing but not worth a column: put it in the title cell as a suffix, `(blocked: BI-2)`.
 
 ## 5. Order it
 
@@ -70,7 +72,7 @@ Rejected tasks appear only in the full picture. They are history, and history in
 ```
 
 - **One row per task, one line per row.** The title cell is rewritten short — around sixty characters — not truncated mid-word. The plan's own title says what comes into existence; here it only has to be recognisable.
-- **The footer is three facts**: the counts, the current milestone, its progress. Rejected tasks are counted separately and left out of the milestone denominator, so `4 of 6` stays reachable.
+- **The footer is three facts**: the counts, the current milestone, its progress. Rejected tasks are counted separately and left out of the milestone denominator, so `4 of 6` stays reachable. `M2` above is only this example's label — use the plan's own, whatever it is.
 - **The full picture adds a state column** before the title: `●` open, `x` done, `-` rejected.
 - **No prose around the table.** If something needs saying — a counter that disagrees, a milestone with no ready work left — it is one line under the footer.
 

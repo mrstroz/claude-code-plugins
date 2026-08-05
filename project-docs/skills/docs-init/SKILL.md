@@ -27,7 +27,12 @@ Ask all four in one `AskUserQuestion` batch. Come with proposals, not blanks.
 | **Source material** | A brief or PRD path, the existing codebase, or both. If the repository has source files, say so and propose reading them |
 | **Cross-repo dependencies** | Only if this project depends on work in other repositories. If it does not, skip the dependencies document entirely — creating an empty one teaches the wrong lesson |
 
-Record the language choice in `docs/README.md` under Conventions. Every other skill reads it from there. `CLAUDE.md` stays English regardless, because it is read from sibling repositories.
+Record under Conventions in `docs/README.md`, because every other skill reads them from there:
+
+- **The language.** `CLAUDE.md` stays English regardless, because it is read from sibling repositories.
+- **The milestone label.** `M` in an English tree, and in another language whatever the word for milestone starts with — a Polish tree using *Etap* numbers its milestones `E1`, `E2`. Pick it with the language rather than leaving it to the first file that needs one, and use it everywhere after that.
+
+One more thing settles here and belongs in `plan/README.md` rather than the map: **where blockers resolve.** A task blocked on another repository resolves against the dependencies document's status column. A project with no sibling repositories still has blockers — waiting on a client decision, an access credential, an answer — and those resolve against the open-questions table in `spec/00`. Every skill that reads a blocker reads `plan/README.md` first, so a tree that leaves this unsaid has tasks nobody can tell are cleared.
 
 Heading and status vocabulary for the chosen language: [references/headings.md](references/headings.md). Follow it literally — one term per concept across the whole tree, or `spec/`, `plan/` and `adr/` stop looking like one document.
 
@@ -40,6 +45,14 @@ Heading and status vocabulary for the chosen language: [references/headings.md](
 - Every sentence about behaviour cites a file you actually opened, with a line number where it helps.
 - Areas you could not read do not get documented. List them instead, as open questions.
 - An ADR is backfilled only for a real decision — one where an alternative was available and something was chosen. If the storage engine is what the template shipped with, that is not a decision; record it as an open question in `spec/00` rather than inventing a rationale nobody had.
+
+**From documentation that is already there.** A project with a `docs/` folder rarely has nothing in it: a brandbook PDF, a client's process notes, an old tracking file, archived review reports, a running journal. None of that fits spec/ADR/plan, and none of it should quietly disappear into a folder nobody mentions again. Go through it with the user, one item at a time, and settle each on one of three:
+
+- **Fold in** — the content belongs in a spec section or an ADR. Move it there and delete the original, so there is one copy.
+- **Leave and map** — a binary, a client deliverable, material about a neighbouring subject. It stays where it is and earns a row in `docs/README.md`, because a map that omits half the folder is not a map.
+- **Archive** — superseded, but somebody may want it. Into `docs/archive/`, mapped in one row, never referenced from `spec/` or `plan/`.
+
+Deciding silently is the failure here. What looks like a stale tracking file to you is sometimes the only record of what the client asked for.
 
 ## 3. Write the tree, in dependency order
 

@@ -1,6 +1,6 @@
 ---
 name: docs-task
-description: Run a task from docs/plan/ end to end, and close the documentation loop so docs/spec, docs/adr and docs/plan keep describing what the code actually does. Two entry points. Starting work — "zrób APP-12", "weź następne zadanie", "co teraz", "kontynuuj plan", "zacznij M2", "do HUE-21", "next task", "what should I work on", "continue the plan", or any request to implement something that has an entry in docs/plan, including when no task number is given, in which case pick the first unblocked one and say why. Finishing work — use it just as firmly after any change lands in a project that has docs/spec, docs/adr and docs/plan, whether it was planned or not: a feature, a fix, a refactor, a dependency change, a decision made in conversation. Triggers on "zaktualizuj dokumentację", "odzwierciedl to w docs", "zrobiłem X, popraw docs", "to już nieaktualne", "dopisz to do planu", "sprawdź czy dokumentacja się zgadza", "update the docs", "sync the docs", "the spec is out of date", "reconcile the documentation", and on simply reaching the end of a piece of work before proposing a commit. Reads every linked spec section and ADR in full before writing code, checks dependencies and blockers, then updates spec, ADR, cross-repo status, checkbox and roadmap in that order and stages a proposed commit without committing. This is what stops the plan and the spec drifting away from the code. Do NOT use to create the documentation tree in the first place — that is project-docs:docs-init.
+description: Run a task from docs/plan/ end to end, and close the documentation loop so docs/spec, docs/adr and docs/plan keep describing what the code actually does. Two entry points. Starting work — "zrób APP-12", "weź następne zadanie", "co teraz", "kontynuuj plan", "zacznij M2", "do HUE-21", "next task", "what should I work on", "continue the plan", or any request to implement something that has an entry in docs/plan, including when no task number is given, in which case pick the first unblocked one and say why. Finishing work — use it just as firmly after any change lands in a project that has docs/spec, docs/adr and docs/plan, whether it was planned or not: a feature, a fix, a refactor, a dependency change, a decision made in conversation. Triggers on "zaktualizuj dokumentację", "odzwierciedl to w docs", "zrobiłem X, popraw docs", "to już nieaktualne", "dopisz to do planu", "sprawdź czy dokumentacja się zgadza", "update the docs", "sync the docs", "the spec is out of date", "reconcile the documentation", and on simply reaching the end of a piece of work before proposing a commit. Reads every linked spec section and ADR in full before writing code, checks dependencies and blockers, then updates spec, ADR, blocker status, checkbox and roadmap in that order and stages a proposed commit without committing. This is what stops the plan and the spec drifting away from the code. Do NOT use to create the documentation tree in the first place — that is project-docs:docs-init.
 argument-hint: "[task id, or a description of what was done]"
 ---
 
@@ -8,7 +8,12 @@ argument-hint: "[task id, or a description of what was done]"
 
 In a project built this way the documentation governs: `docs/spec/` says **what**, `docs/adr/` says **why**, `docs/plan/` says **when and what now**. Code is the last step of a task, and a task is not finished until the documentation describes what actually got built.
 
-Read `docs/plan/README.md` once per session if you have not already. It carries this project's own task format and its definition of done, which are project-specific and beat anything assumed here.
+Read `docs/plan/README.md` once per session if you have not already. It carries this project's own task format, its definition of done and where its blockers resolve — all project-specific, and all of them beat anything assumed here.
+
+Two things to settle before writing into the tree, because getting them wrong shows up in every file you touch:
+
+- **The language** is recorded in `docs/README.md` under Conventions.
+- **The words** come from the vocabulary table in `${CLAUDE_PLUGIN_ROOT}/skills/docs-init/references/headings.md`. Every literal in this skill — `Done`, `Rejected`, `Blocker`, `Depends on`, "State today", `M1` — is the English column. A Polish tree writes `Zrobione`, `Odrzucone`, `Blokada`, `Zależy od`, „Stan na dziś", and whatever milestone label that project chose. Take them from the table rather than translating as you go, or one file starts reading differently from its neighbours.
 
 ## Which mode
 
@@ -40,7 +45,7 @@ The plan entry is a pointer, not a specification. All four checks are cheap; ski
 
 - **Read every linked spec section and every linked ADR in full.** That is where the contract is. Implementing from the task title alone is the easiest way to build the wrong thing with complete confidence.
 - **Dependencies.** If a task in "Depends on" is not ticked, stop and say what goes first. Work done out of order usually gets rewritten.
-- **Blockers.** If the task has "Blocker: FE-2" or similar, check that row's status in the cross-repo spec document. If it is not done, the task cannot be finished today. Say so before starting, not halfway through.
+- **Blockers.** A blocker is something outside the plan that has to land first, and `docs/plan/README.md` says where its status lives: the cross-repo dependencies table when other repositories are involved, the open-questions table in `spec/00` when the project is waiting on a person instead. Read the status there. A single-repo project has no dependencies document and its blockers still resolve, so do not go looking for a file the tree never had. If the blocker is not cleared, the task cannot be finished today — say so before starting, not halfway through.
 - **Gaps.** When the spec does not answer a question you have to resolve, do not invent behaviour and do not quietly pick something reasonable. Extend the spec first, confirm with the user if the decision is theirs, then implement.
 
 ### 3. While you work
@@ -53,11 +58,11 @@ The plan entry is a pointer, not a specification. All four checks are cheap; ski
 
 ### 4. Close the loop
 
-The sequence below. It is not optional and the order matters.
+Run [the closing sequence](#the-closing-sequence) at the end of this file. It is not optional and the order matters.
 
 ### 5. Report
 
-Short and concrete: what was built, which documents changed and why, what broke or surprised you, which task is next. No summarising code the user can read. End with the proposed commit message and wait.
+Once the sequence is done. Short and concrete: what was built, which documents changed and why, what broke or surprised you, which task is next. No summarising code the user can read. End with the proposed commit message and wait.
 
 ---
 
@@ -74,7 +79,7 @@ Then put every change in exactly one bucket:
 | Work that was a plan task | Tick its checkbox |
 | Work that was never in the plan | Add it to the plan with the next free id and a priority token, already ticked, so the numbering and the history stay honest |
 | Work we decided not to do | Its checkbox becomes `- [-]`, its title is struck through, and a `**Rejected YYYY-MM-DD.**` note says why. Never delete the entry and never reuse the number |
-| A dependency in another repository moved | Its row's status column |
+| Something a task was blocked on moved | Its status, wherever `plan/README.md` says blockers resolve |
 | None of the above | **Nothing.** Say so and move on |
 
 That last row carries weight. Formatting, a typo, a dependency bump that changes no documented behaviour, an internal rename — none of it belongs in the spec. A skill that manufactures a documentation change on every occasion teaches the user to skim past its proposals, and then the real ones get skimmed too.
@@ -91,9 +96,14 @@ The order follows from the spec being the source and everything else pointing at
 
 1. **`docs/spec/`** — if the implemented behaviour differs from what is written. Always first. Correct the section that owns the behaviour; do not add a parallel one.
 2. **`docs/adr/`** — only if a decision was involved. An accepted ADR is not rewritten: a factual correction goes in as `## Amendment (YYYY-MM-DD)`, a change of mind becomes a new ADR that supersedes it, and the old one's status changes. Update the register table in `docs/adr/README.md` and the ADR table in `docs/README.md` when a new one is added or a status changes.
-3. **Cross-repo status column** — if something moved in another repository.
+3. **The blocker's status** — if the thing a task was waiting on moved. Whichever table `docs/plan/README.md` points at: the cross-repo status column, or the open question in `spec/00` that the client has now answered. An answered question is resolved into the document that needed it and then leaves the list, which is open work rather than an archive.
 4. **The task checkbox** — `- [ ]` to `- [x]`. If the task deserves a note, add `**Done YYYY-MM-DD.**` after it, capped at two sentences: it earns its place when it stops someone "fixing" something deliberate, or records a measurement nobody will repeat. A task that was dropped rather than finished goes `- [ ]` to `- [-]` instead, with its title struck through and a `**Rejected YYYY-MM-DD.**` note — that one is mandatory, and "not needed" is not a reason.
-5. **`docs/plan/roadmap.md`** — **replace** the "State today" rows, do not append to them. One task in "Last completed", not a history. The milestone progress counter in the milestones table changes too: rejected tasks leave the denominator and are counted after it, `4/6, 1 rejected`, so the milestone can still reach its own total.
+5. **`docs/plan/roadmap.md`** — **replace** the "State today" rows, do not append to them. One task in "Last completed", never a chain of them. "Next" may name more than one when milestones run in parallel and several things are genuinely unblocked at once, but each gets a clause saying why it is next, and that is the cap. The milestone progress counter in the milestones table changes too: rejected tasks leave the denominator and are counted after it, `4/6, 1 rejected`, so the milestone can still reach its own total.
+
+   Then read the rest of the file, because the history you just kept out of the cell has somewhere else to go. Two checks, both of which catch drift that no single edit introduced:
+
+   - **The milestones table carries counters and outcomes, nothing else.** A prose paragraph under it that has grown into "APP-75 arrived after APP-70, APP-73 reopened M1, APP-50 was dropped…" is the banned cell one section lower. Each of those facts belongs on its own task as a `**Done**` annotation, where the person reading that task will find it.
+   - **The row labels match the vocabulary table.** A roadmap whose first row says `Faza` where the rest of the tree says `Etap` reads as a different document, and the drift is invisible from inside the file.
 6. **Stage and propose, do not commit.** `git add` everything, propose a commit message in English carrying the task id (`feat: WH-09 deduplicate webhook events by event id`), and stop. The user reviews the staged changes and approves the commit themselves. Documentation goes in the same commit as the code — that is what keeps the two from drifting.
 
 **If the task ends unfinished:** say what is done, leave the checkbox unticked, and annotate the task with the reason (`Blocker: …`). A plan ticked optimistically lies, and a lying plan is worse than an empty one.
@@ -103,15 +113,19 @@ The order follows from the spec being the source and everything else pointing at
 Grep the whole of `docs/plan/` for the prefix, take the highest number, add one:
 
 ```bash
-rg -o '\*\*WH-[0-9]+\*\*' docs/plan/ | rg -o '[0-9]+' | sort -n | tail -1
+rg -o '\*\*`?WH-[0-9]+`?\*\*|`WH-[0-9]+`' docs/plan/ | rg -o '[0-9]+' | sort -n | tail -1
 ```
+
+The backticked forms are there because a roadmap often writes an id inside a link as ``[`WH-68`](…)``, and a grep that only knows `**WH-68**` would miss the newest task in exactly the file that names it first.
 
 Never count tasks and never restart numbering per milestone. Numbers run continuously through the project and are never reused: an abandoned task stays on the list as `- [-]` with a dated reason, a moved task keeps its number. Reusing a number silently breaks every reference to the old one.
 
-A new task carries a priority token from the start. `(^)` only when the rest of the milestone waits on it — what goes first, not what is necessary, since almost everything in a milestone is necessary. No more than a third of a milestone's tasks, or the marker stops meaning anything.
+A new task carries a priority token from the start. `(^)` only when the rest of the milestone waits on it — what goes first, not what is necessary, since almost everything in a milestone is necessary. No more than a third of the milestone's *open* tasks, or the marker stops meaning anything.
+
+In a plan where no task carries a token at all, a single new one sorts nothing and only makes the plan look half-converted. Either leave it off and match the file, or offer to assign tokens across the milestone in one pass. Both are fine; the mixture is what is not.
 
 ## Writing the documents
 
-Before editing anything under `docs/`, invoke `project-docs:docs-style`. It carries the length budgets and the structural rules, and the roadmap cap in step 5 is one of them.
+Before editing anything under `docs/`, invoke `project-docs:docs-style`. It carries the length ceilings and the structural rules, and the roadmap cap in step 5 is one of them.
 
-If for any reason you write without it, the non-negotiables are: every claim about behaviour points at a file you opened; enumerable facts go in tables; section numbers are addresses so you append rather than renumber; an ADR is 40–80 lines and a spec document 120–280; the em dash is punctuation, not glue; and nothing goes in that could be deleted without losing information.
+If for any reason you write without it, the non-negotiables are: every claim about behaviour points at a file you opened; enumerable facts go in tables; section numbers are addresses so you append rather than renumber; an ADR stays under 80 lines and a spec document under 280, and neither has a floor to reach; the em dash is punctuation, not glue; and nothing goes in that could be deleted without losing information.
