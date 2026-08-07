@@ -1,211 +1,173 @@
 ---
 name: jira-feedback
-description: Add comments, feedback, review notes, or replies to existing JIRA issues. Use when the user wants to post a comment, reply to a discussion, leave review feedback, or add notes on a JIRA ticket. Transforms raw input into clear, well-structured comments. Also use when the user wants to post code review findings or PR review results to a JIRA ticket. Triggers on any request to comment on, reply to, or add feedback to a JIRA issue.
-argument-hint: "[feedback content]"
+description: Write and post a comment on an existing JIRA issue. Turns rough, dictated or half-formed input into a comment that reads like a person wrote it, in whatever language the issue thread is already using. Reads the issue and its recent comments first, so the draft answers what was actually asked and uses the thread's own terminology. Use when the user wants to comment on a ticket, reply to a discussion, leave feedback or review notes, confirm or deny something on an issue, or post an update. Triggers on "skomentuj", "dodaj komentarz", "odpowiedz na", "napisz w tickecie", "wrzuć notatkę do", "comment on", "reply to", "add a note to", "post an update on" followed by an issue key or a description of what to say. Also use whenever the user dictates a rough observation about a ticket and expects it to land in JIRA.
+argument-hint: "[TICKET-123] [what to say]"
 ---
 
 # JIRA Feedback
 
-Add comments and feedback to existing JIRA issues. Transforms raw input into clear, well-structured comments.
+Post a comment on a JIRA issue. The input is usually rough: dictated, unfinished,
+written in a hurry. The job is to turn it into something a colleague would write,
+without adding anything the user did not say.
 
 ## Workflow
 
-1. **Initial setup** — Ask language and feedback type via `AskUserQuestion` (see below)
-2. **Parse the input** — Treat `$ARGUMENTS` as the feedback content; if a JIRA issue key is present, extract it
-3. **Read the JIRA issue** *(optional)* — If an issue key was found, fetch the issue from JIRA for context
-4. **Draft the comment** — Write the comment in the chosen language and format, applying writing clarity rules
-5. **Present for review** — Show the draft to the user and wait for confirmation
-6. **Resolve JIRA configuration** — Resolve `cloudId` if it was not already resolved in Step 3 (see below)
-7. **Send to JIRA** — Only after configuration is resolved
+1. Issue key and domain, then read the issue and its thread
+2. Detect the language from the thread
+3. Draft, with the shape following the content
+4. Preview the draft together with any assumptions
+5. Post after explicit confirmation
 
-## Initial Setup (Step 1)
+## Step 1 — Key, domain, and the read
 
-Before anything else, use `AskUserQuestion` with two questions:
+Extract `[A-Z]{2,6}-\d+` from `$ARGUMENTS`. Without a key there is no thread to
+read and nowhere to post, so when none is present ask once via `AskUserQuestion`
+(header: "Issue key") and continue.
 
-- **Language** (header: "Language"): English (Recommended) | Spanish | Polish | German
-- **Feedback type** (header: "Format"): Comment — direct reply or note | Feedback list — structured list of review points | PR Review — code review findings (from agent-teams-review)
-
-Use the selected language for the entire draft.
-
-## Parsing the Input (Step 2)
-
-Treat the entire `$ARGUMENTS` as the feedback content. Scan for a JIRA issue key matching `[A-Z]{2,6}-\d+` — if found, extract it for use in Step 3 and Step 7.
-
-The issue key is **optional**. If no key is present, skip Step 3 and ask for the issue key later in Step 7 (before sending).
-
-Examples:
-- `TES-1234 I think the API regression also happens on staging` → key: `TES-1234`, content: the full text
-- `there are five things wrong with the export feature` → no key, content: the full text
-
-**PR Review format — additional parsing:**
-
-When PR Review format is selected, determine the input source. The expected input is a **triage report** (output of the triage skill, with Fix Now / Fix Later / Skip groups), but raw review reports also work as a fallback.
-
-- If `$ARGUMENTS` contains a file path (matches `*.md` or a recognizable path like `docs/reviews/...`) — read the file. If it contains Fix Now / Fix Later / Skip sections, treat it as a triage report. If it contains Action Items / Findings by severity, treat it as a raw review report.
-- If `$ARGUMENTS` contains reviewer-prefixed IDs (`VM-`, `BE-`, `FE-`, `QA-`, `SC-`, `DV-` followed by digits) — parse as pasted review findings
-- If the input has neither a file path nor recognizable finding IDs — ask the user via `AskUserQuestion` (header: "Review source") to provide the triage/review report path or paste the findings
-
-Still extract a JIRA issue key if present (same as above).
-
-Examples:
-- `TES-1234 docs/reviews/feature-auth-2026-03-15-triage.md` → key: `TES-1234`, source: triage file
-- `TES-1234 docs/reviews/feature-auth-2026-03-15.md` → key: `TES-1234`, source: raw review file
-- `TES-1234 BE-001 N+1 query in settings loader Critical ...` → key: `TES-1234`, source: pasted findings
-
-## Reading the JIRA Issue (Step 3 — optional)
-
-If an issue key was found in Step 2, use the `getJiraIssue` MCP tool to fetch the issue:
-
-- **cloudId**: resolve it now via the JIRA Configuration section below — this is the first point that needs it
-- **issueKey**: extracted in Step 2
-
-Read the issue summary, description, and existing comments to understand the context. Use the issue's domain terminology in your draft.
-
-**Thread analysis** — when comments exist on the issue, analyze the last 3-5 comments to understand the conversation dynamics:
-
-- **Thread tone:** Identify whether the discussion is technical (code references, stack traces), casual (brief updates), formal (stakeholder-facing), or urgent (blockers, deadlines). Match this tone in the draft — a technical thread gets precise language, an urgent thread gets direct, no-preamble answers.
-- **Open questions:** If the most recent comment asks a question or requests information, frame the draft as a direct answer. The reader should immediately recognize this as a response to what they asked, not a standalone observation.
-- **Terminology consistency:** Use the exact names, abbreviations, and phrasing from the thread — not synonyms. If the thread says "settings loader" do not write "configuration fetcher."
-- **Conversation momentum:** In heated or urgent threads (multiple comments in short succession, language signaling frustration or deadline pressure), match the directness and pace. Skip preamble, lead with the answer or status.
-
-Example with thread context: [references/example-comment-with-context.md](references/example-comment-with-context.md)
-
-If no issue key was provided, skip this step entirely.
-
-## Writing Clarity Rules
-
-The user's input may be rough, unstructured, or dictated by voice. Transform it into a clear, well-written comment:
-
-- **Clean up grammar and structure** — proper capitalization, punctuation, and sentence boundaries; remove filler words and false starts
-- **International English** — the readers are developers from many countries, and English is a second language for most of them. Write so they can read fast without a dictionary. Keep sentences short and one idea each. Use common, everyday words instead of fancy ones (say "happens again" not "reproduces", "makes" not "triggers", "matches" not "aligns with", "easy to read" not "human-readable", "find it later" not "for easier identification"). Avoid idioms, phrasal verbs that are hard to parse, and long noun chains. It is fine if the result sounds a bit plain or simple — clear beats clever. The goal is text that a non-native programmer would write themselves: direct, concrete, no decoration.
-- **Deduplicate** — merge repeated or rephrased versions of the same idea into one clear statement
-- **Preserve intent and tone** — keep the user's meaning, emphasis, and level of urgency intact
-- **Use domain terminology** — if the JIRA issue was fetched, replace vague references with specific terms from the issue (e.g., "that thing" → the actual feature/component name)
-- **Target language** — produce the final text in the language chosen in Step 1, regardless of the input language
-
-## Comment Formats
-
-### Format: Comment
-
-Clean prose, 1-3 paragraphs. Direct reply or note — no headings, no greetings, no sign-offs.
+Resolve the domain the way `jira-fetch` does. Look for a config block in the
+project's CLAUDE.md, and ask only when it is missing:
 
 ```
-[1-3 paragraphs. Concise, direct response addressing the issue or question.]
+## JIRA
+- Domain: mycompany.atlassian.net
 ```
 
-Example: [references/example-comment.md](references/example-comment.md)
+Read the issue with the existing fetch script, one issue selected by key:
 
-### Format: Feedback List
-
-Structured list with a brief context line and prioritized bullet points.
-
-```
-[1-2 sentences of context — what was reviewed and in what scope.]
-
-- [Feedback item — most critical first]
-- [Feedback item]
-- [Feedback item]
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/jira-fetch/scripts/fetch-issues.mjs" \
+  --domain "${DOMAIN}" \
+  --jql "key = ${ISSUE_KEY}" \
+  --output "/tmp/${ISSUE_KEY}.json"
 ```
 
-Rules:
-- Critical or blocking points first
-- 3-8 bullet items
-- Use dash markers (`-`)
-- Each item is a single clear statement — no sub-bullets
+The output carries the summary, description and the most recent comments with
+their bodies already flattened to plain text, which is everything the next three
+steps need. No `cloudId` and no MCP tool is involved; authentication is the
+`JIRA_EMAIL` and `JIRA_API_TOKEN` pair that `jira-fetch` already uses.
 
-Example: [references/example-feedback-list.md](references/example-feedback-list.md)
+## Step 2 — Language
 
-### Format: PR Review
+Comment in the language the thread is already using, and do not ask.
 
-Structured code review findings condensed for a JIRA comment. Expects input from a **triaged** review — after the triage skill has classified findings into Fix Now / Fix Later / Skip groups. Transforms the triage output into an actionable, scannable summary that developers can work through as a checklist.
+The recent comments decide it rather than the description: the comment is
+addressed to the people talking now, not to whoever opened the ticket a month
+ago. So a ticket described in Polish under an English discussion gets an English
+comment. When there are no comments at all, the description decides.
 
-```
-**Code Review: {branch-name}** | {date} | Verdict: {verdict}
-{reviewer-list} | {finding-count} findings | ~{total-effort}
-{AI Slop: X/10 — only if score <= 6}
+An explicit request in the input ("po polsku", "in English") beats detection.
 
-### Fix Now ({group-count} groups, ~{effort})
+State what you picked in one line above the draft. A wrong guess then costs one
+word to correct instead of a whole redraft.
 
-**{Group Name}**
-- [ ] `[BE-001]` **Issue title** — `file:line` — description + fix
-- [ ] `[SC-002]` **Issue title** ↔️CROSS — `file:line` — description + fix
-> {Why fix now — copied from triage reasoning}
+## Step 3 — Draft
 
-**{Group Name}**
-- [ ] `[VM-001]` **Issue title** — `file:line` — description + fix
+### The thread
 
-### Fix Later ({count} findings)
-- `[QA-001]` Issue title — `file:line`
-- `[FE-001]` Issue title — `file:line`
+Read the last few comments before writing anything.
 
-{Skip: N findings omitted} | Full report: `{report-path}`
-```
+When the most recent one asks a question, the draft is an answer to it and
+should read that way from its first sentence, not as a standalone note that
+happens to sit underneath. Match the register of the discussion: a technical
+thread wants precision, and an urgent one (several comments in quick succession,
+deadline language) wants the status first and no preamble.
 
-Rules:
-- **Fix Now groups** are the focus — preserve the triage group names and execution order. Each finding gets full detail: ID, title, file:line, one-sentence description, and inline fix suggestion. Include the triage reasoning blockquote (`>`) so the developer knows why this is urgent.
-- **Fix Later** findings get a single-line summary: ID, title, file:line. No grouping needed — just a flat list for awareness.
-- **Skip** findings are collapsed into a count. The developer doesn't need to see them — they were intentionally excluded.
-- Won't Implement items (from previous triage rounds) are omitted entirely.
-- Preserve reviewer-prefixed issue IDs (`VM-`, `BE-`, `FE-`, `QA-`, `SC-`, `DV-`) for traceability back to the full report
-- Keep `↔️CROSS` tags with reviewer attribution on cross-reviewer findings
-- Keep the entire comment under ~50 lines — JIRA comments lose readability when they are too long
-- AI Slop score: include as a one-line note in the header only if the score is 6 or below; omit the full category breakdown
-- If the source is a raw review report (not triaged), fall back to severity grouping: Critical/High get full detail, Medium get one-liners, Low get collapsed count
+Use the thread's own names and abbreviations. If it says "settings loader", do
+not write "configuration fetcher". A synonym makes every reader stop and work
+out whether some new thing is being discussed.
 
-Example: [references/example-pr-review.md](references/example-pr-review.md)
+### Shape
 
-## Writing Rules
+The shape falls out of the content. One thought is a paragraph. Several separate
+things are a list. An answer plus a caveat is two paragraphs, because a list of
+one item is not a list.
 
-- Be direct — state observations and conclusions, not the process of arriving at them
-- Use the project's domain language and terminology from the JIRA issue
-- Never fabricate information — only include facts from the user's input or the JIRA issue
-- Match the tone to the context — urgent issues get direct language, discussions get collaborative tone
-- Prefer concrete over abstract (say "the CSV export endpoint" not "the relevant endpoint")
-- For PR Review format — keep language factual and terse; review findings are reference material, not prose. Use the finding's own wording rather than paraphrasing
+There is no count in either direction. A minimum turns two real points into
+three, the third being filler. A maximum cuts the ninth finding out of nine. The
+only length rule worth keeping is that nothing stays in which could be deleted
+without losing information.
 
-## Presentation (Step 5)
+### How it should read
 
-Show the draft as plain text the user can copy straight into JIRA — do **not** wrap the comment in a blockquote (`>`). Blockquotes add `>` markers to every line and break copy-paste. Put the comment in a fenced code block instead, so the user gets clean, ready-to-paste text.
+Two habits give a machine away, and both are matters of pattern rather than of
+any single word.
 
-Use this layout:
+**Em dashes.** At most one in an English comment. Where one wants to go, a comma,
+a colon or a full stop usually fits better, and the full stop repairs the rhythm
+at the same time. In a list write `**Term:** description` rather than
+`**Term** — description`.
+
+Polish works differently. The pause is ordinary punctuation there, particularly
+in an aside or where a verb is left out, so stripping every one of them leaves
+the text stiff. What gives it away is density, one per paragraph at most, and
+reaching for it in place of every other mark.
+
+**Bullet rhythm.** Points should not share a length or a build. Five points that
+each run "statement, then implication" across one line read as generated however
+good the content is. Real lists are uneven: one runs half a line, the next three,
+one ends on a question.
+
+**Word choice, English only.** Most readers here are not native speakers, so
+write so they can read fast without a dictionary. Prefer "happens again" to
+"reproduces", "makes" to "triggers", "matches" to "aligns with", "easy to read"
+to "human-readable", "find it later" to "for easier identification". Short
+sentences, one idea each. Sounding plain is fine. None of this applies in Polish:
+write normal Polish and do not flatten the vocabulary to seem simple.
+
+### What may go in
+
+Every sentence needs a source, either the user's input or the issue. Vague
+references may be swapped for real names from the ticket, so "that thing in the
+export" becomes the actual field.
+
+Nothing beyond that. No suspected cause, no suggested fix, no conclusion the user
+did not reach. Their name goes on this and a reader cannot tell which half they
+wrote. Hedges survive intact: "might be" stays "might be", because dropping it
+turns a guess into a claim the thread will hold them to later.
+
+Worked examples of all of the above: [references/examples.md](references/examples.md).
+
+## Step 4 — Preview
+
+Show the draft as plain text in a fenced code block. A blockquote puts a `>` on
+every line and ruins copy-paste.
 
 ````
-**JIRA Comment Draft — please review:**
+**Draft for review:**
 
 ```
-[comment content]
+[comment]
 ```
 
-Confirm to send, or let me know what to change.
+Thread runs in English, so the draft is in English.
+
+Confirm to post, or tell me what to change.
 ````
 
-When thread context was used (comments existed on the issue), add a short context note above the draft so the user knows what shaped the tone and framing. This note is meta-information about the draft, not part of the comment, so a blockquote is fine here:
+When something in the input was ambiguous, list what you assumed underneath, and
+keep it outside the code block so it cannot be posted by accident. Draft first
+and assumptions second: a question asked before the draft costs a round trip
+every time, including the times the guess would have been right.
 
-> **Thread context:** Last 3 comments discuss staging regression. Most recent (Anna, 2h ago) asks for confirmation on the date filter. Draft framed as a direct answer.
+When the thread shaped the tone or framing, say so in a line so it is clear what
+the draft is responding to.
 
-Do NOT send to JIRA until the user explicitly confirms.
+## Step 5 — Post
 
-## JIRA Configuration (Step 6)
+Only after explicit confirmation. Write the confirmed text to a file first,
+because comments contain newlines, quotes and backticks, and a shell argument is
+exactly where that breaks.
 
-Resolve the JIRA connection at the first point that needs it: in Step 3 when an issue key was found (reading the issue requires it), otherwise now — after the user confirms the draft, before sending. Resolve once and reuse for the rest of the session.
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/jira-feedback/scripts/post-comment.mjs" \
+  --domain "${DOMAIN}" \
+  --issue "${ISSUE_KEY}" \
+  --body-file "/tmp/comment.md"
+```
 
-The skill needs the JIRA domain and a `cloudId`. The `projectKey` is not needed — the issue key already identifies the project.
+The script converts the markdown to ADF, which is the format API v3 accepts,
+posts it, then reads the comment back and prints how JIRA actually rendered it.
+Show that output to the user: a conversion problem is otherwise invisible until
+somebody opens the issue in a browser.
 
-**Resolution order for the domain:**
-
-1. Check the project's `CLAUDE.md` for a JIRA config block:
-   ```
-   ## JIRA
-   - Domain: mycompany.atlassian.net
-   ```
-2. If not found, ask the user via `AskUserQuestion` (header: "JIRA config") for the domain.
-
-**cloudId** is not the domain — it is the UUID identifying the Atlassian cloud instance. Resolve it by calling the `getAccessibleAtlassianResources` MCP tool once and picking the resource that matches the domain.
-
-## Sending to JIRA (Step 7)
-
-After configuration is resolved, use the `addCommentToJiraIssue` MCP tool:
-
-- **cloudId**: resolved in Step 6
-- **issueKey**: extracted in Step 2, or ask the user via `AskUserQuestion` (header: "Issue key") if not provided earlier
-- **body**: the confirmed comment text
+Add `--dry-run` to see the exact JSON that would be sent without sending it.

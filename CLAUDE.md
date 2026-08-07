@@ -66,13 +66,22 @@ This repo demonstrates two distinct patterns for multi-agent code review:
 - Nothing about a project's content model is hardcoded. Two real Payload projects shared three collection slugs and one block slug whose fields differed entirely, so the skills discover collections, blocks and locales at runtime and treat the live API as the schema oracle (`?locale=all` reveals which fields are localized, at any nesting depth)
 - Safety lives in `payload-api.mjs`, not in prose: writes to a non-localhost host refuse without `--yes`, `update`/`delete` snapshot the document to `.payload-backups/` first, and `whoami` exits non-zero when credentials resolve to no user. An instruction the model can forget is not a safeguard
 
+## JIRA Comment Skill
+
+`jira-feedback` turns rough dictated input into a JIRA comment. Its redesign settled four things that are easy to re-litigate:
+
+- **The reference examples are the specification, so they have to obey the style themselves.** The previous version stated a plain-writing rule and then, two lines below it, showed an example whose bullets used an em dash in four cases out of five. The model copies examples harder than it follows rules, which is why the comment came out sounding generated. Only two tics are targeted — em-dash density and identical bullet rhythm — because those are the ones the user actually objected to; confident openers and closing summary sentences were explicitly kept
+- **No named formats and no counts.** A format menu forces a choice before anything has read the input, and a floor like "3-8 bullets" pads two real points into three. Shape follows content, and the only length rule is that nothing stays in which could be deleted without losing information. Same principle as the docs plugin: limits are ceilings, or they are absent
+- **Language comes from the thread, never from a question.** The recent comments decide it rather than the description, because the comment addresses whoever is talking now, not whoever opened the ticket. The detected language is stated in one line above the draft so a wrong guess costs a word, not a redraft
+- **`post-comment.mjs` reads the comment back after posting.** API v3 takes ADF rather than markdown, so a converter bug would otherwise surface only when somebody opens the issue in a browser. The converter covers just what the skill writes (paragraph, bullet list, bold, code, link) and leaves anything else as literal text, on the grounds that a stray `#` costs less than a silently dropped sentence
+
 ## Conventions
 
 - Reference a sibling skill's files as `${CLAUDE_PLUGIN_ROOT}/skills/<skill>/references/<file>.md`, not by glob. A glob is scoped to the user's project, where plugin files do not live, and the plugin cache keeps old versions side by side (`project-docs/0.1.0/` and `0.2.0/`, both marked `.in_use`), so a glob that does reach it can resolve to a copy predating half the content. Where a glob is kept as a fallback, say that the highest version in the path wins
 - Save review reports to `docs/pr-reviews/` or `docs/reviews/` as `{branch}-{YYYY-MM-DD}.md`, replacing branch slashes with hyphens
 - Prefix reviewer issue IDs by role: VM-, BE-, FE-, QA-, SC-, DV-
 - Select reviewers/agents conditionally based on file patterns and content keywords, then confirm with the user via `AskUserQuestion`
-- All JIRA skills use `jira-fetch` for data retrieval via REST API v3 (`fetch-issues.mjs`); MCP tools are only needed for write operations (`addCommentToJiraIssue`, `createJiraIssue`) and Confluence publishing — exception: `jira-feedback` uses `getJiraIssue` MCP for single-issue thread context
+- All JIRA skills read via `jira-fetch`'s `fetch-issues.mjs` (REST API v3), including `jira-feedback`, which pulls a single issue with `--jql "key = X"` for thread context. `jira-feedback` also writes over REST (`post-comment.mjs`), so MCP is left for `createJiraIssue` and Confluence publishing
 - `jira-fetch` requires `JIRA_EMAIL` and `JIRA_API_TOKEN` env vars for JIRA REST API authentication
 - Use single-line conventional commit format with auto-detected task numbers from branch names
 - Bump `version` in `<plugin>/.claude-plugin/plugin.json` after each change — patch for bug fixes and small tweaks, minor for new features or significant behavior changes
