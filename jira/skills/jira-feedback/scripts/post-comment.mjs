@@ -10,6 +10,10 @@
 // newlines, quotes and backticks, and shell quoting is exactly where that goes
 // wrong.
 //
+// Write `@Jeff` or `@[Jeff Stevens]` in the body to mention somebody. Only
+// people already on the issue resolve (see fetchParticipants), so a mention
+// cannot reach a stranger; anything unresolved stays as plain text.
+//
 // API v3 takes a comment body as ADF (Atlassian Document Format) — a JSON tree,
 // not markdown. mdToAdf below converts the small subset this skill produces.
 //
@@ -107,18 +111,89 @@ function stripHtml(html) {
 }
 
 // ---------------------------------------------------------------------------
+// Mentions
+//
+// A mention pings a real person, so the set of names that can resolve is
+// deliberately narrow: the issue's reporter, its assignee, and everyone who has
+// already commented. Those are the people a reply in this thread could sensibly
+// address. An unknown or ambiguous name stays literal and warns on stderr,
+// because notifying the wrong human is worse than a missing link.
+// ---------------------------------------------------------------------------
+
+// Not preceded by a word character or a dot, so `foo@bar.com` is left alone.
+const MENTION = /(?<![\w.])@(?:\[([^\]]+)\]|([\p{L}][\p{L}'’-]*))/gu;
+
+async function fetchParticipants(baseUrl, key, auth) {
+  const [issue, comments] = await Promise.all([
+    jiraRequest(baseUrl, 'GET', `/rest/api/3/issue/${key}?fields=reporter,assignee`, auth),
+    jiraRequest(baseUrl, 'GET', `/rest/api/3/issue/${key}/comment?maxResults=100`, auth),
+  ]);
+
+  const people = [];
+  const seen = new Set();
+  const add = (u) => {
+    if (u?.accountId && u.displayName && !seen.has(u.accountId)) {
+      seen.add(u.accountId);
+      people.push({ accountId: u.accountId, displayName: u.displayName });
+    }
+  };
+
+  add(issue.fields?.reporter);
+  add(issue.fields?.assignee);
+  for (const c of comments.comments || []) add(c.author);
+  return people;
+}
+
+// Returns a Map from the raw token (`@Jeff`) to its mention attrs, holding only
+// the tokens that resolved to exactly one person.
+function resolveMentions(markdown, people) {
+  const resolved = new Map();
+  const warnings = [];
+
+  for (const m of markdown.matchAll(MENTION)) {
+    const token = m[0];
+    if (resolved.has(token)) continue;
+
+    const query = (m[1] || m[2]).toLowerCase();
+    // Full display name first, then a bare first name. Anything looser would
+    // start guessing between colleagues who share a surname.
+    let hits = people.filter((p) => p.displayName.toLowerCase() === query);
+    if (!hits.length) {
+      hits = people.filter((p) => p.displayName.toLowerCase().split(/\s+/)[0] === query);
+    }
+
+    if (hits.length === 1) {
+      resolved.set(token, {
+        id: hits[0].accountId,
+        text: `@${hits[0].displayName}`,
+        accessLevel: '',
+      });
+    } else if (hits.length > 1) {
+      warnings.push(`${token} matches ${hits.map((p) => p.displayName).join(', ')} — left as text`);
+    } else {
+      warnings.push(`${token} is not on this issue — left as text`);
+    }
+  }
+
+  return { resolved, warnings };
+}
+
+// ---------------------------------------------------------------------------
 // markdown -> ADF
 //
 // Deliberately small: the skill writes paragraphs, bullet lists, bold, inline
-// code and links, so that is the whole grammar. Anything outside it survives as
-// literal text rather than being dropped, because a stray `#` in a comment is a
-// far cheaper mistake than a sentence that silently disappears.
+// code, links and mentions, so that is the whole grammar. Anything outside it
+// survives as literal text rather than being dropped, because a stray `#` in a
+// comment is a far cheaper mistake than a sentence that silently disappears.
 // ---------------------------------------------------------------------------
 
-const INLINE = /(`[^`]+`)|(\*\*[^*]+\*\*)|(\[[^\]]+\]\([^)\s]+\))/g;
+const INLINE = new RegExp(
+  `(\`[^\`]+\`)|(\\*\\*[^*]+\\*\\*)|(\\[[^\\]]+\\]\\([^)\\s]+\\))|(${MENTION.source})`,
+  'gu',
+);
 const BULLET = /^\s*[-*]\s+/;
 
-function inlineNodes(text) {
+function inlineNodes(text, mentions) {
   const nodes = [];
   let last = 0;
 
@@ -130,6 +205,10 @@ function inlineNodes(text) {
       nodes.push({ type: 'text', text: tok.slice(1, -1), marks: [{ type: 'code' }] });
     } else if (tok.startsWith('**')) {
       nodes.push({ type: 'text', text: tok.slice(2, -2), marks: [{ type: 'strong' }] });
+    } else if (tok.startsWith('@')) {
+      const attrs = mentions?.get(tok);
+      if (attrs) nodes.push({ type: 'mention', attrs });
+      else nodes.push({ type: 'text', text: tok });
     } else {
       const cut = tok.indexOf('](');
       nodes.push({
@@ -142,15 +221,15 @@ function inlineNodes(text) {
   }
 
   if (last < text.length) nodes.push({ type: 'text', text: text.slice(last) });
-  return nodes.filter((n) => n.text !== '');
+  return nodes.filter((n) => n.type !== 'text' || n.text !== '');
 }
 
-function paragraph(text) {
-  const content = inlineNodes(text);
+function paragraph(text, mentions) {
+  const content = inlineNodes(text, mentions);
   return content.length ? { type: 'paragraph', content } : { type: 'paragraph' };
 }
 
-function mdToAdf(markdown) {
+function mdToAdf(markdown, mentions) {
   const content = [];
 
   for (const block of markdown.trim().split(/\n\s*\n/)) {
@@ -168,14 +247,18 @@ function mdToAdf(markdown) {
       }
       content.push({
         type: 'bulletList',
-        content: items.map((item) => ({ type: 'listItem', content: [paragraph(item)] })),
+        content: items.map((item) => ({ type: 'listItem', content: [paragraph(item, mentions)] })),
       });
     } else {
-      content.push(paragraph(lines.join(' ')));
+      content.push(paragraph(lines.join(' '), mentions));
     }
   }
 
-  return { type: 'doc', version: 1, content: content.length ? content : [paragraph('')] };
+  return {
+    type: 'doc',
+    version: 1,
+    content: content.length ? content : [paragraph('', mentions)],
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -198,17 +281,33 @@ async function main() {
     process.exit(1);
   }
 
-  const adf = mdToAdf(body);
-
-  if (config.dryRun) {
-    console.log(JSON.stringify({ body: adf }, null, 2));
-    console.error('Dry run — nothing was sent.');
-    return;
-  }
-
   const baseUrl = `https://${config.domain}`;
   const auth = makeAuth(config.email, config.token);
   const key = encodeURIComponent(config.issue);
+
+  // Only reach for the participant list when the body actually mentions
+  // somebody, which keeps a mention-free dry run entirely offline. Resolution
+  // happens on a dry run too: seeing who would be notified is the whole point
+  // of checking before posting.
+  let mentions = null;
+  if (body.match(MENTION)) {
+    const people = await fetchParticipants(baseUrl, key, auth);
+    const outcome = resolveMentions(body, people);
+    mentions = outcome.resolved;
+
+    for (const [token, attrs] of outcome.resolved) {
+      console.error(`Mention ${token} -> ${attrs.text} (${attrs.id})`);
+    }
+    for (const warning of outcome.warnings) console.error(`Warning: ${warning}`);
+  }
+
+  const adf = mdToAdf(body, mentions);
+
+  if (config.dryRun) {
+    console.log(JSON.stringify({ body: adf }, null, 2));
+    console.error('Dry run — nothing was posted.');
+    return;
+  }
 
   const created = await jiraRequest(
     baseUrl, 'POST',

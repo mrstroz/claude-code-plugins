@@ -76,6 +76,19 @@ Use the thread's own names and abbreviations. If it says "settings loader", do
 not write "configuration fetcher". A synonym makes every reader stop and work
 out whether some new thing is being discussed.
 
+### Mentioning people
+
+Write `@Jeff` to mention somebody, or `@[Jeff Stevens]` when a first name could
+match more than one person. The posting script resolves these against the people
+already on the issue, meaning its reporter, its assignee and everyone who has
+commented, and turns them into real JIRA mentions.
+
+Mention the person the comment is addressed to, normally whoever asked the
+question being answered. A mention lights up somebody's phone, so a name that
+merely comes up in passing reads better as plain text. Anything that does not
+resolve to exactly one participant stays as text, and the script says which
+name it could not place.
+
 ### Shape
 
 The shape falls out of the content. One thought is a paragraph. Several separate
