@@ -76,6 +76,15 @@ This repo demonstrates two distinct patterns for multi-agent code review:
 - **`post-comment.mjs` reads the comment back after posting.** API v3 takes ADF rather than markdown, so a converter bug would otherwise surface only when somebody opens the issue in a browser. The converter covers just what the skill writes (paragraph, bullet list, bold, code, link, mention) and leaves anything else as literal text, on the grounds that a stray `#` costs less than a silently dropped sentence
 - **`@Name` mentions resolve only against people already on the issue** — reporter, assignee, comment authors — because `fetch-issues.mjs` keeps `displayName` and drops `accountId`, and widening it there would bill every skill that fetches in bulk for data only this one needs. `post-comment.mjs` looks the participants up itself at post time, which also means a mention cannot reach somebody outside the thread; an unresolved or ambiguous name stays plain text and warns rather than guessing which colleague to notify
 
+## Commit Skill
+
+`utils/skills/commit` drafts the message; the human picks how long it is. That line has been moved in both directions already, so it is worth recording where it landed and why:
+
+- **The model picks the type, the task number and the wording. It does not pick whether there is a body.** A version that inferred the body from the diff — ADR mentioned, breaking change, migration step — put five bullets on a routine docs commit, because "will somebody want to read this in six months" is not a question a diff answers. Length is a judgement about the reader, and the reader is the user
+- **Both lengths are drafted up front and shown in one picker**, rather than asked about in a round of their own. The pre-rebuild format menu (Short / Descriptive / Multi-line) forced a choice before any text existed, and a length question asked before drafting has the same defect. Two `preview` panes under one cursor cost no extra round trip and let the user compare what will actually land
+- **Short is the first option every time**, including for changes that look consequential. Asking for a description that is already drafted costs one keystroke; deleting one that arrived uninvited costs every commit. The skill also does not argue for the longer option in prose — the preview is the argument
+- The two options are one commit at two lengths, not two drafts: same type, same task number, same subject, body added below. A second option that also reworded the subject would turn a length choice into a writing choice
+
 ## Conventions
 
 - Reference a sibling skill's files as `${CLAUDE_PLUGIN_ROOT}/skills/<skill>/references/<file>.md`, not by glob. A glob is scoped to the user's project, where plugin files do not live, and the plugin cache keeps old versions side by side (`project-docs/0.1.0/` and `0.2.0/`, both marked `.in_use`), so a glob that does reach it can resolve to a copy predating half the content. Where a glob is kept as a fallback, say that the highest version in the path wins
