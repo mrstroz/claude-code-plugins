@@ -96,7 +96,7 @@ Also read the roadmap end to end. If "State today" has grown into a chain of "be
 
 ## 6. What not to do
 
-- **Do not rewrite ADR history.** An accepted ADR that turned out to be wrong gets an `## Amendment (YYYY-MM-DD)` or a superseding ADR. Editing it to match what happened destroys the record of a decision that was made in good faith with the information available.
+- **Bring an ADR up to date rather than annotating it.** An ADR whose details turned out differently is edited to state the decision in force, not given a section recording the correction. Where the superseded decision still explains why the architecture looks the way it does, one line under `## Decision History` keeps it; a decision replaced outright gets a superseding ADR instead.
 - **Do not backfill an ADR for something nobody decided.** If the storage choice happened because it was what the template used, that is not a decision and an invented rationale is worse than no ADR. Say it is undecided and record it as an open question in `spec/00`.
 - **Do not restate the diff in the spec.** The spec describes the system as it is now, not the path it took. "The retry limit was changed from 3 to 5" belongs in git; "Retries stop after 5 attempts" belongs in the spec.
 - **Do not close the gap in one commit if it is large.** Spec corrections in one, plan reconstruction in another. The first is reviewable; the two together are not.

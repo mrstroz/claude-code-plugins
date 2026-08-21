@@ -66,7 +66,7 @@ Adding a third language means adding a column, not a second set of templates.
 | option column | Option | Wariant |
 | why rejected | Why rejected | Dlaczego odrzucony |
 | when to revisit | When to revisit | Kiedy wrócić do tej decyzji |
-| amendment section | Amendment (YYYY-MM-DD) | Sprostowanie (RRRR-MM-DD) |
+| decision history section | Decision History | Historia decyzji |
 | template pointer | Template | Szablon |
 
 ### Statuses

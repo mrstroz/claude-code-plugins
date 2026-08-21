@@ -116,7 +116,7 @@ ceremony, no announcement of what is coming.>
 to where it lives instead.>
 ```
 
-**Rules.** Under 280 lines. Section numbers are addresses: append new sections at the end, never renumber existing ones, because every link in the tree points at a number. Anything enumerable goes in a table. The paragraph under a table says what the table cannot — why the boundary falls there, what happens in the odd case — and never restates its rows.
+**Rules.** Under 280 lines. Section numbers are addresses: append new sections at the end, never renumber existing ones, because every link in the tree points at a number. The document states the system as it is now: when something changes, edit the sentence that carries it and delete what is no longer true, rather than noting anywhere that it changed. Anything enumerable goes in a table. The paragraph under a table says what the table cannot — why the boundary falls there, what happens in the odd case — and never restates its rows.
 
 There is no minimum. A finished area document of 60 lines is finished. The one document that may run past 280 is a catalog with one entry per block, endpoint or screen: splitting it on a line count puts half the entries in a second file, which is worse than the long file. Split it by entry group or leave it long.
 
@@ -203,7 +203,7 @@ Follows the template exactly. Named `NNNN-short-description.md`, numbered consec
 
 A 20-line ADR is not automatically thin, but it is worth two checks: whether Options considered actually lists what was rejected, and whether Context carries a fact — a measurement, a constraint, a file — rather than an assertion. If both hold, leave it short. Padding an honest ADR up to some length adds nothing anyone will read.
 
-An accepted ADR is never rewritten. A factual correction goes in as a `## Amendment (YYYY-MM-DD)` section at the end. A change of mind is a new ADR whose status says "Supersedes ADR-XXXX", and the old one's status becomes "Superseded by ADR-YYYY". Old ADRs are never deleted — the point is being able to reconstruct a decision together with what turned out to be wrong about it.
+An ADR is kept current. When the same decision changes in its details, edit the body so it reads as the decision in force, with no note that something was corrected and no superseded value left beside the new one. Where the earlier decision still explains why the architecture looks the way it does, add a short `## Decision History` at the end — what held before, what replaced it, why if that is not obvious — and nothing more; where it explains nothing, leave the section out. Context describing what the situation was before is not history in this sense — it is what forces the decision, and it stays. A new ADR is for a new decision, or one replaced outright: its status says "Supersedes ADR-XXXX" and the old one's becomes "Superseded by ADR-YYYY". Old ADRs are never deleted.
 
 ---
 
@@ -220,8 +220,13 @@ archaeology in the commit history.
 ## Rules
 
 - One file, one decision. Named `NNNN-short-description.md`, numbered consecutively.
-- An accepted ADR is not edited. Changing your mind means a new ADR marked
-  "Supersedes ADR-XXXX"; the old one gets "Superseded by ADR-YYYY".
+- An ADR is kept current. When the same decision changes in its details, its
+  body is edited to state the decision in force — no "correction" section and
+  no old value beside the new one. A new ADR is for a new decision or one
+  replaced outright, marked "Supersedes ADR-XXXX"; the old one gets
+  "Superseded by ADR-YYYY".
+- An earlier decision may be kept in a short "Decision History" section at the
+  end, but only where it explains why the architecture looks the way it does.
 - Statuses: **Proposed** → **Accepted** → **Superseded** / **Rejected**.
   **Open** means a decision deliberately deferred, with the options written
   down and a criterion for settling it.
@@ -435,9 +440,10 @@ what now**.
 
 Starting work? [`plan/roadmap.md`](plan/roadmap.md) is the only place to look first.
 
-Changing behaviour? Fix the specification first, then the code. Changing an
-architectural decision? Write a new ADR that supersedes the old one. Old ADRs
-are never deleted.
+Changing behaviour? Fix the specification first, then the code, and edit what
+is there rather than noting that it changed. Changing an architectural
+decision? Update the ADR that owns it; a new ADR is for a new decision or one
+replaced outright. Old ADRs are never deleted.
 
 ## Specification
 

@@ -1,6 +1,6 @@
 ---
 name: docs-style
-description: Writing rules for spec, ADR and plan documents — short, checkable, scannable, plain language, with hard length budgets and every claim about system behaviour pointing at code someone actually opened. Read this before writing the first paragraph, not after; fixing a finished draft costs more than drafting it right. Use when adding or rewriting a spec section, opening an ADR or amending an accepted one, writing a plan task or a milestone file, editing docs/README.md or a roadmap, or reviewing documentation someone else wrote. Triggers on "dopisz do spec", "zrób ADR", "opisz to w dokumentacji", "napisz specyfikację", "dodaj zadanie do planu", "popraw ten dokument w docs", "uporządkuj dokumentację projektu", "ta specyfikacja jest za długa", "add this to the spec", "write an ADR for this", "document this decision", "clean up the project docs", "the spec is too long". Works in Polish and English; CLAUDE.md stays English either way. Do NOT use for blog posts, landing copy, release notes or user-facing READMEs (that is utils:humanize-content), or for trimming a document that is not part of a spec/ADR/plan tree (utils:declutter).
+description: Writing rules for spec, ADR and plan documents — short, checkable, scannable, plain language, with hard length budgets and every claim about system behaviour pointing at code someone actually opened. Read this before writing the first paragraph, not after; fixing a finished draft costs more than drafting it right. Use when adding or rewriting a spec section, opening an ADR or updating an accepted one, writing a plan task or a milestone file, editing docs/README.md or a roadmap, or reviewing documentation someone else wrote. Triggers on "dopisz do spec", "zrób ADR", "opisz to w dokumentacji", "napisz specyfikację", "dodaj zadanie do planu", "popraw ten dokument w docs", "uporządkuj dokumentację projektu", "ta specyfikacja jest za długa", "add this to the spec", "write an ADR for this", "document this decision", "clean up the project docs", "the spec is too long". Works in Polish and English; CLAUDE.md stays English either way. Do NOT use for blog posts, landing copy, release notes or user-facing READMEs (that is utils:humanize-content), or for trimming a document that is not part of a spec/ADR/plan tree (utils:declutter).
 ---
 
 # Writing docs/ so people actually read it
@@ -43,7 +43,7 @@ Three rows are mandatory in "State today": the current milestone, the last compl
 | Type | Shape |
 |---|---|
 | `spec/NN-*.md` | Numbered sections `## N. Title`. A short opening with no ceremony, tables for anything enumerable, "Out of scope" at the end. The section number is an address: never renumber, append |
-| `adr/NNNN-*.md` | The template in `adr/template.md`: status table, Context, Decision, Consequences split into positive / negative / requirements, Options considered with the reason each was rejected, When to revisit |
+| `adr/NNNN-*.md` | The template in `adr/template.md`: status table, Context, Decision, Consequences split into positive / negative / requirements, Options considered with the reason each was rejected, When to revisit, and `Decision History` at the end only where an earlier decision still explains the architecture |
 | `plan/NN-*.md` | Goal, end of milestone, external dependencies, the task list, optional Notes |
 | One task | Checkbox, priority token, id, title, a link to the spec section carrying its number, "Depends on", "Blocker" where something outside the plan has to land first, "Done when" where the condition is not obvious from the title. State lives in the checkbox — `[ ]` open, `[x]` done, `[-]` rejected — and nowhere else |
 | `README.md` anywhere | A map and nothing else: what lives where, and where to start. No content that has its own document |
@@ -68,14 +68,15 @@ Two markers, both of them ASCII, both of them after the checkbox so that every g
 
 **A rejected task is never deleted.** It becomes `- [-]`, its title struck through, with a mandatory `**Rejected YYYY-MM-DD.**` note giving the reason — "not needed" is not a reason. The id and the priority token stay: numbers are never reused, and every reference to this one has to keep resolving. Rejected tasks leave the roadmap's progress denominator and are counted after it, `4/6, 1 rejected`, so the milestone can still reach its own total.
 
-## Four structural rules
+## Five structural rules
 
 These are not style. They are why the system holds together, and breaking one costs a refactor later.
 
 1. **Section numbers are addresses.** Append new sections; never renumber existing ones. Every link in the tree points at a number.
 2. **Links run one way:** `plan/` → `spec/` and `adr/`, never the reverse. So a spec correction never forces a plan edit, and moving a task never touches the spec.
-3. **An accepted ADR is never rewritten.** A factual correction goes in as a `## Amendment (YYYY-MM-DD)` section at the end. A changed mind is a *new* ADR that supersedes the old one, and the old one's status becomes "Superseded by ADR-NNNN". The point is that in six months you can reconstruct the decision together with what turned out to be wrong about it.
-4. **A plan task never describes behaviour.** It links to the spec section that does. A task that explains how something works is a spec section wearing a checkbox.
+3. **The spec is the current state, never its history.** When a requirement, a parameter, an architecture or a behaviour changes, edit the sentence that carries it and delete what stopped being true. No "changed", "correction", "update", "previously X", "changed from X to Y", and never the old value left standing beside the new one. Somebody reading the spec has to come away knowing how the system works now, without reconstructing how it got there. Git and the plan task carry the path it took.
+4. **An ADR reads as the decision in force.** When the same decision changes in its details, edit Context, Decision, Consequences and Options to say what holds now; a correction is not a section of its own, and a superseded value does not stay next to the current one. Where the earlier decision still explains why the architecture looks the way it does, a short `## Decision History` at the end carries it: what held before, what replaced it, and why if that is not obvious. Never a copy of the old text, it counts against the 80 lines like everything else, and where the earlier decision explains nothing there is no such section. A *new* ADR is for a new decision, or one replaced outright — a changed parameter is the same decision.
+5. **A plan task never describes behaviour.** It links to the spec section that does. A task that explains how something works is a spec section wearing a checkbox.
 
 ## Language and typography
 
@@ -124,9 +125,10 @@ Good: "Done when a 422 with `<br />` joined into the message renders as readable
 2. Nothing duplicates another document; it links instead.
 3. Tables where content can be enumerated, paragraphs where something needs justifying.
 4. Section numbering untouched, new content appended rather than wedged between existing numbers.
-5. Links and anchors checked, including the section numbers in the link text.
-6. No sentence that can be deleted without losing information.
-7. Under its length ceiling. Over it is a signal about structure, not a prompt to compress the prose. Under it is not a problem to fix.
+5. No trace of the edit itself: nothing saying something was changed, corrected or updated, and no earlier value left standing next to the current one.
+6. Links and anchors checked, including the section numbers in the link text.
+7. No sentence that can be deleted without losing information.
+8. Under its length ceiling. Over it is a signal about structure, not a prompt to compress the prose. Under it is not a problem to fix.
 
 A bloated document that is already written goes through `utils:declutter`. A long one that reads stiffly goes through `utils:humanize-content`.
 

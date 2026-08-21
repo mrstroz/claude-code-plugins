@@ -10,6 +10,7 @@ The examples use a fictional project: a webhook worker that receives Stripe even
 2. [A spec section opening — bad and good](#2-a-spec-section-opening)
 3. [A milestone file](#3-a-milestone-file)
 4. [The roadmap "State today" — bad and good](#4-the-roadmap-state-today)
+5. [Correcting a spec section — bad and good](#5-correcting-a-spec-section)
 
 ---
 
@@ -217,3 +218,29 @@ Within a week this cell is the longest thing in the repository, and the one plac
 This table is replaced by whoever finishes a task. It is the only place anyone
 needs to look at the start of a session.
 ```
+
+---
+
+## 5. Correcting a spec section
+
+**Bad** — the section now carries a record of its own edits, and the reader has to work out which number is live:
+
+```markdown
+## 4.2. Retries
+
+**Updated 2026-08-14:** the retry limit was changed from 3 to 5.
+
+A failed delivery is retried with exponential backoff. Previously it stopped
+after 3 attempts; after the incident on 2026-08-11 this was corrected to 5.
+```
+
+**Good** — the same change, made by editing the sentence that carried the old number:
+
+```markdown
+## 4.2. Retries
+
+A failed delivery is retried with exponential backoff and stops after 5
+attempts (`src/queue/retry.ts:22`).
+```
+
+Why it changed is in the commit and on the plan task that made it. The spec answers one question — how the system works now — and every sentence it spends on how it used to work is a sentence the reader has to disqualify before they can act.
