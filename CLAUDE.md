@@ -34,13 +34,6 @@ A Claude Code plugin marketplace containing markdown-based skills and agents —
 - Place plugin metadata in `<plugin>/.claude-plugin/plugin.json` with `name`, `version`, `description`, `author`
 - Define subagents as markdown files in `<plugin>/agents/<agent-name>.md` — these register as `<plugin>:<agent-name>` for use with the Task tool
 
-## Review Architecture Patterns
-
-This repo demonstrates two distinct patterns for multi-agent code review:
-
-- **Subagent pattern** (`pr-review/`): invoke pre-registered agents via Task tool in parallel, aggregate independently-produced findings in the orchestrating skill
-- **Agent Teams pattern** (`agent-teams-review/`): use TeamCreate, SendMessage, and shared task lists so teammates communicate during review and flag cross-domain findings with `↔️CROSS` notation; spawn teammates with Sonnet to optimize token costs
-
 ## Documentation Convention Plugin
 
 `project-docs/` packages the spec/ADR/plan documentation method used in sibling repos (`transhans-mobile/docs/`, `tesoro-huella/docs/`, `ledlive/docs/`) as four cooperating skills:
@@ -90,9 +83,6 @@ This repo demonstrates two distinct patterns for multi-agent code review:
 ## Conventions
 
 - Reference a sibling skill's files as `${CLAUDE_PLUGIN_ROOT}/skills/<skill>/references/<file>.md`, not by glob. A glob is scoped to the user's project, where plugin files do not live, and the plugin cache keeps old versions side by side (`project-docs/0.1.0/` and `0.2.0/`, both marked `.in_use`), so a glob that does reach it can resolve to a copy predating half the content. Where a glob is kept as a fallback, say that the highest version in the path wins
-- Save review reports to `docs/pr-reviews/` or `docs/reviews/` as `{branch}-{YYYY-MM-DD}.md`, replacing branch slashes with hyphens
-- Prefix reviewer issue IDs by role: VM-, BE-, FE-, QA-, SC-, DV-
-- Select reviewers/agents conditionally based on file patterns and content keywords, then confirm with the user via `AskUserQuestion`
 - All JIRA skills read via `jira-fetch`'s `fetch-issues.mjs` (REST API v3), including `jira-feedback`, which pulls a single issue with `--jql "key = X"` for thread context. `jira-feedback` also writes over REST (`post-comment.mjs`), so MCP is left for `createJiraIssue` and Confluence publishing
 - `jira-fetch` requires `JIRA_EMAIL` and `JIRA_API_TOKEN` env vars for JIRA REST API authentication
 - Use single-line conventional commit format with auto-detected task numbers from branch names
