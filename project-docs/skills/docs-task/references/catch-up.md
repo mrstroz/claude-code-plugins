@@ -46,6 +46,8 @@ Then apply, in the usual closing order: spec, then ADRs, then the cross-repo sta
 
 **Dates come from git, never from memory or from today.** `git log -1 --format=%ad --date=short <commit>`.
 
+**Where the tree mirrors its plan to GitHub** — `docs/docs.config.json` says whether it does — the issues are a second record of the same drift, and a closed issue is evidence a task finished that no commit message may mention. Run `project-docs:docs-sync` after the catch-up rather than during it: it reads the whole plan at once, which is what the reconstruction above has just made trustworthy.
+
 ## 5. Drift checks
 
 Run these regardless of what the diff showed. They catch the rot that no commit introduced.
