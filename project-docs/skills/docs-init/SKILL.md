@@ -106,4 +106,6 @@ Then the milestones table with progress counters (`0/6`), "Why this order" as pr
 
 Report what was created and where the entry point is: `docs/plan/roadmap.md`, section "State today". Name the first task and offer to run it with `project-docs:docs-task`. For the whole plan as one table later on, `project-docs:docs-summary` prints it.
 
+Where the repository has a GitHub remote and `gh` is installed, add one sentence offering to mirror the plan to GitHub Issues with `project-docs:docs-sync`, saying how many issues that would create. One sentence, not a fifth question in the batch above: mirroring is worth offering once the plan exists and the number is real, and a project that says no keeps a tree with no `docs.config.json` in it, which is what every skill treats as "not mirrored".
+
 Say plainly what you could not verify — spec sections built on the brief rather than on code, decisions recorded as open questions, areas of the codebase you did not read. That list is the most useful thing in a fresh documentation tree, because it is the part somebody has to fix.
