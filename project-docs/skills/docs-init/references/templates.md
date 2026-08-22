@@ -301,6 +301,9 @@ touch the specification.
   `**Rejected YYYY-MM-DD.**` note saying *why* — not "not needed" — in at most
   two sentences. The id stays: numbers are never reused, and somebody will come
   looking for this one.
+- **Issue**: `[#42](https://github.com/<owner>/<repo>/issues/42)`, last on the
+  metadata line. Written and maintained by `project-docs:docs-sync`; the
+  checkbox stays the state everything here reads, and the issue follows it.
 
 ## Identifiers and commits
 
@@ -333,6 +336,8 @@ new task rather than inflating the current one.
 ```
 
 **Rules.** Under 80 lines. Items 3 and 4 of the definition of done are universal and always present. Everything above them comes from the project's real toolchain — read `package.json`, `pubspec.yaml`, the CI config. A list naming a command the project does not have teaches people to skip the list.
+
+The Issue bullet is written **only into a tree that mirrors its plan to GitHub** — one with a `docs/docs.config.json` turning it on. Leave it out everywhere else. A format rule describing something the project does not do invites somebody to start doing it by hand, and a hand-written issue link is exactly what the sync cannot recognise.
 
 The Blocker bullet is where this file resolves the placeholder: name **one** place, and the same one every time. Other repositories are involved → the dependencies document's status column. They are not → the open questions in `spec/00`, which is where a project waiting on a client decision or an access credential tracks it. Every skill that reads a blocker reads this bullet to know where to look, so leaving both options in is the same as leaving it blank.
 
@@ -481,6 +486,9 @@ Template for a new ADR: [`adr/template.md`](adr/template.md).
 - References to code are paths relative to the repository root, for example
   `src/handlers/webhook.ts:41`.
 - Dates use `YYYY-MM-DD`. No relative expressions such as "next week".
+- <Only where the plan is mirrored to GitHub: tasks carry an `Issue:` link,
+  `docs.config.json` holds the settings, and `project-docs:docs-sync` keeps the
+  two in step.>
 - <Anything else this project settles once: brand terms, a typography rule, a
   naming convention.>
 ```

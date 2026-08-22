@@ -45,7 +45,7 @@ Three rows are mandatory in "State today": the current milestone, the last compl
 | `spec/NN-*.md` | Numbered sections `## N. Title`. A short opening with no ceremony, tables for anything enumerable, "Out of scope" at the end. The section number is an address: never renumber, append |
 | `adr/NNNN-*.md` | The template in `adr/template.md`: status table, Context, Decision, Consequences split into positive / negative / requirements, Options considered with the reason each was rejected, When to revisit, and `Decision History` at the end only where an earlier decision still explains the architecture |
 | `plan/NN-*.md` | Goal, end of milestone, external dependencies, the task list, optional Notes |
-| One task | Checkbox, priority token, id, title, a link to the spec section carrying its number, "Depends on", "Blocker" where something outside the plan has to land first, "Done when" where the condition is not obvious from the title. State lives in the checkbox — `[ ]` open, `[x]` done, `[-]` rejected — and nowhere else |
+| One task | Checkbox, priority token, id, title, a link to the spec section carrying its number, "Depends on", "Blocker" where something outside the plan has to land first, "Done when" where the condition is not obvious from the title, and `Issue` last where the tree mirrors its plan to GitHub. State lives in the checkbox — `[ ]` open, `[x]` done, `[-]` rejected — and the checkbox is what every document reads. A mirrored issue's open or closed state follows it; it never leads |
 | `README.md` anywhere | A map and nothing else: what lives where, and where to start. No content that has its own document |
 
 **Blocker** points at something outside the plan that has to land before the task can finish, and its status is tracked in exactly one place: the cross-repo dependencies table where other repositories are involved, the open-questions table in `spec/00` where the project is waiting on a person rather than a repository. `plan/README.md` records which, because a project with no sibling repositories still has blockers and needs somewhere to resolve them.
@@ -96,6 +96,7 @@ Polish documents carry extra rules — quotation marks `„ "`, and the pauza is
 - Anchors only for short headings. For something like "4.3. Layer 2: the app (live since the first release)", link the file and leave the number in the text.
 - Code in *other* repositories is plain text, never a link: `some-api/modules/order/forms/OrderForm.php:45`. They are separate repositories, so a relative link would mislead.
 - At most two linked documents per task. More than that means the task is too big.
+- An `Issue:` link is not one of those two. It points at a tracker, not at a document, so it neither explains the task nor counts against the limit — and it goes last on the metadata line, after `Spec`, `ADR`, `Depends on` and `Blocker`, so the eye reaching for the spec link stops before the URL rather than after it.
 
 ## What we don't write
 
