@@ -137,12 +137,23 @@ first, and the plan already has a roadmap for that.
 Create them once, at the start of the first sync:
 
 ```bash
-gh label create docs-plan --repo "$REPO" --color 0E8A16 \
-  --description "Task mirrored from docs/plan" --force
+gh label create docs-plan       --repo "$REPO" --color 0E8A16 --description "Task mirrored from docs/plan" --force
+gh label create priority:high   --repo "$REPO" --color B60205 --description "Everything else in the milestone waits on it" --force
+gh label create priority:normal --repo "$REPO" --color FBCA04 --description "Required, but nothing is held up by it" --force
+gh label create priority:low    --repo "$REPO" --color 0E8A16 --description "The milestone closes without it" --force
+gh label create blocked         --repo "$REPO" --color D93F0B --description "Waiting on something outside the plan" --force
+gh label create "milestone:M1"  --repo "$REPO" --color 1D76DB --description "<the milestone's goal>" --force
 ```
 
 `--force` updates an existing label instead of failing, so this is safe to
 re-run and needs no "does it exist" check first.
+
+**Use these colours, rather than picking your own.** `--force` rewrites the
+colour of a label that already exists, so a value invented per run means the
+labels change colour every time a different session syncs — churn in the one
+part of the repository people navigate by sight. The milestone labels are the
+exception that has to be generated, one per milestone file; keep them all the
+same blue so they read as one family.
 
 **If `docs-plan` cannot be created, stop.** It is the scoping key: issues
 created without it are invisible to every future sync, and the next run will
@@ -229,8 +240,18 @@ rg -o 'Issue: \[#([0-9]+)\]' docs/plan/*.md
 | Issue, no task | The id appears nowhere in `docs/plan/` | Report and ask. Never auto-create a task: a task with no spec link is a spec section wearing a checkbox |
 | Both | The normal case | Compare title, state and labels, and nothing else |
 
-**Before every create, check the title prefix.** That is what makes the whole
-thing idempotent, and it is the reason the prefix exists.
+**Before every create, check the title prefix:**
+
+```bash
+gh issue list --repo "$REPO" --label docs-plan --state all \
+  --search "WH-10 in:title" --json number,title -q '.[] | [.number,.title] | @tsv'
+```
+
+A hit means the issue already exists and the plan simply lost its segment —
+write the segment, do not create a second issue. This is what makes the whole
+thing idempotent, and it is the reason the prefix exists. Where the whole list
+from the step above is already in hand, match against it rather than paying for
+another call.
 
 **Two tasks citing the same issue number is a data bug.** Stop and report it;
 do not pick one.
