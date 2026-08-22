@@ -337,7 +337,7 @@ new task rather than inflating the current one.
 
 **Rules.** Under 80 lines. Items 3 and 4 of the definition of done are universal and always present. Everything above them comes from the project's real toolchain — read `package.json`, `pubspec.yaml`, the CI config. A list naming a command the project does not have teaches people to skip the list.
 
-The Issue bullet is written **only into a tree that mirrors its plan to GitHub** — one with a `docs/docs.config.json` turning it on. Leave it out everywhere else. A format rule describing something the project does not do invites somebody to start doing it by hand, and a hand-written issue link is exactly what the sync cannot recognise.
+The Issue bullet is written **only into a tree that mirrors its plan to GitHub** — one with a `docs/docs.config.json` turning it on. Leave it out everywhere else. A format rule describing something the project does not do invites somebody to start doing it by hand, and a hand-written issue link is exactly what the sync cannot recognise. A project that turns mirroring on later does not have to come back here: `project-docs:docs-sync` adds this bullet, and the matching Conventions line in `docs/README.md`, as part of turning it on.
 
 The Blocker bullet is where this file resolves the placeholder: name **one** place, and the same one every time. Other repositories are involved → the dependencies document's status column. They are not → the open questions in `spec/00`, which is where a project waiting on a client decision or an access credential tracks it. Every skill that reads a blocker reads this bullet to know where to look, so leaving both options in is the same as leaving it blank.
 

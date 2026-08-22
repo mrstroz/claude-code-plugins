@@ -182,6 +182,25 @@ from step 3.
 sync does not have to parse prose first, and reports itself stale if they ever
 disagree.
 
+**Turning mirroring on is also a documentation change**, and it is the one step
+easy to forget, because the tree already reads correctly without it. Two lines
+have to be added in the same breath as the config file:
+
+- `docs/plan/README.md`, in the task format section: the `Issue:` bullet, so
+  the file describes the line shape people are about to start seeing.
+- `docs/README.md`, under Conventions: one line saying the plan is mirrored,
+  that `docs.config.json` holds the settings, and that `docs-sync` keeps the two
+  in step.
+
+Both skeletons in `docs-init/references/templates.md` carry these as
+opted-in-only content, which is exactly why they are missing here: the tree was
+scaffolded before this decision existed. A map that omits a file readers will
+find is what stops them trusting the map.
+
+Turning mirroring **off** reverses the same two edits and leaves the issues
+alone. Deleting them is somebody's call to make in GitHub, not a side effect of
+editing a config file.
+
 The first sync pushes **open tasks only**. Finished and rejected work stays in
 the files where its history already lives; importing it as a wall of closed
 issues buries the backlog the mirror was supposed to make visible.

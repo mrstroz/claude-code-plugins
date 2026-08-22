@@ -96,7 +96,7 @@ Polish documents carry extra rules — quotation marks `„ "`, and the pauza is
 - Anchors only for short headings. For something like "4.3. Layer 2: the app (live since the first release)", link the file and leave the number in the text.
 - Code in *other* repositories is plain text, never a link: `some-api/modules/order/forms/OrderForm.php:45`. They are separate repositories, so a relative link would mislead.
 - At most two linked documents per task. More than that means the task is too big.
-- An `Issue:` link is not one of those two. It points at a tracker, not at a document, so it neither explains the task nor counts against the limit — and it goes last on the metadata line, after `Spec`, `ADR`, `Depends on` and `Blocker`, so the eye reaching for the spec link stops before the URL rather than after it.
+- An `Issue:` link is not one of those two. It points at a tracker, not at a document, so it neither explains the task nor counts against the limit — and it goes last on the metadata line, after `Spec`, `ADR`, `Depends on` and `Blocker`, so the eye reaching for the spec link stops before the URL rather than after it. Whether a tree carries them at all is answered by `docs/docs.config.json`: no file means no issue links, and writing one by hand creates a link no sync will recognise.
 
 ## What we don't write
 
