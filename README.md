@@ -38,9 +38,10 @@ The spec/ADR/plan documentation method, packaged so a new project gets it in one
 | `docs-init` | Scaffolds `docs/spec`, `docs/adr` and `docs/plan`, greenfield from a brief or by reading an existing codebase |
 | `docs-task` | Runs a task from the plan and then updates spec, ADR, checkbox and roadmap so the docs still match the code |
 | `docs-summary` | Reads the plan back as one table ordered by priority. Read-only, writes nothing |
-| `docs-style` | The writing rules the other three follow: short, checkable, scannable, with hard length ceilings |
+| `docs-sync` | Mirrors the plan's tasks to GitHub Issues and reads the closings back. Opt-in per project |
+| `docs-style` | The writing rules the others follow: short, checkable, scannable, with hard length ceilings |
 
-Works in Polish and English trees.
+Works in Polish and English trees. GitHub mirroring is off until a project adds `docs/docs.config.json`, and needs the `gh` CLI logged in.
 
 ### utils
 
