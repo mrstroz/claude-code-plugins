@@ -96,6 +96,7 @@ Adding a third language means adding a column, not a second set of templates.
 | **task: condition** | Done when | Gotowe, gdy |
 | **task: completion note** | Done YYYY-MM-DD. | Zrobione RRRR-MM-DD. |
 | **task: rejection note** | Rejected YYYY-MM-DD. | Odrzucone RRRR-MM-DD. |
+| **task: issue link** | Issue | Issue |
 | **task: priority** | Priority | Priorytet |
 | **priority values** | high / normal / low | wysoki / normalny / niski |
 | spec link label | Spec | Spec |
@@ -148,6 +149,24 @@ Printed by `project-docs:docs-summary`, never written to a file.
 | current milestone line | Current milestone `<label>`2 — 4 of 6 | Bieżący etap `<label>`2 — 4 z 6 |
 | truncation note | <N> more (v) tasks not shown | <N> zadań (v) nie pokazano |
 
+## GitHub mirroring
+
+Printed by `project-docs:docs-sync`, never written to a file. Only reached by a
+tree whose `docs/docs.config.json` turns mirroring on.
+
+| Slot | English | Polski |
+|---|---|---|
+| report title | Sync with GitHub Issues | Synchronizacja z GitHub Issues |
+| to github | To GitHub | Na GitHuba |
+| to the plan | To the plan | Do planu |
+| needs a decision | Needs a decision | Do rozstrzygnięcia |
+| only on github | Only on GitHub | Tylko na GitHubie |
+| action column | Action | Akcja |
+| created | Created | Utworzone |
+| updated | Updated | Zaktualizowane |
+| closed | Closed | Zamknięte |
+| reopened | Reopened | Otwarte ponownie |
+
 ## What never translates
 
 - `CLAUDE.md` — its content stays English, because it is read from sibling repositories where that convention already holds.
@@ -156,5 +175,7 @@ Printed by `project-docs:docs-summary`, never written to a file.
 - The date format `YYYY-MM-DD`. Polish documents may *describe* it as `RRRR-MM-DD` in prose, but the dates themselves are written `2026-08-04`.
 - The task id prefix.
 - The task markers themselves: the checkbox states `[ ]`, `[x]`, `[-]`, the priority tokens `(^)`, `(=)`, `(v)`, and the `Nr` and `P` column headers of the summary table. They are symbols, not words, and every skill that reads a plan matches on them literally.
+- The `Issue:` label on a task line, for the same reason `ADR` and `Spec` stay put: it names an object in another system, and the grep the whole mirroring feature depends on matches it literally. Prose about it is still prose — a Polish document writes *zgłoszenia na GitHubie* in a sentence the same way it describes dates as `RRRR-MM-DD` while writing them `2026-08-04`.
+- `docs.config.json`, its filename and its keys, and the label names it carries: `docs-plan`, `blocked`, `priority:*` and the `milestone:` prefix. They are identifiers in GitHub, not headings. The *value* after that prefix is the plan's own, so a Polish tree using *Etap* gets `milestone:E1` — English prefix, translated letter, which is the same split as everything else here.
 
 Everything else translates, including ADR filenames: `0002-native-auth-and-session-bridge.md` becomes `0002-uwierzytelnianie-natywne-i-most-sesji.md`.
