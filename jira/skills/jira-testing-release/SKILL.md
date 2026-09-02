@@ -1,6 +1,6 @@
 ---
 name: jira-testing-release
-description: Generate testing scenarios for a Jira release version. Combines Jira issue descriptions with git diff analysis (Quality vs Master) to produce a concise table of what needs manual testing before release. Use when the user wants testing scenarios, a test plan, QA checklist, release testing guide, or pre-release verification. Triggers on any request mentioning testing release, test scenarios, QA plan, release testing, what to test, pre-release checklist, or testing before deployment.
+description: Generate testing scenarios for a Jira release version. Combines Jira issue descriptions with git diff analysis (Quality vs Master) to produce a concise table of what needs manual testing before release. Use when the user wants testing scenarios, a test plan, QA checklist, release testing guide, or pre-release verification. Triggers on any request mentioning testing release, test scenarios, QA plan, release testing, what to test, pre-release checklist, or testing before deployment. This skill writes the plan and does not run it — to actually click a feature through the browser and come back with captioned screenshots and a pass/fail table, use qa:ui-test-report instead.
 argument-hint: "[version number]"
 ---
 

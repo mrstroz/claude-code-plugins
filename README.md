@@ -78,6 +78,16 @@ Needs `DATAFORSEO_LOGIN` and `DATAFORSEO_PASSWORD`.
 
 Three consultation skills that answer from inside a specific person's experience instead of giving balanced expert advice: `fryderyk` on B2B SaaS sold to SMB hospitality, `piotr` on marketplaces, HR tech and bootstrapped Polish software, `stanislaw` on venture math and defence tech investing.
 
+### qa
+
+Manual QA of a feature, done in a real browser rather than described.
+
+| Skill | What it does |
+| --- | --- |
+| `ui-test-report` | Derives the scenarios from the ticket and the diff, clicks through every one in Chrome, captions each screenshot with what it proves, and reports a pass/fail table with reproduction steps |
+
+Needs the Claude in Chrome extension connected — it drives the user's own logged-in session, not a headless browser. Results stay local; posting them to a ticket is `jira:jira-feedback`.
+
 ## Repository layout
 
 ```

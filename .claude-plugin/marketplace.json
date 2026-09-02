@@ -33,6 +33,11 @@
       "name": "payload-cms",
       "source": "./payload-cms",
       "description": "Read and write Payload CMS content over the REST API — discovers each project's collections, blocks and locales at runtime, composes blocks and Lexical rich text, uploads media, and guards every write with a backup, a diff and a re-read"
+    },
+    {
+      "name": "qa",
+      "source": "./qa",
+      "description": "Manual QA through a real Chrome session — scenarios derived from the ticket and the diff, executed in the browser, every screenshot captioned with what it proves, reported as a pass/fail table with reproduction steps"
     }
   ]
 }

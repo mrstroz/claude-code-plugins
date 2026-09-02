@@ -1,0 +1,8 @@
+{
+  "name": "qa",
+  "description": "Manual QA runs driven through a real Chrome session — derive the scenarios from the ticket and the diff, execute them in the browser, caption every screenshot with what it proves, and report pass/fail with reproduction steps",
+  "version": "0.1.0",
+  "author": {
+    "name": "mrstroz"
+  }
+}
