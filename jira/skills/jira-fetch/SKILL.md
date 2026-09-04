@@ -1,15 +1,21 @@
 ---
 name: jira-fetch
-description: Fetch JIRA issues via REST API and save as minimal extracted JSON. Bypasses MCP tools for maximum data efficiency and token minimization. Use when the user wants to download, fetch, pull, export, or cache JIRA data locally. Triggers on requests to fetch issues, download tasks, export JIRA data, get issues from JIRA, pull sprint/version/project data, cache JIRA issues, dump JIRA to file, or any variation like "give me data from JIRA", "I need issues from...", "pull tasks for sprint X", "get me everything from version Y". Also triggers when the user needs JIRA data saved to a file for offline analysis or for other skills to consume. Does NOT use MCP — calls JIRA REST API v3 directly via Node.js script.
+description: Fetch JIRA issues matching a request and save them as a minimal JSON file — descriptions and comments as Markdown, nested objects flattened, ready for offline analysis or for another skill to read. Use when the user wants to download, fetch, pull, export, or cache JIRA data locally. Triggers on requests to fetch issues, download tasks, export JIRA data, get issues from JIRA, pull sprint/version/project data, cache JIRA issues, dump JIRA to file, or any variation like "give me data from JIRA", "I need issues from...", "pull tasks for sprint X", "get me everything from version Y". Also triggers when the user needs JIRA data saved to a file for offline analysis or for other skills to consume. Calls the REST API through the jira-api skill's script, no MCP.
 allowed-tools: [Bash, Read, Write, AskUserQuestion, Glob, Grep]
 argument-hint: describe what to fetch, e.g. "sprint 5 of project PROJ" or "all bugs in version 2.0"
 ---
 
 # JIRA Fetch
 
-Fetch JIRA issues via REST API v3 and save as minimal extracted JSON. Uses a zero-dependency Node.js script that calls JIRA directly — no MCP tools, no subagents, no token overhead.
+Fetch JIRA issues and save them as minimal JSON. All tracker access goes through
+`${CLAUDE_PLUGIN_ROOT}/skills/jira-api/scripts/jira.mjs` — one zero-dependency script, no MCP
+tools, no subagents.
 
-**Output per issue:** key, type, status, priority, assignee, reporter, labels, fixVersions, components, summary, created, updated, description (plaintext), comments (up to 50, plaintext with author/datetime). All nested objects flattened, all HTML stripped.
+**Output per issue:** key, url, type, status, statusCategory, resolution, priority, assignee,
+reporter, labels, fixVersions, components, parent, summary, created, updated, description
+(Markdown), comments (up to 50, oldest first, each with id, author, created, body as Markdown and
+`replyTo` when it answers another comment). The full contract is in
+`${CLAUDE_PLUGIN_ROOT}/skills/jira-api/SKILL.md#exporting`.
 
 ## Prerequisites
 
@@ -21,66 +27,54 @@ If either is missing, tell the user which one and how to set it permanently — 
 
 ---
 
-## Step 1: Resolve JIRA Domain
+## Step 1: Configuration
 
-Look for a JIRA configuration block in the project's CLAUDE.md:
+The script reads the site and the project key itself, from `.ai/jira.config.json` found by
+walking up from the working directory (falling back to the `tracker` block of
+`.ai/tesoro.config.json`). Nothing has to be resolved by hand. When the script exits with code 2
+saying `no .ai/jira.config.json found`, ask once via `AskUserQuestion` (header: "JIRA config") for
+the site (e.g. `mycompany.atlassian.net`) and the project key, offer to write the file, and
+continue. Details: `${CLAUDE_PLUGIN_ROOT}/skills/jira-api/SKILL.md#setup`.
 
-```
-## JIRA
-- Domain: mycompany.atlassian.net
-- Project key: PROJ
-```
-
-If found, use that domain and project key. If not found, ask via `AskUserQuestion` (header: "JIRA Configuration"):
-- Domain (e.g., mycompany.atlassian.net)
-- Default project key (optional — used when user doesn't specify one)
-
-Store domain and project key for the session.
+If the user asks for a different project than the configured one, pass `--project KEY` on the
+command line rather than editing the file.
 
 ---
 
-## Step 2: Build JQL
+## Step 2: Build the JQL predicate
 
-Transform the user's request (`$ARGUMENTS`) into a valid JQL query. Construct it directly — do not ask the user for JQL syntax.
+Transform the user's request (`$ARGUMENTS`) into a JQL predicate. Construct it directly — do not ask the user for JQL syntax.
 
-If the user's request mentions a project, use that. Otherwise use the project key from Step 1.
+Write only the predicate. The script composes `project = "KEY" AND (<predicate>) ORDER BY …` around it, so the project never appears in what you write; a trailing `ORDER BY` is honoured.
 
 Common patterns:
 
-| User says | JQL |
-|-----------|-----|
-| sprint 5 of project PROJ | `project = PROJ AND sprint = "Sprint 5" ORDER BY priority DESC` |
-| current sprint | `project = PROJ AND sprint in openSprints() ORDER BY priority DESC` |
-| my tasks in current sprint | `project = PROJ AND sprint in openSprints() AND assignee = currentUser() ORDER BY priority DESC` |
-| all bugs in version 2.0 | `project = PROJ AND issuetype = Bug AND fixVersion = "2.0" ORDER BY priority DESC` |
-| everything updated this week | `project = PROJ AND updated >= startOfWeek() ORDER BY updated DESC` |
-| tasks in "In Progress" | `project = PROJ AND status = "In Progress" ORDER BY priority DESC` |
-| all tasks for version 3.1 | `project = PROJ AND fixVersion = "3.1" ORDER BY priority DESC` |
-| unresolved bugs | `project = PROJ AND issuetype = Bug AND resolution = Unresolved ORDER BY priority DESC` |
+| User says | Predicate |
+|-----------|-----------|
+| sprint 5 | `sprint = "Sprint 5" ORDER BY priority DESC` |
+| current sprint | `sprint in openSprints() ORDER BY priority DESC` |
+| my tasks in current sprint | `sprint in openSprints() AND assignee = currentUser() ORDER BY priority DESC` |
+| all bugs in version 2.0 | `issuetype = Bug AND fixVersion = "2.0" ORDER BY priority DESC` |
+| everything updated this week | `updated >= startOfWeek() ORDER BY updated DESC` |
+| tasks in "In Progress" | `status = "In Progress" ORDER BY priority DESC` |
+| all tasks for version 3.1 | `fixVersion = "3.1" ORDER BY priority DESC` |
+| unresolved bugs | `issuetype = Bug AND resolution = Unresolved ORDER BY priority DESC` |
 
-Show the constructed JQL to the user before executing:
+When the request genuinely spans projects ("my open issues everywhere"), add `--all-projects` in
+Step 3 and write the predicate as a complete query. It has to be said explicitly, because a
+whole-instance query by accident is never what anybody meant.
+
+Show the predicate to the user before executing:
 
 ```
-JQL: project = PROJ AND sprint in openSprints() ORDER BY priority DESC
+JQL predicate: sprint in openSprints() ORDER BY priority DESC
 ```
 
 If they want changes, adjust and re-show. Proceed only after confirmation.
 
 ---
 
-## Step 3: Locate Script
-
-Find the fetch script's absolute path:
-
-```
-Glob pattern: **/jira-fetch/scripts/fetch-issues.mjs
-```
-
-Store as `SCRIPT_PATH`. The Glob is needed because the plugin install path varies across systems — the script could be in `~/.claude/plugins/`, a local checkout, or a symlinked directory. If not found, report the error — the jira plugin may not be installed correctly.
-
----
-
-## Step 4: Run Fetch
+## Step 3: Run the export
 
 Generate the output filename using current date and time:
 
@@ -88,28 +82,27 @@ Generate the output filename using current date and time:
 FILENAME: jira-fetch-YYYYMMDD-HHmmss.json
 ```
 
-Run the script. Output goes to `/tmp` first so the user can preview before committing to the project directory — this avoids polluting the repo with unwanted files:
+Run the export. Output goes to `/tmp` first so the user can preview before committing to the project directory — this avoids polluting the repo with unwanted files:
 
 ```bash
-node "${SCRIPT_PATH}" \
-  --domain "${DOMAIN}" \
-  --jql "${JQL}" \
+node "${CLAUDE_PLUGIN_ROOT}/skills/jira-api/scripts/jira.mjs" export-issues \
+  --jql "${PREDICATE}" \
   --output "/tmp/${FILENAME}"
 ```
 
-The JQL argument must be properly quoted to handle spaces, parentheses, and special characters.
+The predicate must be properly quoted to handle spaces, parentheses, and special characters.
 
-**Lightweight mode** — when the user only needs an issue list or version discovery (no descriptions or comments), add `--summaries-only`. The script then returns search results directly (key, type, status, priority, assignee, labels, fixVersions, components, summary, updated) at a cost of one API request per 1000 issues instead of 2+ requests per issue — a large difference on projects with years of history.
+**Lightweight mode** — when the user only needs an issue list (no descriptions or comments), add `--summaries-only`. The script then returns search rows directly at a cost of one API request per 1000 issues instead of 2+ requests per issue — a large difference on projects with years of history. To list a project's versions, `list-versions` is cheaper still and does not need issues at all.
 
 The script prints progress to stderr and the output file path to stdout. If it exits with non-zero status, show the error message and stop — do not retry.
 
 ---
 
-## Step 5: Show Results
+## Step 4: Show Results
 
 Read the output JSON from the temp file. Display a compact summary:
 
-**Header line:** `Fetched {count} issues from {domain} ({fetched timestamp})`
+**Header line:** `Fetched {count} issues from {meta.site} ({meta.fetched})`
 
 **Table** with all issues:
 
@@ -121,7 +114,7 @@ Truncate summary at 60 characters with `...`. This table lets the user verify th
 
 ---
 
-## Step 6: Ask to Save
+## Step 5: Ask to Save
 
 Ask via `AskUserQuestion` (header: "Save results"):
 - **Save to docs/jira/** (Recommended) — copy file to `./docs/jira/${FILENAME}`
@@ -139,27 +132,18 @@ After saving (or keeping), mention that the file is ready for use by other skill
 
 ## Raw API Access
 
-For one-off operations the script does not cover (project metadata, workflow transitions, sprints), call the REST API directly with the same credentials. Reads are safe to run freely; anything `POST`/`PUT`/`DELETE` changes JIRA state — confirm with the user first, same as the send steps in the other jira skills. For writes prefer the MCP tools (`addCommentToJiraIssue`, `createJiraIssue`) — see the ADF gotcha below.
+For a read the named operations do not cover (workflow transitions, boards, sprints), call the REST API directly with the same credentials. Reads only: anything that changes JIRA state goes through a `jira-api` operation, which shows the request and waits for confirmation. The tracker's rich-text format is what makes a hand-written write break, and the script already handles it.
 
 **Auth** — Basic auth with the same env vars the script uses:
 
 ```bash
 curl -s -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
   -H "Accept: application/json" \
-  "https://${DOMAIN}/rest/api/3/myself"   # cheap credentials check
+  "https://${SITE}/rest/api/3/myself"   # cheap credentials check
 ```
-
-**Useful endpoints beyond issue search:**
 
 | Endpoint | Purpose |
 |----------|---------|
-| `GET /rest/api/3/project/{key}/versions` | List fixVersions directly — faster than scanning issues |
 | `GET /rest/api/3/issue/{key}/transitions` | Available workflow transitions (IDs are instance-specific) |
-| `POST /rest/api/3/issue/{key}/transitions` | Move an issue through the workflow |
 | `GET /rest/agile/1.0/board?projectKeyOrId={key}` | Boards; `/rest/agile/1.0/board/{id}/sprint` lists sprints |
 | `GET /rest/api/3/myself` | Verify credentials / current account |
-
-**Gotchas:**
-
-- **Writes need ADF, not markdown** — REST v3 write bodies (comments, descriptions) must be Atlassian Document Format JSON. A plain-text comment body looks like `{"body":{"type":"doc","version":1,"content":[{"type":"paragraph","content":[{"type":"text","text":"..."}]}]}}`. This is why the jira skills route writes through MCP tools, which accept plain text.
-- **Search endpoint migration** — `/rest/api/3/search` (offset-based) is legacy; new instances use `/rest/api/3/search/jql` (cursor-based, `nextPageToken`). The bundled script already handles both, so prefer the script for issue searches.

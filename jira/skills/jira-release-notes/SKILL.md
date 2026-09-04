@@ -6,13 +6,13 @@ argument-hint: "[version number]"
 
 # JIRA Release Notes Generator
 
-Generate professional, client-facing release notes from Jira version data. Produces a detailed feature-by-feature overview for a single release version with categorized items. Uses the `jira-fetch` script to pull all issue data via REST API in one call — no MCP overhead, no subagents, no token waste.
+Generate professional, client-facing release notes from Jira version data. Produces a detailed feature-by-feature overview for a single release version with categorized items. Pulls every issue in one call through the `jira-api` script, so the data arrives as one JSON file rather than through MCP round trips or subagents.
 
 ## Workflow
 
 1. **Initial setup** — Ask language and output format via `AskUserQuestion`
-2. **Resolve JIRA project** — Get domain and project key from CLAUDE.md or ask user
-3. **Fetch issue data** — Run `jira-fetch` script to get all issues for the version
+2. **Configuration** — The script reads the site and project key from `.ai/jira.config.json`; ask only when it reports none
+3. **Fetch issue data** — Run `export-issues` to get all issues for the version
 4. **Filter issues** — Remove internal, technical-only, and low-priority items
 5. **Categorize into themes** — Group issues into 3-7 business-facing categories
 6. **Generate business-value summaries** — Transform technical descriptions into user-outcome language
@@ -35,66 +35,43 @@ If `$ARGUMENTS` contains version number(s) (e.g., `2.1.0`, `v3.0`), extract them
 
 Use the selected language for the entire document. Translate section headers according to the translations in the respective format reference file.
 
-## Resolve JIRA Project (Step 2)
+## Configuration (Step 2)
 
-Look for a JIRA configuration block in the project's CLAUDE.md:
+Every tracker call goes through `${CLAUDE_PLUGIN_ROOT}/skills/jira-api/scripts/jira.mjs`, which reads the site and the project key itself from `.ai/jira.config.json`, found by walking up from the working directory (falling back to the `tracker` block of `.ai/tesoro.config.json`). When it exits with code 2 saying `no .ai/jira.config.json found`, ask once via `AskUserQuestion` (header: "JIRA config") for the site (e.g. `mycompany.atlassian.net`) and the project key, offer to write the file, and continue. Details: `${CLAUDE_PLUGIN_ROOT}/skills/jira-api/SKILL.md#setup`.
 
-```
-## JIRA
-- Domain: mycompany.atlassian.net
-- Project key: PROJ
-```
-
-If found, use that domain and project key. If not found, ask via `AskUserQuestion` (header: "JIRA Configuration"):
-- Domain (e.g., mycompany.atlassian.net)
-- Project key (e.g., PROJ)
-
-Store the resolved `domain`, `projectKey`, and base URL (`https://{domain}`) for the rest of the session. The base URL is needed for clickable task links in the output.
+Every exported issue carries its own `url`, so no base URL has to be built for links in the output.
 
 ---
 
 ## Fetch Issue Data (Step 3)
 
-This single step replaces the old search + subagent extraction pattern. The `jira-fetch` script fetches all issues with full descriptions and comments in one call, returning a minimal JSON file with plaintext data ready for transformation into release notes.
-
-### Locate Script
-
-Find the fetch script via Glob:
-
-```
-pattern: **/jira-fetch/scripts/fetch-issues.mjs
-```
+This single step replaces the old search + subagent extraction pattern. `export-issues` fetches all issues with full descriptions and comments in one call, returning a minimal JSON file with Markdown text ready for transformation into release notes.
 
 ### Determine Version and Fetch
 
-**If a version was extracted from `$ARGUMENTS`**, run a targeted fetch:
+**If a version was extracted from `$ARGUMENTS`**, run a targeted export. Write only the predicate — the script composes the project scope around it:
 
 ```bash
-node "${SCRIPT_PATH}" \
-  --domain "${DOMAIN}" \
-  --jql "project = ${PROJECT_KEY} AND fixVersion = \"${VERSION}\" ORDER BY priority DESC, issuetype ASC" \
+node "${CLAUDE_PLUGIN_ROOT}/skills/jira-api/scripts/jira.mjs" export-issues \
+  --jql "fixVersion = \"${VERSION}\" ORDER BY priority DESC, issuetype ASC" \
   --output "/tmp/jira-release-notes-${VERSION}-$(date +%Y%m%d-%H%M%S).json"
 ```
 
-**If no version was provided**, discover available versions first. Use `--summaries-only` — it skips descriptions and comments, so discovery stays cheap even when the JQL matches a project's entire history:
+**If no version was provided**, list the project's versions first. This reads them from the project itself rather than scanning every issue for the names it carries, so it costs one request:
 
 ```bash
-node "${SCRIPT_PATH}" \
-  --domain "${DOMAIN}" \
-  --jql "project = ${PROJECT_KEY} AND fixVersion IS NOT EMPTY ORDER BY fixVersion DESC" \
-  --summaries-only \
-  --output "/tmp/jira-release-versions-$(date +%Y%m%d-%H%M%S).json"
+node "${CLAUDE_PLUGIN_ROOT}/skills/jira-api/scripts/jira.mjs" list-versions
 ```
 
-Read the JSON output and extract unique version names from the `fixVersions` field across all issues. Present discovered versions to the user via `AskUserQuestion` (header: "Version") as selectable options. Allow free text input for a version not in the list.
+Present the versions to the user via `AskUserQuestion` (header: "Version") as selectable options, newest release first. Allow free text input for a version not in the list.
 
-After the user selects a version, run the targeted fetch above with that version — the summaries-only discovery data lacks the descriptions and comments needed for business-value summaries.
+After the user selects a version, run the targeted export above with that version.
 
 If the script fails, show the error and stop. Common issues: missing `JIRA_EMAIL` or `JIRA_API_TOKEN` env vars.
 
 ### Read and Parse
 
-The JSON output contains per issue: `key`, `type`, `status`, `priority`, `assignee`, `reporter`, `labels`, `fixVersions`, `components`, `summary`, `created`, `updated`, `description` (plaintext), `comments[]` (with `author`, `created`, `body` as plaintext).
+The JSON output contains per issue: `key`, `url`, `type`, `status`, `statusCategory`, `resolution`, `priority`, `assignee`, `reporter`, `labels`, `fixVersions`, `components`, `parent`, `summary`, `created`, `updated`, `description` (Markdown), `comments[]` (with `id`, `author`, `created`, `body` as Markdown, and `replyTo` when the comment answers another).
 
 Descriptions and comments are the key inputs for transforming technical issues into business-value summaries in Steps 5-6. Having them available directly (instead of via subagent extraction) enables better cross-issue reasoning — detecting duplicate features, identifying themes, and producing more consistent language.
 
@@ -232,7 +209,7 @@ If the user confirms, write the file.
 
 ### Confluence Output
 
-Confluence publishing is the only part of this skill that uses MCP tools, and only when Confluence output was selected. Resolve the `cloudId` first — call the `getAccessibleAtlassianResources` MCP tool once and pick the resource that matches the domain.
+Confluence publishing is the only part of this skill that uses MCP tools, and only when Confluence output was selected. Resolve the `cloudId` first — call the `getAccessibleAtlassianResources` MCP tool once and pick the resource whose URL matches the site from `show-config`.
 
 Use the available Confluence MCP tools to publish:
 

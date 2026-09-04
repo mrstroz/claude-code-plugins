@@ -7,7 +7,7 @@
     {
       "name": "jira",
       "source": "./jira",
-      "description": "JIRA task creator for any software project"
+      "description": "JIRA over one REST gateway — read, search, export, create, edit, link and comment on issues from Markdown, with task drafting, thread-aware comments, daily summaries, release notes, roadmaps and release test plans built on top"
     },
     {
       "name": "utils",

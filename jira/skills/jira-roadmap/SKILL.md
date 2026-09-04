@@ -6,13 +6,13 @@ argument-hint: "[project name or key]"
 
 # JIRA Product Roadmap Generator
 
-Generate a professional, client-facing product roadmap from Jira version data. Produces a condensed project-wide overview with version summaries, highlights, and links to individual release notes pages. Uses the `jira-fetch` script to pull issue data via REST API — no MCP overhead, no subagents, no token waste.
+Generate a professional, client-facing product roadmap from Jira version data. Produces a condensed project-wide overview with version summaries, highlights, and links to individual release notes pages. Pulls issue data through the `jira-api` script, so it arrives as one JSON file rather than through MCP round trips or subagents.
 
 ## Workflow
 
 1. **Initial setup** — Ask language and output format via `AskUserQuestion`
-2. **Resolve JIRA project** — Get domain and project key from CLAUDE.md or ask user
-3. **Discover versions and fetch data** — Run `jira-fetch` to discover versions, then fetch per-version data
+2. **Configuration** — The script reads the site and project key from `.ai/jira.config.json`; ask only when it reports none
+3. **Discover versions and fetch data** — Run `list-versions`, then `export-issues` for the chosen ones
 4. **Check for existing release notes pages** — Find links to detailed release notes
 5. **Generate version summaries** — Produce theme, summary, and highlights per version
 6. **Compose main roadmap document** — Assemble using the main roadmap format
@@ -30,64 +30,41 @@ Before anything else, use a single `AskUserQuestion` call with two questions:
 
 If Confluence output is selected, immediately follow up with one more `AskUserQuestion` (header: "Confluence URL") asking for the target Confluence page URL (the full URL, e.g. `https://mycompany.atlassian.net/wiki/spaces/PROJ/pages/123456`).
 
-If `$ARGUMENTS` contains a project name or key (e.g., `SF`, `ShopFlow`), extract it for use in Step 2 to skip project discovery.
+If `$ARGUMENTS` contains a project key other than the configured one (e.g., `SF`), pass it as `--project SF` on every script call in Step 3.
 
 Use the selected language for the entire document. Translate section headers according to the translations in the respective format reference file.
 
-## Resolve JIRA Project (Step 2)
+## Configuration (Step 2)
 
-Look for a JIRA configuration block in the project's CLAUDE.md:
+Every tracker call goes through `${CLAUDE_PLUGIN_ROOT}/skills/jira-api/scripts/jira.mjs`, which reads the site and the project key itself from `.ai/jira.config.json`, found by walking up from the working directory (falling back to the `tracker` block of `.ai/tesoro.config.json`). When it exits with code 2 saying `no .ai/jira.config.json found`, ask once via `AskUserQuestion` (header: "JIRA config") for the site (e.g. `mycompany.atlassian.net`) and the project key, offer to write the file, and continue. Details: `${CLAUDE_PLUGIN_ROOT}/skills/jira-api/SKILL.md#setup`.
 
-```
-## JIRA
-- Domain: mycompany.atlassian.net
-- Project key: PROJ
-```
-
-If found, use that domain and project key. If not found, ask via `AskUserQuestion` (header: "JIRA Configuration"):
-- Domain (e.g., mycompany.atlassian.net)
-- Project key (e.g., PROJ)
-
-Store the resolved `domain`, `projectKey`, and base URL (`https://{domain}`) for the rest of the session. The base URL is needed for clickable task links in the output.
+Every exported issue carries its own `url`, so no base URL has to be built for links in the output.
 
 ---
 
 ## Discover Versions and Fetch Data (Step 3)
 
-This step discovers available versions, lets the user select which ones to include, and then fetches full issue data per version. Uses the `jira-fetch` script for all data retrieval — no MCP tools needed.
-
-### Locate Script
-
-Find the fetch script via Glob:
-
-```
-pattern: **/jira-fetch/scripts/fetch-issues.mjs
-```
+This step lists the project's versions, lets the user select which ones to include, and then fetches full issue data for those versions. All data comes through the `jira-api` script; no MCP tool is needed here.
 
 ### Discover Versions
 
-Run jira-fetch in lightweight mode to list issues with version assignments — `--summaries-only` skips descriptions and comments, so discovery stays cheap even when the JQL matches a project's entire history:
+List the versions from the project itself — one request, and it includes a version with no issues yet, which a scan of issues would miss:
 
 ```bash
-node "${SCRIPT_PATH}" \
-  --domain "${DOMAIN}" \
-  --jql "project = ${PROJECT_KEY} AND fixVersion IS NOT EMPTY ORDER BY fixVersion DESC" \
-  --summaries-only \
-  --output "/tmp/jira-roadmap-versions-$(date +%Y%m%d-%H%M%S).json"
+node "${CLAUDE_PLUGIN_ROOT}/skills/jira-api/scripts/jira.mjs" list-versions
 ```
 
-Read the JSON output and extract unique version names from the `fixVersions` field across all issues. Present discovered versions to the user via `AskUserQuestion` (header: "Versions") to confirm which versions to include. Allow the user to deselect versions they want to exclude.
+Present them to the user via `AskUserQuestion` (header: "Versions") to confirm which versions to include, newest release first. Allow the user to deselect versions they want to exclude.
 
 If the script fails, show the error and stop. Common issues: missing `JIRA_EMAIL` or `JIRA_API_TOKEN` env vars.
 
 ### Fetch Per-Version Data
 
-After the user confirms the version list, run one full fetch covering just those versions — the summaries-only discovery data lacks descriptions:
+After the user confirms the version list, run one export covering just those versions. Write only the predicate — the script composes the project scope around it:
 
 ```bash
-node "${SCRIPT_PATH}" \
-  --domain "${DOMAIN}" \
-  --jql "project = ${PROJECT_KEY} AND fixVersion IN (\"2.1.0\", \"2.0.0\") ORDER BY priority DESC" \
+node "${CLAUDE_PLUGIN_ROOT}/skills/jira-api/scripts/jira.mjs" export-issues \
+  --jql "fixVersion in (\"2.1.0\", \"2.0.0\") ORDER BY priority DESC" \
   --output "/tmp/jira-roadmap-issues-$(date +%Y%m%d-%H%M%S).json"
 ```
 
@@ -104,7 +81,7 @@ Descriptions are available for every fetched issue; use them for the top 5 issue
 ## Check for Existing Release Notes Pages (Step 4)
 
 ### If output is Confluence:
-- Resolve the `cloudId` first — call the `getAccessibleAtlassianResources` MCP tool once, pick the resource that matches the domain, and cache it for publishing in Step 8
+- Resolve the `cloudId` first — call the `getAccessibleAtlassianResources` MCP tool once, pick the resource whose URL matches the site from `show-config`, and cache it for publishing in Step 8
 - Search Confluence for existing pages matching `[Project] Release Notes — Version {version}` pattern using `searchConfluenceUsingCql`
 - Also search for the legacy pattern `[Project] Roadmap — Version {version}` for backward compatibility
 - Store found page URLs for linking in the main roadmap

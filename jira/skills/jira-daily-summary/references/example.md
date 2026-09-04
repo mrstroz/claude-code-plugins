@@ -87,4 +87,4 @@ Processing starts with the first todo (SF-234):
 >
 > Confirm to send, or let me know what to change.
 
-*User confirms → comment sent via `addCommentToJiraIssue` → todo marked completed → move to SF-289*
+*User confirms → comment posted with `jira.mjs add-comment` → todo marked completed → move to SF-289*
