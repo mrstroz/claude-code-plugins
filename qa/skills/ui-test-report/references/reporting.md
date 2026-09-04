@@ -2,7 +2,7 @@
 
 Write it for someone who was not there and will not re-run it: a table they can scan, findings they can act on, and a picture behind every claim.
 
-Save it as `qa-report.md` next to `screenshots/`, and give the same content back in the conversation — the user usually wants to read it without opening a file.
+Save it as `docs/qa/<TASK>/report.md` next to `screenshots/`, and give the same content back in the conversation — the user usually wants to read it without opening a file.
 
 ## Structure
 
@@ -27,6 +27,8 @@ reviewer reading a FAIL needs to know which browser saw it.>
 | 37 | Row reordering by drag & drop | CHECK |
 
 ## Things to fix
+
+## Changes to the scenarios during the run
 
 ## Test data left behind
 
@@ -72,10 +74,20 @@ The cause line is what separates a report somebody fixes today from one that sta
 
 Minor observations that are not worth a fix on their own — wrong toast copy, a truncated label — still belong here, marked as minor. They cost one line and they are the things nobody ever writes down.
 
+## Changes to the scenarios during the run
+
+One line per scenario whose step or assertion was rewritten after a FAIL or an ERROR: what the first version checked, why it was wrong, what the final one checks.
+
+```markdown
+- **10** first asserted that material numbers ascend by JavaScript string comparison and failed; MySQL orders by collation, so the check was wrong, not the sort. Now asserts the 20 numbers equal `ORDER BY material_num` run directly in MySQL.
+```
+
+The section exists because a PASS that used to be a FAIL reads as "fixed" unless the report says the check changed rather than the code. `results.json` keeps the earlier entry under `history` for every such scenario and the runner lists them at the end of the run, so the material is already there. Leave the section out when nothing was rewritten.
+
 ## Test data left behind
 
 Anything created to reach a scenario: records, saved views, users, uploaded files, and which environment they are in. Whoever reads the report needs to know that a stray "QA test view" on DEV came from this run and can go, and equally that it is still there.
 
 ## Files
 
-Say where the evidence is: `screenshots/NN-slug.jpg`, numbered to match the table, the report itself, and `qa-scenarios.json` — the run as data, which is what lets somebody repeat it. With the Playwright driver add `qa-results.json`, the assertions and values behind every row. If captions were written in a language other than the report, say which.
+Say where the evidence is: `screenshots/NN-slug.jpg`, numbered to match the table, the report itself, and `scenarios.json` — the run as data, which is what lets somebody repeat it. With the Playwright driver add `results.json`, the assertions and values behind every row. If captions were written in a language other than the report, say which.

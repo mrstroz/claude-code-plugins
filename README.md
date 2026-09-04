@@ -84,9 +84,9 @@ Manual QA of a feature, done in a real browser rather than described.
 
 | Skill | What it does |
 | --- | --- |
-| `ui-test-report` | Derives the scenarios from the ticket and the diff, writes them down as `qa-scenarios.json`, runs every one in a browser, captions each screenshot with what it proves, and reports a pass/fail table with reproduction steps |
+| `ui-test-report` | Derives the scenarios from the ticket and the diff, writes them down as `docs/qa/<TASK>/scenarios.json`, runs every one in a browser, captions each screenshot with what it proves, and reports a pass/fail table with reproduction steps |
 
-Three drivers, chosen at the start of a run: Playwright in a visible window on a dedicated QA profile (default — one command runs the whole file), Playwright headless for re-runs, or the user's own Chrome through the Claude in Chrome extension when the app needs their real session. Playwright is installed once per machine under `~/.cache/qa-ui-test`; the runner prints the command when it is missing. Results stay local; posting them to a ticket is `jira:jira-feedback`.
+Two drivers, chosen at the start of a run: Playwright in a QA window that stays open between runs (default — Chromium or Brave on a profile of its own, logged in once by hand, one command runs the whole file), or the user's own Chrome through the Claude in Chrome extension when the app needs their real session. Playwright is installed once per machine under `~/.cache/qa-ui-test`; the runner prints the command when it is missing. Report, scenarios, results and screenshots live in the repository under `docs/qa/<TASK>/`; posting them to a ticket is `jira:jira-feedback`.
 
 ## Repository layout
 

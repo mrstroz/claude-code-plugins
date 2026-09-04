@@ -1,6 +1,6 @@
 ---
 name: ui-test-report
-description: Run a feature through a real browser and come back with proof it works — derive the scenarios from the ticket and the diff, write them down as a scenario file, click through every one of them, caption each screenshot with the scenario number and what it proves, verify the result with a JavaScript assertion rather than by eye, and hand back a numbered pass/fail table plus a "things to fix" section with reproduction steps. Three ways to drive the browser, chosen at the start — Playwright in a visible window on a dedicated QA profile (default, fast, you watch it click), Playwright headless (same, no window, for re-runs), or the user's own Chrome through the Claude in Chrome extension when the app needs their real session or extensions. Use whenever the user wants a feature exercised in the UI rather than described: "przetestuj to w przeglądarce", "przeklikaj to i zrób screenshoty", "sprawdź czy to działa w UI", "zrób testy tej funkcji", "pokaż że to działa", "przetestuj dokładnie ten feature", "zrób QA tego zanim zmerguję", "odpal to w playwright", "test this in the browser", "click through the feature and screenshot it", "QA this before I merge", "walk me through it and show it works", "verify this works end to end in the app", "run the QA scenarios again" — and after finishing an implementation when the user asks whether it actually works. Do NOT use it to write automated tests — Playwright or Cypress specs are ordinary code. Do NOT use it to only draft a list of what should be tested for a release; that is jira:jira-testing-release, which produces the plan this skill executes.
+description: Run a feature through a real browser and come back with proof it works — derive the scenarios from the ticket and the diff, write them down as a scenario file, click through every one of them, caption each screenshot with the scenario number and what it proves, verify the result with a JavaScript assertion rather than by eye, and hand back a numbered pass/fail table plus a "things to fix" section with reproduction steps, all saved under docs/qa/<TASK>/ in the repository. Two ways to drive the browser, chosen at the start — Playwright in a QA window that stays open between runs (default: Chromium or Brave on its own profile, logged in once by hand, one command runs the whole file while you watch), or the user's own Chrome through the Claude in Chrome extension when the app needs their real session or extensions. Use whenever the user wants a feature exercised in the UI rather than described: "przetestuj to w przeglądarce", "przeklikaj to i zrób screenshoty", "sprawdź czy to działa w UI", "zrób testy tej funkcji", "pokaż że to działa", "przetestuj dokładnie ten feature", "zrób QA tego zanim zmerguję", "odpal to w playwright", "test this in the browser", "click through the feature and screenshot it", "QA this before I merge", "walk me through it and show it works", "verify this works end to end in the app", "run the QA scenarios again" — and after finishing an implementation when the user asks whether it actually works. Do NOT use it to write automated tests — Playwright or Cypress specs are ordinary code. Do NOT use it to only draft a list of what should be tested for a release; that is jira:jira-testing-release, which produces the plan this skill executes.
 argument-hint: "[what to test and where, e.g. \"property filtering on localhost:3000\" or \"TES-8147\"]"
 ---
 
@@ -16,10 +16,9 @@ Take a feature that has just been built, work out what actually needs checking, 
 
 Ask once, with a single `AskUserQuestion`:
 
-- **Driver** — who clicks. Three options, in this order:
-  - *Playwright, visible window* (recommended): a Chromium of its own on a persistent QA profile, one command runs the whole file, the user watches it happen. Fast; the profile has to be logged in once.
-  - *Playwright, headless*: the same without a window. For re-running after a fix, or when nobody needs to watch.
-  - *Chrome through the extension*: the user's own browser, session and extensions, driven one batch at a time. Slower by a factor of a few; the only choice when the app needs a session the QA profile cannot reproduce.
+- **Driver** — who clicks. Two options, in this order:
+  - *Playwright in the QA window* (recommended): a browser window of its own — Chromium, or Brave with `--browser brave` when the user prefers it — that stays open between runs. The user logs in once in that window; each run opens a tab, works, closes the tab. One command runs the whole file and the user watches it happen.
+  - *Chrome through the extension*: the user's own browser, session and extensions, driven one batch at a time. Slower by a factor of a few; the only choice when the app needs a session the QA window cannot reproduce.
 - **Where** the app runs (`http://localhost:3000` and the page under test).
 - **What** is under test: a ticket key, a branch, or "what we just built".
 - **Language** of the on-image captions and the report. Default to English — the report usually ends up in a ticket read by the whole team. Offer the conversation's language as the alternative.
@@ -32,28 +31,38 @@ Derive coverage from the ticket's acceptance criteria and the feature's diff —
 
 Show the numbered table and wait for a yes before the first click. Fixing the list costs one sentence now; discovering a gap after forty screenshots costs the whole run.
 
-Then write `qa-scenarios.json` next to where the report will go, in the format in [references/scenario-file.md](references/scenario-file.md): number, slug, title, the steps, the assertions and the caption template for each row. This happens with every driver. With Playwright it is the runner's input; with Chrome it is the script you follow, and either way it is what lets the run be repeated — `--only 07` after a fix, or the whole thing on the next build — without designing it again.
+Everything the run produces lives in the repository under `docs/qa/<TASK>/`: `scenarios.json`, `results.json`, `report.md` and `screenshots/`. `<TASK>` is the ticket key — from the conversation, or from the branch name (`RO-2562-stock-items-perf` → `RO-2562`) — and a short slug of the feature (`filter-drawer`) when there is no ticket. The report and its pictures belong with the code they test and travel in the same pull request; a directory next to the repository is one nobody will find in a month. Write nothing temporary in there — a throwaway scenario file for probing the DOM is what `--eval` is for.
+
+Then write `scenarios.json` there, in the format in [references/scenario-file.md](references/scenario-file.md): number, slug, title, the steps, the assertions and the caption template for each row. This happens with every driver. With Playwright it is the runner's input; with Chrome it is the script you follow, and either way it is what lets the run be repeated — `--only 07` after a fix, or the whole thing on the next build — without designing it again.
 
 Number scenarios from `01` and keep the numbers stable for the rest of the run — they are the key joining a report row to its screenshot file. Create `screenshots/` next to the report before the first capture.
 
 ### 3. Run the scenarios
 
-#### Playwright (visible or headless)
+#### Playwright in the QA window
 
-One command, details in [references/playwright-driver.md](references/playwright-driver.md):
+Details in [references/playwright-driver.md](references/playwright-driver.md). Open the window first and check where the app lands:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/ui-test-report/scripts/run-scenarios.mjs" \
-  --scenarios qa-scenarios.json --base-url http://localhost:3000 --driver headed   # or headless
+cd docs/qa/<TASK>
+node "${CLAUDE_PLUGIN_ROOT}/skills/ui-test-report/scripts/run-scenarios.mjs" --base-url http://localhost:3000 --open
 ```
 
-The runner injects the caption overlay, clicks, asserts, captions, writes `screenshots/NN-slug.jpg` and `qa-results.json`. Three things can come back that need you:
+It prints the URL of the tab. A login page means the user has to log in in that window — ask them to, and wait; there is no flag to pass and nothing to press afterwards, the session simply lives as long as the window does. While writing selectors, read the page through the same window instead of guessing or writing a probe file: `--eval "document.querySelector('table').className" --url /items` returns one value and closes its tab.
+
+Then one command runs the file:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/ui-test-report/scripts/run-scenarios.mjs" --base-url http://localhost:3000
+```
+
+The runner opens a tab, injects the caption overlay, clicks, asserts, captions, writes `screenshots/NN-slug.jpg` and `results.json`, and closes the tab. The window stays open for the next run and for the user to look at; `--close` ends it when the session is over. Three things can come back that need you:
 
 - **It exits with an install command.** Playwright is not on the machine. Show the command and run it when the user says so; it changes the machine, which is not this skill's call.
-- **The app redirected to a login page.** The QA profile has no session yet. Run the same command with `--login`, the user logs in in the window that opens and presses Enter, then re-run.
-- **A scenario is `error`.** A selector matched nothing or a wait timed out. That is a broken step, not a finding: fix it in `qa-scenarios.json` and re-run with `--only NN`. Its screenshot is named so that `check-evidence.js` rejects it, so it cannot slip into the report by accident.
+- **A scenario is `error`.** A selector matched nothing or a wait timed out. That is a broken step, not a finding: fix it in `scenarios.json` and re-run with `--only NN`. Its screenshot is named so that `check-evidence.js` rejects it, so it cannot slip into the report by accident.
+- **A scenario changed status since the previous results.** The runner lists them at the end and keeps the earlier entry under `history` in `results.json`. Rewriting an assertion that turned out to be wrong is normal — a JavaScript string comparison is not a database collation — but the report then has to say so, in its "Changes to the scenarios during the run" section, or a PASS that was a FAIL an hour ago reads as a fix that never happened. Do not wipe `screenshots/` or `results.json` before a re-run; the runner overwrites by name, and the history is what a reviewer needs.
 
-Read `qa-results.json`: `pass`/`fail`/`check` become the table, a `fail` entry already carries the assertion and the actual value for the finding, and `values` holds every number the captions and findings may quote.
+Read `results.json`: `pass`/`fail`/`check` become the table, a `fail` entry already carries the assertion and the actual value for the finding, and `values` holds every number the captions and findings may quote.
 
 #### Chrome through the extension
 
@@ -96,14 +105,14 @@ Format in [references/reporting.md](references/reporting.md): the results table,
 Then verify the evidence is complete:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/ui-test-report/scripts/check-evidence.js" qa-report.md screenshots
+node "${CLAUDE_PLUGIN_ROOT}/skills/ui-test-report/scripts/check-evidence.js" docs/qa/<TASK>/report.md docs/qa/<TASK>/screenshots
 ```
 
 It fails on a row with no screenshot, a screenshot with no row, a malformed name — including the runner's `*.error.jpg` — and a capture too small to contain anything. Fix what it reports rather than explaining it away; a row nobody can check is the one failure mode this whole format exists to prevent.
 
 ### 5. Hand over
 
-The report, `screenshots/`, `qa-scenarios.json` and `qa-results.json` stay local. If the user wants them on the ticket, point at `jira:jira-feedback` — this skill posts nothing on its own, so a run can never surprise anyone by appearing in a tracker.
+`docs/qa/<TASK>/` — the report, `screenshots/`, `scenarios.json` and `results.json` — goes into the repository with the change and nowhere else. If the user wants the report on the ticket, point at `jira:jira-feedback` — this skill posts nothing on its own, so a run can never surprise anyone by appearing in a tracker.
 
 ## Three things that ruin a Chrome run
 

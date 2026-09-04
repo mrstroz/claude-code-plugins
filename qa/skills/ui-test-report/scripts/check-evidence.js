@@ -3,7 +3,7 @@
  * Check that every scenario in a QA report has a screenshot behind it, and that
  * every screenshot belongs to a scenario.
  *
- *   node check-evidence.js <report.md> [screenshots-dir]
+ *   node check-evidence.js <report.md> [screenshots-dir]     (typically docs/qa/<TASK>/report.md and its screenshots/)
  *
  * Defaults the directory to ./screenshots. Exits non-zero on any problem, so it
  * can be the last thing a run does before the report is handed over.

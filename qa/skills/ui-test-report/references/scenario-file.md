@@ -1,6 +1,6 @@
 # The scenario file
 
-`qa-scenarios.json` is the approved scenario table written down as data. It is produced in every run, whichever driver clicks: with Playwright it is the runner's input, with the Chrome extension it is the script the model follows one batch at a time. Either way it means a run can be repeated (`--only 07`), handed to a colleague, or moved from one driver to the other without redesigning anything.
+`scenarios.json` is the approved scenario table written down as data. It is produced in every run, whichever driver clicks: with Playwright it is the runner's input, with the Chrome extension it is the script the model follows one batch at a time. Either way it means a run can be repeated (`--only 07`), handed to a colleague, or moved from one driver to the other without redesigning anything.
 
 It is data rather than code because a wrong selector in a JSON file is a one-line fix and a re-run, while a wrong selector in a script the model wrote is a debugging session. The runner owns the control flow; the file owns what to click and what must be true afterwards.
 
@@ -78,7 +78,7 @@ Put the number that decides pass or fail inside `<b>` in `d`. That is what makes
 ## Verdict
 
 - every `expect` in the scenario passed → PASS
-- any `expect` failed → FAIL, and the failing assertion with its actual value is in `qa-results.json`
+- any `expect` failed → FAIL, and the failing assertion with its actual value is in `results.json`
 - `manual: true` → CHECK, no assertions run
 - a step threw — selector matched nothing, a wait timed out — → `error`. This is not a result. The screenshot goes to `NN-slug.error.jpg`, which `check-evidence.js` rejects, so the run cannot be handed over until the step is fixed and re-run with `--only NN`
 
