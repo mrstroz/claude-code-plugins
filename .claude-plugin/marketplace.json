@@ -37,7 +37,7 @@
     {
       "name": "qa",
       "source": "./qa",
-      "description": "Manual QA through a real Chrome session — scenarios derived from the ticket and the diff, executed in the browser, every screenshot captioned with what it proves, reported as a pass/fail table with reproduction steps"
+      "description": "Manual QA through a browser — scenarios derived from the ticket and the diff, written down as a scenario file, executed by Playwright (visible or headless) or in the user's own Chrome, every screenshot captioned with what it proves, reported as a pass/fail table with reproduction steps"
     }
   ]
 }

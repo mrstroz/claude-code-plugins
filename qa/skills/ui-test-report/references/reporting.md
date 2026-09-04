@@ -10,8 +10,12 @@ Save it as `qa-report.md` next to `screenshots/`, and give the same content back
 # QA — <feature>, <ticket key if any>
 
 <One paragraph: what was tested, on which branch/commit, in which environment,
-with which data, and how many scenarios. Anything that would change the result
-if it were different goes here — a feature flag, a seeded data set, a role.>
+with which data, how many scenarios, and which driver clicked — "Playwright,
+visible window, QA profile, Chromium 151" or "Chrome extension, the user's own
+session". Anything that would change the result if it were different goes here
+— a feature flag, a seeded data set, a role. The driver belongs on that list:
+a different session has different permissions, extensions and cookies, and a
+reviewer reading a FAIL needs to know which browser saw it.>
 
 ## Scenarios
 
@@ -74,4 +78,4 @@ Anything created to reach a scenario: records, saved views, users, uploaded file
 
 ## Files
 
-Say where the evidence is: `screenshots/NN-slug.jpg`, numbered to match the table, and the report itself. If captions were written in a language other than the report, say which.
+Say where the evidence is: `screenshots/NN-slug.jpg`, numbered to match the table, the report itself, and `qa-scenarios.json` — the run as data, which is what lets somebody repeat it. With the Playwright driver add `qa-results.json`, the assertions and values behind every row. If captions were written in a language other than the report, say which.

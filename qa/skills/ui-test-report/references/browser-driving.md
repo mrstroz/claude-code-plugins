@@ -1,6 +1,36 @@
 # Driving Chrome without wasting turns
 
-The Chrome MCP drives a real browser with the user's real session. That is the point — it tests the app as the user has it, with their login, their data and their extensions — and it is also why a run is worth doing carefully rather than fast.
+The Chrome MCP drives a real browser with the user's real session. That is the point — it tests the app as the user has it, with their login, their data and their extensions — and it is also why a run is worth doing carefully rather than fast. This is the driver to choose when that session cannot be reproduced in the Playwright QA profile; for everything else, [playwright-driver.md](playwright-driver.md) runs the same scenario file in one command.
+
+## Batching
+
+Every tool call is a full round trip through the model. Across forty scenarios, the difference between six calls per scenario and two is most of the afternoon. `browser_batch` runs a list of tool calls in one round trip, sequentially, and returns their outputs and screenshots together.
+
+The shape that works: `find` on its own first, because its refs are the output the batch needs. Then one batch per scenario — click by ref, wait, `javascript_tool` for the assertion, `javascript_tool` for `__ann()`, `computer` screenshot:
+
+```json
+[
+  { "name": "computer", "input": { "action": "left_click", "ref": "…", "tabId": 123 } },
+  { "name": "find", "input": { "query": "Apply button inside the open drawer", "tabId": 123 } },
+  { "name": "javascript_tool", "input": { "text": "document.querySelectorAll('tbody tr').length", "tabId": 123 } },
+  { "name": "javascript_tool", "input": { "text": "__ann({ n: '03', t: '…', d: '…', ok: true })", "tabId": 123 } },
+  { "name": "computer", "input": { "action": "screenshot", "save_to_disk": true, "tabId": 123 } }
+]
+```
+
+Two constraints shape what goes in a batch:
+
+- **Coordinates written in a batch refer to the screenshot taken before it.** Anything that moves the layout — opening a drawer, filtering a list — makes every coordinate after it stale. Refs do not have this problem, which is one more reason to click by ref and keep coordinates out of batches entirely.
+- **A batch stops at the first error.** So after an action that opens a panel, the next item in the batch is a `find` for something inside that panel, not a click: it confirms the panel is there, it waits out the animation, and if the panel did not open the batch stops with a clear message instead of clicking the backdrop.
+
+The caption goes into the batch before its assertion has come back, so do not type the number into `d` — read it from the page inside the same `__ann()` call:
+
+```js
+const n = document.querySelectorAll("tbody tr").length;
+__ann({ n: "03", t: "Apply — list filtered", d: `The list drops from 11 to <b>${n}</b> records.`, ok: n === 6 });
+```
+
+The verdict and the value on the picture then come from the DOM at capture time, exactly as the Playwright runner does it, and the separate assertion item in the batch returns the same value for the report.
 
 ## Setup
 
@@ -43,10 +73,10 @@ Read the value **before** writing the caption, and put the number in the caption
 
 The tools return as soon as the command is dispatched, not when the UI has settled. Two habits cover almost everything:
 
-- after opening a drawer, dialog or menu, take a screenshot before interacting with its contents — it both confirms the panel is there and gives the animation time to finish
+- after opening a drawer, dialog or menu, `find` an element inside it before clicking anything — it confirms the panel is there, gives the animation time to finish, and costs nothing extra inside a batch
 - after an action that refetches, wait for the data before asserting; an assertion run too early reports the previous state and produces a confidently wrong caption
 
-A click that "does nothing" is usually a click that landed during an animation, on the backdrop, and closed what it was aiming at. Take the screenshot, look, then act.
+A click that "does nothing" is usually a click that landed during an animation, on the backdrop, and closed what it was aiming at. Confirm the panel, then act.
 
 ## Things not to do
 

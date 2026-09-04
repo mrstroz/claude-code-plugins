@@ -1,7 +1,7 @@
 {
   "name": "qa",
-  "description": "Manual QA runs driven through a real Chrome session — derive the scenarios from the ticket and the diff, execute them in the browser, caption every screenshot with what it proves, and report pass/fail with reproduction steps",
-  "version": "0.1.0",
+  "description": "Manual QA runs driven through a browser — derive the scenarios from the ticket and the diff, write them down as a scenario file, execute them with Playwright (visible or headless, on a dedicated QA profile) or through the user's own Chrome, caption every screenshot with what it proves, and report pass/fail with reproduction steps",
+  "version": "0.2.0",
   "author": {
     "name": "mrstroz"
   }
