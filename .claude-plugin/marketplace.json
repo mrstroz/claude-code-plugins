@@ -38,6 +38,11 @@
       "name": "qa",
       "source": "./qa",
       "description": "Manual QA through a browser — scenarios derived from the ticket and the diff, written down as a scenario file, executed by Playwright (visible or headless) or in the user's own Chrome, every screenshot captioned with what it proves, reported as a pass/fail table with reproduction steps"
+    },
+    {
+      "name": "pair",
+      "source": "./pair",
+      "description": "Pair programming across two Claude Code tabs — one session drives and writes the code step by step, the other navigates and reviews the plan and every step, talking through cross-session messages"
     }
   ]
 }

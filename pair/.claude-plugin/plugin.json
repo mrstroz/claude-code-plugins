@@ -1,0 +1,8 @@
+{
+  "name": "pair",
+  "description": "Pair programming across two Claude Code tabs — one session drives (writes the code, announces every step, reports it with evidence), the other navigates (reviews the plan before any code and every step after it lands, watches edge cases, architecture and tests), talking through cross-session messages in the same working directory",
+  "version": "0.1.0",
+  "author": {
+    "name": "mrstroz"
+  }
+}
