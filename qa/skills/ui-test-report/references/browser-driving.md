@@ -86,6 +86,15 @@ A click that "does nothing" is usually a click that landed during an animation, 
 
 **Do not treat a hard reload as free.** Everything injected into the page is gone afterwards, including the annotation overlay. Re-inject before the next captioned screenshot.
 
+## The scenario file, by hand
+
+The Chrome driver runs the same `scenarios.json` the Playwright runner would, one batch per scenario, so the file's rules hold here too — they are just yours to apply:
+
+- **`given`** is a `javascript_tool` call before the batch. When a check does not hold, the scenario is BLOCKED: no batch, no screenshot, a line under Not run in the report saying which check and what value it saw.
+- **`requires`** is your reading order. When a required scenario errored or was blocked, the ones that build on it are BLOCKED too, with the number — running them anyway produces findings about a state the app never reached.
+- **An error** — the element `find` cannot see, a click that times out — gets the same triage as under Playwright, in [playwright-driver.md](playwright-driver.md): is the element there at all (`javascript_tool`), what does the console say (`read_console_messages`), what does the code render. A missing element the criterion requires is a FAIL with the error as evidence; a wrong step is fixed in the file with a `revision` and the scenario re-run.
+- **An inventory** of a page comes from pasting `scripts/inspect.js` into `javascript_tool`, the same probe `--inspect` evaluates: controls with roles and names, selects with option values, tables with their first rows.
+
 ## Cleaning up
 
 Some scenarios need state that does not exist yet — a saved view, a second record, a user with a different role. Create it, note it, and list it at the end of the report under what was left behind. Deleting it is usually the wrong move: the environment is shared, and something you did not create may now depend on it.

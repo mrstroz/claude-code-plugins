@@ -6,8 +6,9 @@
  * load a file into the page. Re-inject after any full reload; the page context
  * is thrown away along with everything defined on it.
  *
- * Defines two globals:
+ * Defines three globals:
  *   __ann(opts)              draws the caption card, outlines and callouts
+ *   __annClear()             removes them again
  *   __at(selector, shotW)    converts an element's centre into screenshot pixels
  */
 (() => {
@@ -61,6 +62,11 @@
     label.style.top = Math.max(2, rect.top - 2 + dy) + "px";
     document.body.appendChild(label);
   }
+
+  /** Remove the card, pins and outlines. The runner calls this before every
+   *  scenario: the card is fixed and on top of everything, so left in place it
+   *  would intercept the next scenario's clicks and sit in every DOM probe. */
+  window.__annClear = clear;
 
   /**
    * @param {object}   o
