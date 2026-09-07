@@ -37,8 +37,8 @@ month they disagree.
 
 **Nothing here has a length to reach.** A section answers its question and stops. A one-line
 `Findings` on a defect somebody traced in ten seconds is complete, and padding it to look thorough
-costs the reader more than the empty space would have. The ceiling on `Acceptance criteria` is the
-one exception, and it is a diagnostic rather than a limit; see below.
+costs the reader more than the empty space would have. The ceilings on `Acceptance criteria` and
+`Findings` are the exceptions, and they are diagnostics rather than limits; see below.
 
 The rest of what a description can carry, such as panels, tables, images and smart links to other
 issues, is in [the dialect](${CLAUDE_PLUGIN_ROOT}/skills/jira-api/references/markdown.md). Read
@@ -193,15 +193,16 @@ What somebody already established about the system as it stands, so that whoever
 does not spend the first afternoon rediscovering it.
 
 **Every finding is a bullet, and one bullet is one finding.** The section is scanned rather than
-read through. Somebody picking the work up is hunting for the line that saves them an afternoon,
-and a paragraph buries it among the others. A finding too long for a bullet is usually two; one
-that genuinely is not may run to two or three lines, but it stays a bullet.
+read through, and a paragraph buries the line somebody is hunting for. A finding too long for a
+bullet is usually two.
 
-**One test, applied per line: is this true right now?** If it is, it stays. If it says what should
-exist once the work is done, it belongs to whoever implements it. Three kinds of line pass:
+**Two tests, applied per line, in this order.** First: is this true right now? A line saying what
+should exist once the work is done belongs to whoever implements it. Second: would somebody who
+sits down with the repository open miss this, or lose real time finding it? A line they reach
+with one grep or one `git log` fails, however true it is. Three kinds of line pass both:
 
 - **Where it lives**: the file, the class or the method, under the rule from
-  [Pointing at code](#pointing-at-code).
+  [Pointing at code](#pointing-at-code), when the name does not give it away.
 - **How it works today**, especially when that is what makes the issue necessary. "The reaper runs
   every thirty minutes and is the only exit from `processing`" is why somebody waits twelve hours
   for a stalled job; without it the report is a complaint.
@@ -209,12 +210,22 @@ exist once the work is done, it belongs to whoever implements it. Three kinds of
   or a failure already watched happening. A trap somebody has fallen into once is the most
   valuable line in an issue and the one most often left behind in a chat window.
 
-What does not pass: the mechanism to use, the API to call, the file to create, the pattern to
+The first test rejects the mechanism to use, the API to call, the file to create, the pattern to
 copy, the library, the algorithm. Those belong to whoever implements it, who reads the code with
 fresh eyes so an opinion formed earlier gets checked instead of confirmed. An answer written into
 the issue a week earlier arrives carrying the tracker's authority, so it gets followed rather than
-tested. The section used to be called `Technical details`, and the name was half the problem: it
-reads as an invitation to write down how the change should be built.
+tested. The section used to be called `Technical details`, and the name was half the problem.
+
+The second test rejects the files that contain a phrase, how many matches a grep returned, the
+commit that introduced a file, the size of a diff, what a configuration file plainly says. Each is
+true, each has a command behind it, and each is produced faster than it is read. Not a rule
+against numbers: one that changes a decision stays, one that only proves somebody looked goes.
+
+**Order by cost, and past ten or so bullets stop adding and start choosing.** What would wreck
+the implementation goes first, then what has to be known to start; at ten bullets the line that
+matters lands wherever it was written down. The cap is a diagnostic like the one on criteria, not
+a limit: a list that long has stopped being the set of traps and become the transcript of reading
+the code, and the reader cannot tell the two apart.
 
 **One exception, and it has a fixed shape: `Suspected:`.** Somebody who watched the failure or
 wrote the code often already knows what the fix is, and discarding that is the most expensive

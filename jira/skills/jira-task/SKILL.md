@@ -182,15 +182,16 @@ Ask it to report findings only, editing nothing:
 - a line in `Findings` saying what should be built rather than what is, and not opening
   `Suspected:`;
 - a `Findings` section written as prose, where every finding is a bullet of its own;
+- a line in `Findings` the implementer would reach with one grep or one `git log`;
+- `Findings` past ten or so bullets, the sign that nothing was selected;
 - a criterion nobody could check without writing the code first, or one needing information the
   issue never gives;
 - a line in `Out of scope` that reads like a decision, where nothing says a person made it;
 - a number, a count or a list of names with no command behind it;
 - more than five criteria, which is the signal this is a `Story` rather than a long `Task`.
 
-It is one agent reading one short file with no repository behind it, so run it every time. Fix
-what it finds or say why not. A dismissed finding is a decision, and it belongs in the message to
-the human rather than nowhere.
+It is one agent reading one short file, so run it every time. Fix what it finds or say why not:
+a dismissed finding is a decision, and it belongs in the message to the human.
 
 Then read the draft once more against [the style rules](#what-makes-an-issue-worth-its-length)
 below. The agent reads the shape, this pass reads the sentences, and neither finds what the other
