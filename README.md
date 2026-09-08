@@ -88,6 +88,21 @@ Manual QA of a feature, done in a real browser rather than described.
 
 Two drivers, chosen at the start of a run: Playwright in a QA window that stays open between runs (default — Chromium or Brave on a profile of its own, logged in once by hand, one command runs the whole file), or the user's own Chrome through the Claude in Chrome extension when the app needs their real session. Playwright is installed once per machine under `~/.cache/qa-ui-test`; the runner prints the command when it is missing. Report, scenarios, results and screenshots live in the repository under `docs/qa/<TASK>/`; posting them to a ticket is `jira:jira-feedback`.
 
+### pair
+
+Pair programming, or a three-agent team, across separate Claude Code tabs in the same directory, talking through cross-session messages.
+
+| Skill | What it does |
+| --- | --- |
+| `driver` | Does the task: assembles the team, records the repository baseline, writes the plan with acceptance criteria and gates, keeps the shared state file, sends every review request with a revision and quoted evidence, integrates everybody's changes and reports to the user |
+| `navigator` | The one reviewing tab of a pair: holds the architect's and the tester's responsibilities together |
+| `architect` | Guards the shape of the change, the interfaces, the dependencies and the consequences; approves the gated items, reviews the rest asynchronously |
+| `tester` | Turns the criteria into checks, writes tests and reproductions in parallel with the implementation, runs the verification and reports command, result and the lines that matter |
+
+Pair: run `/pair:navigator` in tab B, then `/pair:driver <task>` in tab A. Team: `/pair:architect` in tab B, `/pair:tester` in tab C, then `/pair:driver <task>` in tab A. Renaming a reviewing tab with `/rename pair-nav`, `pair-architect` or `pair-tester` lets the driver find it without asking. The sessions are real tabs, not subagents; the protocol lives in `pair/references/protocol.md`, and the task's state (goal, members, plan, decisions, open blockers, pending reviews) in `~/.cache/claude-pair/<repo>-<hash>/<run>.md`, written by the driver only. Every review request points at a snapshot of the working tree, taken by `pair/scripts/snap.sh` as an immutable ref under `refs/pair/<run>/` without touching the index, so a reviewer reads the revision and not whatever the driver has typed since. Approval is required where the plan says so — the plan itself, interfaces, schema, and any deployment, migration or push before it runs — and asynchronous elsewhere; `--strict` gates every step.
+
+See the [workflow diagrams and explanation in Polish](pair/references/workflow.md) for the parallel work, review gates, deployment verification, and communication between roles.
+
 ## Repository layout
 
 ```
@@ -95,6 +110,7 @@ Two drivers, chosen at the start of a run: Playwright in a QA window that stays 
   .claude-plugin/plugin.json     name, version, description, author
   skills/<skill-name>/SKILL.md   frontmatter plus the instructions
     references/                  detail loaded only when needed
+  references/                    files shared by several skills of one plugin
     scripts/                     Node helpers the skill shells out to
 ```
 
