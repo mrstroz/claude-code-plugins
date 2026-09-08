@@ -23,7 +23,7 @@ Call `ListAgents`. Take a session the user named, or one carrying a role name (`
 
 Take the baseline snapshot with `${CLAUDE_PLUGIN_ROOT}/scripts/snap.sh baseline <task>` (a ref under `refs/pair/<run>/` that touches neither the index nor `git status`; the run id it prints is the namespace for every later snapshot) and record the run id, the ref and sha, `git rev-parse --short HEAD` and `git status --short`. Files already modified or untracked are the user's: never reverted, reformatted or staged, and if the task has to edit one you say so to the user before the first edit. Reviews then cover the team's increment against the baseline, which includes the team's lines inside a file the user had already changed and survives an authorised commit.
 
-Create the state file at the path `snap.sh state <run>` prints, with the sections from the protocol. You are its only writer; keep it current at every `OK`, `FIX`, `BLOCK`, `DECISION` and step boundary, because it is what any of you reads after a context compaction.
+Create the state file at the path `snap.sh state <run>` prints, with the sections from the protocol. You are its only writer; keep it current at every `OK`, `FIX`, `BLOCK`, `DECISION` and step boundary, because it is what any of you reads after a context compaction. Write `updated:` from `date -Iseconds`, never from memory.
 
 Send `START` to every member: the task as the user gave it (`$ARGUMENTS` plus what the conversation adds), the expected result, your session name, the members with their roles, the absolute paths of the protocol and the state file. Then end the turn; the ready `NOTE`s wake you. A reply that names a different role, directory or task is not a member: stop and tell the user.
 
@@ -43,7 +43,9 @@ When the user has put this tab in plan mode, all of this happens before `ExitPla
 
 ### 4. Work
 
-Do the steps. For each one: do it, run its proof, read the output, `snap.sh <run> stepN-r1`, send `REVIEW stepN@r1` with the ref and sha it printed, the files (new ones included), the evidence quoted rather than summarised, and whether the scope stays idle until the answer: the item's files and everything its checks import or run against. Say "no" when you are not sure; the reviewer then checks a worktree of the snapshot instead. A gated step: end the turn and wait for every `OK` it needs. An async step: continue with the next one; the `OK` arrives while you work.
+Do the steps. For each one: do it, run its proof, read the output, `snap.sh <run> stepN-r1`, send `REVIEW stepN@r1` with the ref and sha it printed, the files (new ones included), what else the snapshot holds that is not this step, the evidence quoted rather than summarised, and whether the scope stays idle until the answer: the item's files and everything its checks import or run against. Say "no" when you are not sure; the reviewer then checks a worktree of the snapshot instead. Snapshot and send before you start the next step, so the reviewers do not read step 5 half done inside step 4.
+
+Write the `REVIEW` once. The same body goes to every reviewer, and one line per role says what that role is asked to look at; two versions of the same review cost you the writing and them the reconciling. Evidence longer than a screen goes into `<state dir>/<run>/<item>-rN.md` and the message quotes the path and the decisive lines. A gated step: end the turn and wait for every `OK` it needs. An async step: continue with the next one; the `OK` arrives while you work.
 
 An operation outside the working tree is reviewed before it runs: `REVIEW deploy@r1` carries the command or artifact, the target and the rollback; the operation runs after `OK`, and never before; what it did is then verified and sent as `REVIEW deploy-run@r1` with the verification output and the environment. Same for a migration on a shared database, a push, a data change.
 
@@ -64,7 +66,7 @@ Reach the result first, within `authorised`: the code passes its checks, the dep
 
 Then `snap.sh <run> final-r1` and `REVIEW final@r1` to every member, with evidence that fits the result: for code, the increment against the baseline and the test output; for a report or diagnosis, the document path and the checks behind its claims; for a deployment, the verification command, its output and the environment. Every async item needs its `OK` by now.
 
-Close on `OK final` from every reviewer, with a report to the user: the result, the evidence, the limitations. A `FIX` on `final`, an `OK` missing because a member is unavailable, or an open `BLOCK` makes the task unfinished, and the report says so instead of closing around it. Run `snap.sh clean <run>` afterwards unless the user wants to look.
+Close on `OK final` from every reviewer, with a report to the user: the result, the evidence, the limitations. A suggestion inside an `OK final` goes into the report as follow-up work; taking it reopens `final` for everybody. A `FIX` on `final` is done at once. A `FIX` on `final`, an `OK` missing because a member is unavailable, or an open `BLOCK` makes the task unfinished, and the report says so instead of closing around it. Run `snap.sh clean <run>` afterwards unless the user wants to look.
 
 ## When you disagree
 

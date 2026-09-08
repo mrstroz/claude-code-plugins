@@ -1,7 +1,7 @@
 {
   "name": "pair",
-  "description": "Pair or three-agent team across Claude Code tabs — a driver does the task, integrates and reports; a navigator (pair) or an architect and a tester (team) review the plan before any work, approve the gated items, review the rest asynchronously and verify the result themselves; free conversation, a seven-type protocol, review requests with revisions and quoted evidence, a shared state file, all over cross-session messages in the same working directory",
-  "version": "0.2.0",
+  "description": "Pair or three-agent team across Claude Code tabs \u2014 a driver does the task, integrates and reports; a navigator (pair) or an architect and a tester (team) review the plan before any work, approve the gated items, review the rest asynchronously and verify the result themselves; free conversation, a seven-type protocol, review requests with revisions and quoted evidence, a shared state file, all over cross-session messages in the same working directory",
+  "version": "0.2.1",
   "author": {
     "name": "mrstroz"
   }
