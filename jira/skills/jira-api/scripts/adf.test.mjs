@@ -379,11 +379,40 @@ test('two neighbours sharing a mark are written as one span', () => {
     type: 'paragraph',
     content: [
       { type: 'text', text: 'in ', marks: [{ type: 'strong' }] },
-      { type: 'text', text: 'some/branch', marks: [{ type: 'strong' }, { type: 'code' }] },
+      { type: 'text', text: 'some/branch', marks: [{ type: 'strong' }, { type: 'link', attrs: { href: 'https://example.com/b' } }] },
     ],
   };
 
-  assert.equal(adfToText(paragraph, OPTS).trim(), '**in `some/branch`**');
+  assert.equal(adfToText(paragraph, OPTS).trim(), '**in [some/branch](https://example.com/b)**');
+});
+
+test('a code span inside bold keeps the bold beside it, not on it', () => {
+  // The tracker answers `{"errors":{"comment":"INVALID_INPUT"}}` to a text node
+  // carrying `code` next to `strong`, `em` or `strike` — seen live on TES-8451
+  // and, before the cause was known, on every variant of one comment on RO-2570.
+  const node = only('**Ekran ról nazywa je `hide_category_<id>`.** Tekst.');
+  assert.deepEqual(node.content, [
+    { type: 'text', text: 'Ekran ról nazywa je ', marks: [{ type: 'strong' }] },
+    { type: 'text', text: 'hide_category_<id>', marks: [{ type: 'code' }] },
+    { type: 'text', text: '.', marks: [{ type: 'strong' }] },
+    { type: 'text', text: ' Tekst.' },
+  ]);
+
+  const em = only('*kursywa z `kodem` w środku*');
+  assert.deepEqual(em.content.map((child) => (child.marks || []).map((mark) => mark.type)), [['em'], ['code'], ['em']]);
+});
+
+test('a code span inside a link keeps the link', () => {
+  const node = only('[`adf.mjs`](https://example.com/adf.mjs)');
+  assert.deepEqual(node.content[0].marks, [{ type: 'link', attrs: { href: 'https://example.com/adf.mjs' } }, { type: 'code' }]);
+});
+
+test('bold around a code span survives the round trip', () => {
+  const source = 'Zobacz **plik `adf.mjs` tutaj** i dalej.';
+  const first = markdownToAdf(source, OPTS);
+  const written = adfToText(first, OPTS);
+  assert.equal(written.trim(), 'Zobacz **plik **`adf.mjs`** tutaj** i dalej.');
+  assert.deepEqual(markdownToAdf(written, OPTS), first);
 });
 
 test('a break inside a list item survives', () => {

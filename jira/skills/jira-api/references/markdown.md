@@ -51,6 +51,11 @@ under it — leaving a blank line before a second paragraph — and it stays ins
 An issue key only becomes a card when it is the project's own key, which the converter reads
 from the configuration. `UTF-8` and `ISO-8601` are not issue keys and are left alone.
 
+A code span carries no other mark. The tracker rejects a text node that is `code` and bold,
+italic or struck at once — the whole write comes back `400 INVALID_INPUT` with no field named —
+so in `**see `adf.mjs` here**` the bold wraps the code and stops at it. A link is the one
+companion a code span keeps: `` [`adf.mjs`](url) `` works.
+
 **A mention is the one construct that can fail the write.** The name is resolved through `people`
 in the configuration first, then through the people already on the issue — reporter, assignee,
 everyone who commented. A bare first name, `@[Jeff]`, works when it names exactly one of them. A

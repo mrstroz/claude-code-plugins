@@ -204,7 +204,15 @@ function inlineNodes(text, marks = [], opts = normaliseOptions()) {
 
     if (token.startsWith('`')) {
       // Code spans are literal by definition, so no recursion inside them.
-      nodes.push(textNode(token.slice(1, -1), [...marks, { type: 'code' }]));
+      //
+      // A code mark travels alone. The tracker refuses the whole write — 400,
+      // `INVALID_INPUT`, no field named — when `code` shares a text node with
+      // strong, em or strike, and a comment that dies for one backtick inside a
+      // bold sentence is the failure that cost an afternoon. So `**a `b` c**`
+      // keeps the bold around the code and not on it; a link is the one
+      // companion the format accepts.
+      const kept = marks.filter((mark) => mark.type === 'link');
+      nodes.push(textNode(token.slice(1, -1), [...kept, { type: 'code' }]));
     } else if (token.startsWith('@[')) {
       // A `mention` node is the reason this whole module exists. Markdown has no
       // way to express one, so a converter going through Markdown drops it and

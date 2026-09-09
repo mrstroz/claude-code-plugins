@@ -1,7 +1,7 @@
 {
   "name": "jira",
   "description": "JIRA over one REST gateway (jira-api): read, search, export, create, edit, link, attach and comment on issues from Markdown, plus the skills built on it — task drafting, thread-aware comments, daily summaries, release notes, roadmaps and release test plans",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "author": {
     "name": "mrstroz"
   }
