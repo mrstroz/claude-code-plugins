@@ -37,7 +37,7 @@
     {
       "name": "qa",
       "source": "./qa",
-      "description": "Manual QA through a browser — scenarios derived from the ticket and the diff or taken from a list as handed over, written down as a scenario file with preconditions and dependencies, executed by Playwright in a QA window that stays open between runs or in the user's own Chrome, every screenshot captioned with what it proves, reported as a pass/fail/blocked table with reproduction steps"
+      "description": "Manual QA through a browser — scenarios derived from the ticket and the diff or taken from a list as handed over, written down as a scenario file with test data, preconditions and dependencies, executed by Playwright in a QA window that stays open between runs or in the user's own Chrome, optionally checked against the local database (withDB), every screenshot captioned with what it proves and a frame around the evidence, every execution kept under runs/<runId>/, reported as a pass/fail/blocked table naming the run behind each row, with reproduction steps"
     },
     {
       "name": "pair",

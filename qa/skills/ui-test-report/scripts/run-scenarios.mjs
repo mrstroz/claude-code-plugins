@@ -1,77 +1,55 @@
 #!/usr/bin/env node
 /*
- * Run a scenarios.json file in the QA browser window and write one captioned
- * screenshot per scenario plus results.json.
+ * Run a scenarios.json file in the QA browser window. Every execution is a
+ * run of its own under runs/<runId>/ — metadata, the scenario file as
+ * executed, results, the test-data ledger, screenshots — and results.json in
+ * the task directory is the index: for every scenario, which run last executed
+ * it and what it found.
  *
+ *   cd docs/qa/<TASK>
  *   node run-scenarios.mjs --base-url http://localhost:3000 [--scenarios scenarios.json] \
- *     [--out screenshots] [--results results.json] [--only 07,08] [--slow-mo MS] \
- *     [--viewport 1440x900] [--timeout MS] [--browser chromium|brave] [--executable PATH] \
- *     [--profile DIR] [--port 9333]
+ *     [--only 07,08] [--fast | --slow-mo MS] [--keep-data] [--viewport 1440x900] [--timeout MS] \
+ *     [--browser chromium|brave] [--executable PATH] [--profile DIR] [--port 9333] \
+ *     [--task-dir DIR] [--config qa.config.json]
  *
- *   node run-scenarios.mjs --base-url URL --open            open the QA window (or a tab in it)
- *   node run-scenarios.mjs --base-url URL --eval JS [--url /path] [--steps '[…]']
- *                                                           read one value, no scenario file; --steps
- *                                                           runs scenario steps first (open a drawer…)
- *   node run-scenarios.mjs --base-url URL --inspect [--url /path] [--steps '[…]']
- *                                                           inventory of the page: controls, selects
- *                                                           with options, tables, open dialogs
- *   node run-scenarios.mjs --verdict 07=fail --reason "…"   record a QA verdict on a scenario that
- *                                                           errored, or overturn one, without re-running
- *   node run-scenarios.mjs --close                          quit the QA window
+ *   --open                     open the QA window (or a tab in it) and print where it landed
+ *   --eval JS [--url /p] [--steps '[…]']     read one value; --steps runs scenario steps first
+ *   --inspect [--url /p] [--steps '[…]']     inventory of the page: controls, selects, tables, dialogs
+ *   --verdict 07=fail --reason "…" [--run ID]   record a QA judgement without re-running
+ *   --new-run [--driver chrome]  create runs/<runId>/ for a run driven by hand (Chrome extension)
+ *   --prepare --run ID [--setups a,b]         run setups into that run's ledger, no browser needed
+ *   --cleanup --run ID           remove what that run's ledger says it created
+ *   --finish --run ID            close a hand-driven run: merge its results.json into the index
+ *   --db-discover                propose a db block for qa.config.json from docker-compose / docker ps
+ *   --db-check                   connect, describe, and run the configured probe against the app
+ *   --db "SELECT …" [--params '[…]']          one read-only query, rows as JSON
+ *   --close                      quit the QA window
  *
- * The browser is a long-lived process, not something each run starts and stops.
- * The first run (or --open) launches it detached, with remote debugging on a
- * local port, on a profile of its own; every later run connects over CDP, opens
- * a tab, works in it and closes only that tab. The window stays until --close.
- * That is what keeps a session alive: a login cookie with no expiry is dropped
- * the moment Chromium exits, so a runner that exits after every run can never
- * hold one. The user logs in once, in the window, and the runs reuse it.
- *
- * What this owns, and why it is a script rather than instructions:
- *   - the scenario file is validated before the first click. A scenario with no
- *     `expect` and no `manual`, a step of an unknown kind, a `${ref}` nothing
- *     reads: each is a broken file, reported all at once, not discovered on
- *     scenario 37 of 40
- *   - the verdict comes from the `expect` steps, not from reading a picture.
- *     A PASS in the results file means an assertion ran against the DOM and held
- *   - `given` checks run before the steps. When one fails the scenario is
- *     `blocked`, with the check and the value it saw, and no screenshot: a
- *     picture of a state the scenario never reached is not evidence
- *   - `requires` names the scenarios whose state this one builds on. A
- *     dependency that did not run to the end in this run — errored, blocked,
- *     absent — blocks the dependant instead of letting it run on the wrong
- *     state, and --only pulls dependencies in, so a re-run of 07 runs 03 first
- *     rather than trusting a PASS from an earlier run
- *   - the screenshot is written straight to NN-slug.jpg, so the number in the
- *     report row and the number on the file can never disagree
- *   - the caption overlay is injected as an init script, so it survives every
- *     reload and hard navigation, and is cleared before each scenario, so the
- *     previous card cannot intercept a click
- *   - an error in one scenario (a selector that no longer matches, a timeout)
- *     does not stop the run. It is recorded as status "error", its screenshot
- *     goes to NN-slug.error.jpg — a name check-evidence.js rejects on purpose —
- *     and the next scenario runs. A FAIL is a result; an error is a step that
- *     could not run, until somebody establishes why. --verdict records that
- *     diagnosis: the error stays in the data, the status becomes the QA result
- *   - a scenario whose steps or status differ from the previous results file
- *     keeps the earlier entry under `history`. Steps are compared by hash, so a
- *     changed comparator counts as a rewrite even when the description did not
- *     change, and a rewrite is expected to carry a `revision` saying why
- *
- * What it does not do: type credentials, install Playwright (it prints the
- * command), or post anything anywhere.
+ * The browser is a long-lived process the runner attaches to over CDP; the
+ * first run starts it detached on a profile of its own, and every run after
+ * opens a tab and closes only the tab. The user logs in once, in the window.
  *
  * Exit codes: 0 all scenarios ran (FAILs and blocked included), 1 at least one
- * scenario errored, 2 the environment or the file is not usable (no Playwright,
- * bad arguments, invalid scenarios, browser did not start).
+ * scenario errored, 2 the environment or the file is not usable, 130 the run
+ * was interrupted (its record says so).
  */
 import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { createRequire } from "node:module";
-import { execSync, spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
+
+import { fillDeep, getPath } from "./lib/compare.mjs";
+import { validateScenarios, selectScenarios, numberOf, hashOf } from "./lib/validate.mjs";
+import {
+  INDEX_FILE, readJson, writeJsonAtomic, runDirOf, listRuns, markStaleRuns, gitBuildInfo,
+  createRun, updateRun, snapshotEntry, loadIndex, updateIndex, unexplainedRewrite, runnerVersion, RUN_ID_RE,
+} from "./lib/runs.mjs";
+import { loadConfig, openDb, discoverDb, CONFIG_FILE } from "./lib/db.mjs";
+import { Ledger, prepareSetup, cleanupRun } from "./lib/fixtures.mjs";
+import { executeScenarios, runStep, resolveUrl, awaitReady } from "./lib/engine.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const STATE_DIR = path.join(os.homedir(), ".cache", "qa-ui-test");
@@ -85,26 +63,12 @@ const BRAVE_CANDIDATES = ["brave-browser", "brave", "brave-browser-stable"];
 
 function parseArgs(argv) {
   const opts = {
-    scenarios: "scenarios.json",
-    baseUrl: null,
-    browser: null,
-    executable: null,
-    profile: null,
-    port: 9333,
-    out: "screenshots",
-    results: "results.json",
-    slowMo: 250,
-    only: null,
-    viewport: { width: 1440, height: 900 },
-    timeout: 10000,
-    open: false,
-    close: false,
-    eval: null,
-    url: null,
-    verdict: null,
-    reason: null,
-    steps: null,
-    inspect: false,
+    scenarios: "scenarios.json", baseUrl: null, browser: null, executable: null, profile: null, port: 9333,
+    slowMo: 250, only: null, viewport: { width: 1440, height: 900 }, timeout: 10000, keepData: false,
+    taskDir: process.cwd(), config: null, driver: "playwright",
+    open: false, close: false, eval: null, url: null, verdict: null, reason: null, steps: null, inspect: false,
+    newRun: false, prepare: false, cleanup: false, finish: false, run: null, setups: null,
+    dbDiscover: false, dbCheck: false, db: null, params: [],
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -119,11 +83,14 @@ function parseArgs(argv) {
       case "--executable": opts.executable = next(); break;
       case "--profile": opts.profile = next(); break;
       case "--port": opts.port = Number(next()); break;
-      case "--out": opts.out = next(); break;
-      case "--results": opts.results = next(); break;
       case "--slow-mo": opts.slowMo = Number(next()); break;
+      case "--fast": opts.slowMo = 0; break;
       case "--only": opts.only = next().split(",").map((s) => s.trim()).filter(Boolean); break;
       case "--timeout": opts.timeout = Number(next()); break;
+      case "--keep-data": opts.keepData = true; break;
+      case "--task-dir": opts.taskDir = path.resolve(next()); break;
+      case "--config": opts.config = next(); break;
+      case "--driver": opts.driver = next(); break;
       case "--viewport": {
         const m = next().match(/^(\d+)x(\d+)$/);
         if (!m) die(2, "--viewport wants WIDTHxHEIGHT, e.g. 1440x900");
@@ -141,13 +108,23 @@ function parseArgs(argv) {
         break;
       }
       case "--reason": opts.reason = next(); break;
+      case "--run": opts.run = next(); break;
       case "--inspect": opts.inspect = true; break;
+      case "--new-run": opts.newRun = true; break;
+      case "--prepare": opts.prepare = true; break;
+      case "--cleanup": opts.cleanup = true; break;
+      case "--finish": opts.finish = true; break;
+      case "--setups": opts.setups = next().split(",").map((s) => s.trim()).filter(Boolean); break;
+      case "--db-discover": opts.dbDiscover = true; break;
+      case "--db-check": opts.dbCheck = true; break;
+      case "--db": opts.db = next(); break;
+      case "--params": {
+        try { opts.params = JSON.parse(next()); } catch (e) { die(2, `--params wants a JSON array: ${e.message}`); }
+        if (!Array.isArray(opts.params)) die(2, "--params wants a JSON array");
+        break;
+      }
       case "--steps": {
-        try {
-          opts.steps = JSON.parse(next());
-        } catch (e) {
-          die(2, `--steps wants a JSON array of scenario steps: ${e.message}`);
-        }
+        try { opts.steps = JSON.parse(next()); } catch (e) { die(2, `--steps wants a JSON array of scenario steps: ${e.message}`); }
         if (!Array.isArray(opts.steps)) die(2, "--steps wants a JSON array of scenario steps");
         break;
       }
@@ -156,14 +133,18 @@ function parseArgs(argv) {
     }
   }
   if (opts.browser && !["chromium", "brave"].includes(opts.browser)) die(2, "--browser must be chromium or brave");
+  if (!["playwright", "chrome"].includes(opts.driver)) die(2, "--driver must be playwright or chrome");
   if (!Number.isInteger(opts.port) || opts.port <= 0) die(2, "--port must be a port number");
-  if (!opts.close && !opts.verdict && !opts.baseUrl) die(2, "--base-url is required (e.g. http://localhost:3000)");
+  if (opts.run && !RUN_ID_RE.test(opts.run)) die(2, `--run wants a run id like 20260910-103212-9f3a, got ${opts.run}`);
+  const offline = opts.close || opts.verdict || opts.newRun || opts.prepare || opts.cleanup || opts.finish || opts.dbDiscover || opts.db !== null;
+  if (!offline && !opts.baseUrl) die(2, "--base-url is required (e.g. http://localhost:3000)");
   if (opts.baseUrl) opts.baseUrl = opts.baseUrl.replace(/\/+$/, "");
   if (opts.inspect) {
     if (opts.eval !== null) die(2, "--inspect and --eval are two ways to read the page; pick one");
     opts.eval = fs.readFileSync(path.join(HERE, "inspect.js"), "utf8");
   }
   if (opts.steps && opts.eval === null) die(2, "--steps only makes sense with --eval or --inspect");
+  if ((opts.cleanup || opts.finish) && !opts.run) die(2, `--${opts.cleanup ? "cleanup" : "finish"} needs --run <id>`);
   return opts;
 }
 
@@ -178,12 +159,6 @@ function die(code, msg) {
 
 // --------------------------------------------------------- playwright lookup
 
-/**
- * Resolve the `playwright` package from, in order: the project this run is in,
- * the tool's own state directory, wherever this script lives, the global npm
- * root. The plugin cache is versioned and replaced on update, so a node_modules
- * inside it would vanish — that is why the fallback lives under ~/.cache.
- */
 function loadPlaywright() {
   const bases = [process.cwd(), STATE_DIR, HERE];
   for (const base of bases) {
@@ -194,7 +169,7 @@ function loadPlaywright() {
     }
   }
   try {
-    const root = execSync("npm root -g", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+    const root = execFileSync("npm", ["root", "-g"], { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
     return createRequire(path.join(root, "noop.js"))("playwright");
   } catch {
     /* fall through */
@@ -206,7 +181,7 @@ function loadPlaywright() {
 
 function which(name) {
   try {
-    return execSync(`command -v ${name}`, { stdio: ["ignore", "pipe", "ignore"], shell: "/bin/sh" }).toString().trim() || null;
+    return execFileSync("/bin/sh", ["-c", `command -v ${name}`], { stdio: ["ignore", "pipe", "ignore"] }).toString().trim() || null;
   } catch {
     return null;
   }
@@ -229,10 +204,6 @@ function resolveExecutable(opts, pw) {
   return p;
 }
 
-/**
- * A snap-confined browser cannot read hidden directories at the top of $HOME,
- * so ~/.cache is invisible to it; its profile has to live under ~/snap/<name>/common.
- */
 function resolveProfile(opts, executable) {
   if (opts.profile) return path.resolve(opts.profile);
   if (executable.startsWith("/snap/")) {
@@ -258,10 +229,6 @@ function readBrowserFile() {
   }
 }
 
-/**
- * Find the QA window or start it. Started detached, so it outlives this
- * process; recorded in browser.json so the next run finds the same port.
- */
 async function ensureBrowser(opts, pw) {
   const known = readBrowserFile();
   const port = known?.port || opts.port;
@@ -274,15 +241,10 @@ async function ensureBrowser(opts, pw) {
     info.version = version.Browser;
     return info;
   }
-
   const browser = opts.browser || "chromium";
   const executable = resolveExecutable({ ...opts, browser }, pw);
   const profile = resolveProfile({ ...opts, browser }, executable);
   fs.mkdirSync(profile, { recursive: true });
-  // --no-sandbox is what Playwright itself passes (chromiumSandbox defaults to
-  // false): distros that lock unprivileged user namespaces make Chromium exit
-  // with "No usable sandbox!" otherwise, and the test profile holds nothing worth
-  // the sandbox anyway.
   const args = [
     `--user-data-dir=${profile}`,
     `--remote-debugging-port=${opts.port}`,
@@ -294,7 +256,6 @@ async function ensureBrowser(opts, pw) {
   ];
   const child = spawn(executable, args, { detached: true, stdio: "ignore" });
   child.unref();
-
   const deadline = Date.now() + 15000;
   let v = null;
   while (!v && Date.now() < deadline) {
@@ -302,7 +263,6 @@ async function ensureBrowser(opts, pw) {
     v = await alive(opts.port);
   }
   if (!v) die(2, `${executable} did not answer on port ${opts.port} within 15 s (profile: ${profile})`);
-
   const info = { port: opts.port, pid: child.pid, browser, executable, profile, startedAt: new Date().toISOString(), version: v.Browser };
   fs.mkdirSync(STATE_DIR, { recursive: true });
   fs.writeFileSync(BROWSER_FILE, JSON.stringify(info, null, 2) + "\n");
@@ -316,7 +276,6 @@ async function connect(pw, info, opts) {
   return { browser, context };
 }
 
-/** Quit the QA window through CDP; fall back to the recorded pid. */
 async function closeBrowser(pw) {
   const info = readBrowserFile();
   const port = info?.port;
@@ -335,375 +294,67 @@ async function closeBrowser(pw) {
   fs.rmSync(BROWSER_FILE, { force: true });
 }
 
-// ---------------------------------------------------------------- selectors
+// ------------------------------------------------------------- the file
 
-/** A string is a Playwright selector; an object picks one of the getBy* locators. */
-function locate(page, target) {
-  if (typeof target === "string") return page.locator(target);
-  if (target && typeof target === "object") {
-    if (target.role) return page.getByRole(target.role, { name: target.name, exact: target.exact });
-    if (target.text !== undefined) return page.getByText(target.text, { exact: target.exact });
-    if (target.label !== undefined) return page.getByLabel(target.label, { exact: target.exact });
-    if (target.placeholder !== undefined) return page.getByPlaceholder(target.placeholder);
-    if (target.testId !== undefined) return page.getByTestId(target.testId);
-    if (target.selector) {
-      let loc = page.locator(target.selector);
-      if (target.nth !== undefined) loc = loc.nth(target.nth);
-      return loc;
-    }
-  }
-  throw new Error(`cannot locate ${JSON.stringify(target)}`);
-}
-
-// ---------------------------------------------------------------- templating
-
-/** Replace ${name} with the value read earlier under that name. */
-function fill(template, values) {
-  if (typeof template !== "string") return template;
-  return template.replace(/\$\{([a-zA-Z0-9_]+)\}/g, (m, k) => (k in values ? String(values[k]) : m));
-}
-
-const REF_RE = /^\$\{([a-zA-Z0-9_]+)\}$/;
-
-/** An expect operand: a ${ref} resolves to a stored value; anything else is literal. */
-function operand(v, values) {
-  if (typeof v === "string") {
-    const m = v.match(REF_RE);
-    if (m) {
-      if (!(m[1] in values)) throw new Error(`\${${m[1]}} has not been read in this run — the scenario that reads it did not run; include it in --only`);
-      return values[m[1]];
-    }
-  }
-  return v;
-}
-
-// Arrays and objects compare by content, recursively — a list of ids read from
-// the page against the list in the file is the assertion this runner exists
-// for. Primitives compare by value with a string fallback, because the DOM
-// hands back "11" where the file says 11. The fallback stops at structures:
-// String(["a,b"]) === String(["a", "b"]), and two objects both print as
-// [object Object].
-function same(a, b) {
-  if (a === b) return true;
-  const obj = (v) => v !== null && typeof v === "object";
-  if (obj(a) || obj(b)) {
-    if (!obj(a) || !obj(b) || Array.isArray(a) !== Array.isArray(b)) return false;
-    if (Array.isArray(a)) return a.length === b.length && a.every((v, i) => same(v, b[i]));
-    const ka = Object.keys(a);
-    return ka.length === Object.keys(b).length && ka.every((k) => Object.hasOwn(b, k) && same(a[k], b[k]));
-  }
-  return String(a) === String(b);
-}
-
-const COMPARATORS = {
-  equals: same,
-  notEquals: (a, b) => !same(a, b),
-  matches: (a, b) => new RegExp(b).test(String(a)),
-  contains: (a, b) => String(a).includes(String(b)),
-  gt: (a, b) => Number(a) > Number(b),
-  gte: (a, b) => Number(a) >= Number(b),
-  lt: (a, b) => Number(a) < Number(b),
-  lte: (a, b) => Number(a) <= Number(b),
-  truthy: (a) => !!a,
-  falsy: (a) => !a,
-};
-
-const comparatorOf = (spec) => Object.keys(COMPARATORS).find((k) => k in spec);
-
-/** Evaluate one check — an `expect` step or a `given` entry — against the page. */
-async function check(page, spec, values) {
-  const actual = spec.js !== undefined ? await page.evaluate(spec.js) : operand(`\${${spec.name}}`, values);
-  const op = comparatorOf(spec);
-  if (!op) throw new Error(`check without a comparator: ${JSON.stringify(spec)}`);
-  const expected = operand(spec[op], values);
-  const passed = COMPARATORS[op](actual, expected);
-  const desc = spec.desc || `${spec.js || "${" + spec.name + "}"} ${op} ${JSON.stringify(spec[op])}`;
-  return { desc, passed, actual, expected: op === "truthy" || op === "falsy" ? undefined : expected };
-}
-
-// ------------------------------------------------------------------ steps
-
-function resolveUrl(u, opts) {
-  return /^https?:\/\//.test(u) ? u : opts.baseUrl + (u.startsWith("/") ? u : "/" + u);
-}
-
-const stepKind = (step) => Object.keys(step).find((k) => k in STEP);
-
-async function runStep(page, step, values, opts, sink) {
-  const kind = stepKind(step);
-  if (!kind) throw new Error(`unknown step ${JSON.stringify(step)}`);
-  return STEP[kind](page, step[kind], step, values, opts, sink);
-}
-
-const STEP = {
-  async goto(page, url, _s, values, opts) {
-    await page.goto(resolveUrl(fill(url, values), opts));
-    await page.waitForLoadState("networkidle").catch(() => {});
-  },
-  async reload(page) {
-    await page.reload();
-    await page.waitForLoadState("networkidle").catch(() => {});
-  },
-  async click(page, target) {
-    await locate(page, target).click();
-  },
-  async dblclick(page, target) {
-    await locate(page, target).dblclick();
-  },
-  async hover(page, target) {
-    await locate(page, target).hover();
-  },
-  async fill(page, spec, _s, values) {
-    await locate(page, spec.selector ?? spec.target ?? spec).fill(fill(spec.value, values));
-  },
-  async type(page, spec, _s, values) {
-    await locate(page, spec.selector ?? spec.target).pressSequentially(fill(spec.value, values));
-  },
-  async select(page, spec, _s, values) {
-    await locate(page, spec.selector ?? spec.target).selectOption(fill(spec.value, values));
-  },
-  async check(page, target) {
-    await locate(page, target).check();
-  },
-  async uncheck(page, target) {
-    await locate(page, target).uncheck();
-  },
-  async press(page, key, step) {
-    if (step.selector) await locate(page, step.selector).press(key);
-    else await page.keyboard.press(key);
-  },
-  async wait(page, what, _s, values, opts) {
-    if (typeof what === "number") return page.waitForTimeout(what);
-    if (["load", "domcontentloaded", "networkidle"].includes(what)) return page.waitForLoadState(what);
-    if (typeof what === "string") return page.locator(what).first().waitFor({ state: "visible", timeout: opts.timeout });
-    if (what.url) return page.waitForURL(new RegExp(fill(what.url, values)), { timeout: opts.timeout });
-    if (what.js) return page.waitForFunction(what.js, null, { timeout: opts.timeout });
-    return locate(page, what).first().waitFor({ state: what.state || "visible", timeout: opts.timeout });
-  },
-  async read(page, spec, _s, values) {
-    values[spec.name] = await page.evaluate(spec.js);
-  },
-  async expect(page, spec, _s, values, _opts, sink) {
-    sink.push(await check(page, spec, values));
-  },
-};
-
-// A drawer that closed 50 ms ago is still on screen mid-slide. Fast-forwarding
-// CSS transitions at capture time is what makes "Apply closes the drawer" and
-// the picture agree without every scenario carrying a 350 ms wait.
-const SHOT = (file) => ({ path: file, type: "jpeg", quality: 85, animations: "disabled" });
-
-// ------------------------------------------------------------- validation
-
-/**
- * Every problem in the file at once, before anything is clicked. The rules
- * that matter: a scenario needs an `expect` or `manual: true`, because a PASS
- * nobody asserted is the row a reviewer cannot trust; a `${ref}` has to be read
- * by an earlier step or an earlier scenario, because the values map is shared
- * across the run in file order.
- */
-function validateScenarios(list) {
-  const problems = [];
-  const seen = new Set();
-  const reads = new Set();
-  const refsOf = (spec) => {
-    const refs = [];
-    if (spec.name !== undefined) refs.push(spec.name);
-    const op = comparatorOf(spec);
-    const m = op && typeof spec[op] === "string" ? spec[op].match(REF_RE) : null;
-    if (m) refs.push(m[1]);
-    return refs;
-  };
-  const checkSpec = (where, kind, spec) => {
-    if (!spec || typeof spec !== "object") return problems.push(`${where}: ${kind} must be an object`);
-    if (!comparatorOf(spec)) problems.push(`${where}: ${kind} without a comparator: ${JSON.stringify(spec)}`);
-    if (spec.js === undefined && spec.name === undefined) problems.push(`${where}: ${kind} needs js or name: ${JSON.stringify(spec)}`);
-    for (const ref of refsOf(spec)) {
-      if (!reads.has(ref)) problems.push(`${where}: ${kind} refers to \${${ref}} but no earlier read stores it`);
-    }
-  };
-  list.forEach((sc, i) => {
-    const n = String(sc.n ?? "").padStart(2, "0");
-    const where = `scenario ${sc.n ?? "#" + (i + 1)}`;
-    if (!/^\d{2,3}$/.test(n)) problems.push(`${where}: n must be a number like "01"`);
-    else if (seen.has(n)) problems.push(`${where}: number ${n} is used twice`);
-    // A dependency has to come earlier in the file, because that is the order
-    // the run follows — which also rules out cycles without a graph walk.
-    if (sc.requires !== undefined && !Array.isArray(sc.requires)) problems.push(`${where}: requires must be an array of scenario numbers`);
-    for (const dep of Array.isArray(sc.requires) ? sc.requires : []) {
-      const d = String(dep).padStart(2, "0");
-      if (d === n) problems.push(`${where}: requires itself`);
-      else if (!seen.has(d)) problems.push(`${where}: requires ${d}, which is not an earlier scenario in the file`);
-    }
-    seen.add(n);
-    const slug = sc.slug || "scenario";
-    if (!/^[a-z0-9][a-z0-9-]*$/.test(slug)) problems.push(`${where}: slug "${slug}" must be lowercase letters, digits and dashes`);
-    for (const spec of sc.given || []) checkSpec(where, "given", spec);
-    let expects = 0;
-    for (const step of sc.steps || []) {
-      const kind = stepKind(step);
-      if (!kind) { problems.push(`${where}: unknown step ${JSON.stringify(step)}`); continue; }
-      if (kind === "read") {
-        if (!step.read?.name || step.read.js === undefined) problems.push(`${where}: read needs name and js: ${JSON.stringify(step)}`);
-        else reads.add(step.read.name);
-      }
-      if (kind === "expect") { expects++; checkSpec(where, "expect", step.expect); }
-    }
-    if (!sc.manual && expects === 0) problems.push(`${where}: no expect step and not manual — add an assertion, or set "manual": true if the tooling cannot verify it`);
-  });
-  return problems;
-}
-
-/** Steps, preconditions and the manual flag, hashed: the identity of what a scenario checks. */
-function hashOf(sc) {
-  const body = JSON.stringify({ given: sc.given || [], steps: sc.steps || [], manual: !!sc.manual });
-  return crypto.createHash("sha1").update(body).digest("hex").slice(0, 12);
-}
-
-// --------------------------------------------------------------- selection
-
-const numberOf = (sc) => String(sc.n).padStart(2, "0");
-const requiresOf = (sc) => (sc.requires || []).map((d) => String(d).padStart(2, "0"));
-
-/**
- * Which scenarios run, in file order. --only names some; each of those pulls
- * in what it requires, transitively, because a dependency's PASS from an
- * earlier run says nothing about the state of the app now.
- */
-function select(list, opts) {
-  if (!opts.only) return list;
-  const byN = new Map(list.map((sc) => [numberOf(sc), sc]));
-  const wanted = new Set(opts.only.map((n) => n.padStart(2, "0")));
-  const missing = [...wanted].filter((n) => !byN.has(n));
-  if (missing.length) die(2, `--only ${missing.join(",")}: no such scenario in the file`);
-  const pulled = [];
-  const add = (n, forWhom) => {
-    for (const dep of requiresOf(byN.get(n))) {
-      if (!wanted.has(dep)) { wanted.add(dep); pulled.push(`${dep} for ${forWhom}`); }
-      add(dep, forWhom);
-    }
-  };
-  for (const n of [...wanted]) add(n, n);
-  if (pulled.length) console.log(`running ${pulled.sort().join(", ")} (requires)`);
-  return list.filter((sc) => wanted.has(numberOf(sc)));
-}
-
-// ----------------------------------------------------------------- caption
-
-async function caption(page, annotateSrc, o) {
-  const ready = await page.evaluate(() => typeof window.__ann === "function").catch(() => false);
-  if (!ready) await page.addScriptTag({ content: annotateSrc });
-  return page.evaluate((opts) => window.__ann(opts), o);
-}
-
-// ------------------------------------------------------------------ errors
-
-/**
- * The whole error message, minus what differs between two runs of the same
- * failure: Playwright's retry counters and wait intervals. The first line alone
- * ("locator.click: Timeout 3000ms exceeded.") is the same for a button that is
- * missing and one that is disabled; the call log below it is where they differ.
- */
-function errorDetail(message) {
-  const seen = new Set();
-  const out = [];
-  for (const raw of String(message).replace(/\x1b\[[0-9;]*m/g, "").split("\n")) {
-    // "4 × waiting for element to be visible" counts attempts; the count grows with the timeout.
-    const line = raw.trimEnd().replace(/\b\d+ × /, "× ");
-    if (!line.trim() || /^\s*-?\s*(retrying .*action|waiting \d+ms)\s*$/.test(line)) continue;
-    if (seen.has(line)) continue;
-    seen.add(line);
-    out.push(line);
-  }
-  return out.join("\n");
-}
-
-/** Same failure: same detail once the configured timeout is masked out. */
-const sameError = (a, b) => !!a && !!b && a.replace(/\d+ms/g, "Nms") === b.replace(/\d+ms/g, "Nms");
-
-// ----------------------------------------------------------------- history
-
-function readResults(file) {
+function loadScenarios(opts) {
+  const file = path.resolve(opts.taskDir, opts.scenarios);
+  if (!fs.existsSync(file)) die(2, `scenarios file not found: ${file}`);
+  let doc;
   try {
-    return JSON.parse(fs.readFileSync(file, "utf8"));
-  } catch {
-    return null;
+    doc = JSON.parse(fs.readFileSync(file, "utf8"));
+  } catch (e) {
+    die(2, `${file}: not valid JSON (${e.message})`);
+  }
+  return { file, doc: Array.isArray(doc) ? { scenarios: doc } : doc };
+}
+
+function dbConfigFor(opts, doc) {
+  let cfg;
+  try {
+    cfg = loadConfig(opts.taskDir, opts.config);
+  } catch (e) {
+    die(2, e.message);
+  }
+  const withDB = doc?.withDB === true;
+  if (withDB && !cfg.config.db) die(2, `the scenario file says "withDB": true but no ${CONFIG_FILE} with a db block was found next to ${opts.taskDir} or in docs/qa/ — run --db-discover for a skeleton`);
+  return { ...cfg, withDB };
+}
+
+async function openDbFor(opts, doc, { writes = false } = {}) {
+  const { config, withDB, file } = dbConfigFor(opts, doc);
+  if (!withDB && !opts.db && !opts.dbCheck) return { db: null, config, file };
+  if (!config.db) die(2, `no db block in ${CONFIG_FILE} — run --db-discover`);
+  try {
+    const db = await openDb(config.db, { cwd: path.dirname(file), writes });
+    await db.query("SELECT 1 AS ok");
+    return { db, config, file };
+  } catch (e) {
+    die(2, `database not available: ${e.message}\n  The run needs it (withDB): fix the connection or ask the user whether to run UI only — not both, and not silently.`);
   }
 }
-
-/** What an earlier entry keeps when it moves into `history`. */
-function snapshot(p) {
-  return {
-    at: p.at || null, status: p.status, completed: p.completed, title: p.title, expects: p.expects,
-    error: p.error, errorDetail: p.errorDetail, failedStep: p.failedStep, stepsHash: p.stepsHash,
-    revision: p.revision, revisionHash: p.revisionHash, diagnosis: p.diagnosis,
-  };
-}
-
-/**
- * Carry the previous results file forward. A scenario whose status or steps
- * changed keeps the old entry under `history`; otherwise the old history rides
- * along untouched. Under --only, scenarios not in this run keep their previous
- * entry so the file stays the single record of the run.
- */
-function mergeResults(results, prev, opts) {
-  if (!prev) return results;
-  const byN = new Map((prev.scenarios || []).map((r) => [r.n, r]));
-  const descs = (r) => (r.expects || []).map((e) => e.desc).join(" ");
-  for (const r of results) {
-    const p = byN.get(r.n);
-    if (!p) continue;
-    // Results written before stepsHash existed fall back to comparing assertion texts.
-    const rewritten = p.stepsHash ? p.stepsHash !== r.stepsHash : descs(p) !== descs(r);
-    const older = p.history || [];
-    r.history = p.status !== r.status || rewritten ? [...older, snapshot(p)] : older;
-    if (r.history.length === 0) delete r.history;
-    byN.set(r.n, r);
-  }
-  if (!opts.only) return results;
-  for (const r of results) byN.set(r.n, r);
-  return [...byN.values()].sort((a, b) => a.n.localeCompare(b.n));
-}
-
-/**
- * Rewritten since an earlier run — the steps hash changed — and the file has no
- * revision written for this version of the steps. A revision is tied to the
- * hash it first appeared with, so the sentence that explained A → B does not
- * also cover B → C.
- */
-const unexplainedRewrite = (r) =>
-  (r.history || []).some((h) => h.stepsHash && h.stepsHash !== r.stepsHash) && (!r.revision || r.revisionHash !== r.stepsHash);
 
 // ----------------------------------------------------------------- verdict
 
-/**
- * A verdict is the QA judgement on a scenario the runner could not judge: a
- * step that errored because the element the criterion needs is not there (a
- * FAIL, with the error as evidence), or a picture that shows something the
- * assertions did not cover. The entry as it was goes to history, the reason is
- * kept next to the new status, and an error screenshot is renamed so the
- * evidence check accepts it as the picture behind a result.
- */
 function applyVerdict(opts) {
   if (!opts.reason) die(2, "--verdict needs --reason: the diagnosis is what makes this a QA result rather than an edit");
-  const doc = readResults(opts.results);
-  if (!doc) die(2, `results file not found or unreadable: ${opts.results}`);
-  const rec = (doc.scenarios || []).find((r) => r.n === opts.verdict.n);
-  if (!rec) die(2, `no scenario ${opts.verdict.n} in ${opts.results}`);
+  const index = loadIndex(opts.taskDir);
+  const rec = index.scenarios.find((r) => r.n === opts.verdict.n);
+  if (!rec) die(2, `no scenario ${opts.verdict.n} in ${INDEX_FILE}`);
+  const runId = opts.run || rec.sourceRunId;
+  if (runId !== rec.sourceRunId) die(2, `${rec.n} was last executed by run ${rec.sourceRunId}, not ${runId}; a verdict applies to the latest execution`);
   if (rec.status === "blocked") die(2, `${rec.n} is blocked (${rec.reason}); it did not run, so there is nothing to judge — fix the precondition and re-run it with --only ${rec.n}`);
   if (opts.verdict.status === "pass" && !(rec.completed === true && (rec.expects || []).length > 0 && rec.expects.every((e) => e.passed))) {
     die(2, `${rec.n} cannot be passed by verdict: a PASS is a completed run whose assertions held. Fix the scenario and re-run it with --only ${rec.n}`);
   }
-  // The badge drawn on the picture is the status at capture time; a verdict
-  // changes the row, not the picture, and the report has to say which wins.
   if (rec.pictureSays === undefined && rec.caption !== null && rec.completed === true) {
     rec.pictureSays = { pass: "PASS", fail: "FAIL", check: "CHECK" }[rec.status] || null;
   }
-  rec.history = [...(rec.history || []), snapshot(rec)];
+  rec.history = [...(rec.history || []), snapshotEntry(rec)];
   if (rec.screenshot && /\.error\.jpg$/.test(rec.screenshot)) {
     const evidence = rec.screenshot.replace(/\.error\.jpg$/, ".jpg");
-    if (fs.existsSync(rec.screenshot)) fs.renameSync(rec.screenshot, evidence);
-    else console.error(`run-scenarios: ${rec.screenshot} is not here — run --verdict from the directory the run was made in`);
+    const abs = path.join(opts.taskDir, rec.screenshot);
+    if (fs.existsSync(abs)) fs.renameSync(abs, path.join(opts.taskDir, evidence));
+    else console.error(`run-scenarios: ${rec.screenshot} is not here — run --verdict from the task directory`);
     rec.screenshot = evidence;
   }
   const from = rec.status;
@@ -711,11 +362,244 @@ function applyVerdict(opts) {
   rec.diagnosis = opts.reason;
   rec.diagnosedAt = new Date().toISOString();
   delete rec.diagnosisCarried;
-  fs.writeFileSync(opts.results, JSON.stringify(doc, null, 2) + "\n");
-  console.log(`${rec.n} ${from} → ${rec.status}: ${opts.reason}`);
+  writeJsonAtomic(path.join(opts.taskDir, INDEX_FILE), index);
+  // The run's own results file records the verdict too, so the run directory
+  // stands on its own.
+  if (runId && runId !== "legacy") {
+    const runResults = path.join(runDirOf(opts.taskDir, runId), "results.json");
+    const doc = readJson(runResults);
+    if (doc) {
+      const i = (doc.scenarios || []).findIndex((r) => r.n === rec.n);
+      if (i >= 0) doc.scenarios[i] = { ...doc.scenarios[i], status: rec.status, diagnosis: rec.diagnosis, diagnosedAt: rec.diagnosedAt, pictureSays: rec.pictureSays, screenshot: rec.screenshot, history: rec.history };
+      writeJsonAtomic(runResults, doc);
+    }
+  }
+  console.log(`${rec.n} ${from} → ${rec.status} (run ${runId}): ${opts.reason}`);
   if (rec.error) console.log(`      the execution error stays on the entry as evidence: ${rec.error}`);
   const word = { pass: "PASS", fail: "FAIL", check: "CHECK" }[rec.status];
   if (rec.pictureSays && rec.pictureSays !== word) console.log(`      the caption on ${rec.screenshot} still reads ${rec.pictureSays}; the finding has to say the verdict supersedes it`);
+}
+
+// --------------------------------------------------------- run bookkeeping
+
+function runMeta(opts, doc, extra = {}) {
+  const build = gitBuildInfo(opts.taskDir);
+  return {
+    driver: opts.driver,
+    scope: opts.only ? { only: opts.only.map((n) => n.padStart(2, "0")) } : "all",
+    baseUrl: opts.baseUrl,
+    viewport: opts.viewport,
+    slowMo: opts.slowMo,
+    runnerVersion: runnerVersion(),
+    scenariosHash: crypto.createHash("sha1").update(JSON.stringify(doc)).digest("hex").slice(0, 12),
+    fixturesVersion: doc.setups?.version ?? null,
+    withDB: doc.withDB === true,
+    build,
+    ...extra,
+  };
+}
+
+function fixturesCtx(opts, run, doc, db, context) {
+  const ledger = new Ledger(path.join(run.dir, "records.json"), run.runId);
+  const values = { runId: run.runId };
+  const ctx = {
+    runId: run.runId, baseUrl: opts.baseUrl, values, db, ledger, cwd: opts.taskDir,
+    cookieHeader: context ? async (url) => (await context.cookies(url)).map((c) => `${c.name}=${c.value}`).join("; ") : null,
+  };
+  return { ledger, values, ctx };
+}
+
+
+/**
+ * A cleanup or setup step with "session": "browser" needs the QA window's
+ * cookies. Attach to the window when it is open; a window started now would
+ * have no session, so a missing one is an error with the way out.
+ */
+async function browserSessionFor(opts, needed) {
+  if (!needed) return { context: null, close: async () => {} };
+  const known = readBrowserFile();
+  const port = known?.port || opts.port;
+  const version = await alive(port);
+  if (!version) die(2, `a step with "session": "browser" needs the QA window and none is open — start it with --open, log in, then run this command again`);
+  const pw = loadPlaywright();
+  const info = { ...(known || { port }), version: version.Browser };
+  const { browser, context } = await connect(pw, info, { ...opts, slowMo: 0 });
+  return { context, close: () => browser.close().catch(() => {}) };
+}
+
+const wantsBrowserSession = (...parts) => JSON.stringify(parts).includes('"session":"browser"');
+
+/** --new-run: a run directory for a hand-driven (Chrome extension) run. */
+function newRun(opts) {
+  const { doc } = loadScenarios(opts);
+  const problems = validateScenarios(doc, { only: opts.only, dbWrites: !!dbConfigFor(opts, doc).config.db?.writes });
+  if (problems.length) die(2, `${opts.scenarios} is not runnable:\n  - ${problems.join("\n  - ")}`);
+  markStaleRuns(opts.taskDir);
+  const run = createRun(opts.taskDir, { scenariosDoc: doc, meta: runMeta(opts, doc, { status: "manual", pid: null, note: `driven by hand through the ${opts.driver} driver; results.json in this directory is written by whoever drives it, then --finish --run ${"<id>"} merges it into the index` }) });
+  updateRun(run.runFile, { status: "manual" });
+  new Ledger(path.join(run.dir, "records.json"), run.runId).save();
+  console.log(run.runId);
+  console.log(`created ${path.relative(process.cwd(), run.dir) || "."}/ — screenshots go to screenshots/NN-slug.jpg there, results to results.json; then --finish --run ${run.runId}`);
+}
+
+/** --prepare: run setups into a run's ledger, without a browser. */
+async function prepareOnly(opts) {
+  const { doc } = loadScenarios(opts);
+  const { db } = await openDbFor(opts, doc, { writes: true });
+  const setups = doc.setups || {};
+  const names = opts.setups || Object.keys(setups).filter((k) => k !== "version");
+  for (const n of names) if (!setups[n]) die(2, `no setup "${n}" in ${opts.scenarios}`);
+  let run;
+  if (opts.run) {
+    const dir = runDirOf(opts.taskDir, opts.run);
+    if (!fs.existsSync(dir)) die(2, `no run ${opts.run} under ${opts.taskDir}`);
+    run = { runId: opts.run, dir, runFile: path.join(dir, "run.json") };
+    opts.baseUrl = opts.baseUrl || readJson(run.runFile)?.baseUrl || null;
+    if (opts.baseUrl) updateRun(run.runFile, { baseUrl: opts.baseUrl });
+  } else {
+    run = createRun(opts.taskDir, { scenariosDoc: doc, meta: runMeta(opts, doc, { status: "manual", pid: null, note: "created by --prepare" }) });
+    updateRun(run.runFile, { status: "manual" });
+    console.log(`run ${run.runId} created for the prepared data`);
+  }
+  const session = await browserSessionFor(opts, wantsBrowserSession(names.map((n) => setups[n])));
+  const { ledger, ctx } = fixturesCtx(opts, run, doc, db, session.context);
+  let failed = 0;
+  for (const n of names) {
+    if (ledger.prepared.includes(n)) { console.log(`setup ${n} already prepared in ${run.runId}`); continue; }
+    try {
+      await prepareSetup(n, setups[n], ctx);
+      ledger.markPrepared(n);
+      console.log(`setup ${n} prepared (${ledger.records.length} record(s) in the ledger)`);
+    } catch (e) {
+      failed++;
+      console.error(`setup ${n} FAILED — ${e.message}`);
+    }
+  }
+  db?.close();
+  await session.close();
+  console.log(`ledger: ${path.relative(process.cwd(), ledger.file)}; clean up with --cleanup --run ${run.runId}`);
+  return failed ? 1 : 0;
+}
+
+/** --cleanup: remove what a run's ledger says it created. */
+async function cleanupOnly(opts) {
+  const dir = runDirOf(opts.taskDir, opts.run);
+  if (!fs.existsSync(dir)) die(2, `no run ${opts.run} under ${opts.taskDir}`);
+  const doc = readJson(path.join(dir, "scenarios.json")) || loadScenarios(opts).doc;
+  const run = { runId: opts.run, dir, runFile: path.join(dir, "run.json") };
+  // The run remembers where the app was; http cleanup steps need it.
+  opts.baseUrl = opts.baseUrl || readJson(run.runFile)?.baseUrl || null;
+  const { db } = await openDbFor(opts, doc, { writes: true });
+  const previous = readJson(path.join(dir, "records.json"));
+  const setups = doc.setups || {};
+  const session = await browserSessionFor(opts, wantsBrowserSession(previous?.records?.map((r) => r.cleanup), (previous?.prepared || []).map((n) => setups[n]?.cleanup)));
+  const { ledger, ctx } = fixturesCtx(opts, run, doc, db, session.context);
+  const c = await cleanupRun(ctx, { setups });
+  db?.close();
+  await session.close();
+  const meta = readJson(run.runFile) || {};
+  updateRun(run.runFile, { data: { ...(meta.data || {}), records: ledger.records.length, cleaned: c.cleaned, skipped: c.skipped, kept: false, failures: c.failures, cleanedAt: new Date().toISOString() } });
+  console.log(`run ${opts.run}: ${c.cleaned} record(s) removed, ${c.skipped} without a cleanup step, ${c.failures.length} failure(s)`);
+  for (const f of c.failures) console.error(`  - ${f.kind || f.setup} ${f.id ?? ""}: ${f.error}`);
+  return c.failures.length ? 1 : 0;
+}
+
+/** --finish: a hand-driven run's results.json into the index. */
+function finishRun(opts) {
+  const dir = runDirOf(opts.taskDir, opts.run);
+  const file = path.join(dir, "results.json");
+  const doc = readJson(file);
+  if (!doc) die(2, `no readable results.json in ${dir} — write one entry per scenario there first ({ "scenarios": [ { "n", "slug", "title", "status", "completed", "expects", "screenshot" … } ] })`);
+  const snap = readJson(path.join(dir, "scenarios.json"));
+  const setups = snap?.setups || {};
+  const byN = new Map((snap?.scenarios || []).map((sc) => [numberOf(sc), sc]));
+  const problems = [];
+  const entries = (doc.scenarios || []).map((r) => {
+    const n = String(r.n ?? "").padStart(2, "0");
+    const sc = byN.get(n);
+    if (!sc) problems.push(`entry ${n}: not in the run's scenarios.json`);
+    if (!["pass", "fail", "check", "blocked", "error"].includes(r.status)) problems.push(`entry ${n}: status "${r.status}" is not pass|fail|check|blocked|error`);
+    if (r.status === "pass" && !(Array.isArray(r.expects) && r.expects.length && r.expects.every((e) => e.passed))) problems.push(`entry ${n}: a PASS needs expects that passed — what was asserted and what value it saw`);
+    if (["pass", "fail", "check"].includes(r.status)) {
+      if (!r.screenshot) problems.push(`entry ${n}: no screenshot`);
+      else if (!fs.existsSync(path.join(opts.taskDir, r.screenshot))) problems.push(`entry ${n}: screenshot ${r.screenshot} not found`);
+    }
+    if (r.status === "blocked" && !r.reason) problems.push(`entry ${n}: blocked without a reason`);
+    return { completed: ["pass", "fail", "check"].includes(r.status), at: doc.startedAt || new Date().toISOString(), ...r, n, runId: opts.run, stepsHash: sc ? hashOf(sc, setups) : undefined, hashVersion: 2, driver: "chrome" };
+  });
+  if (problems.length) die(2, `${file} is not complete:\n  - ${problems.join("\n  - ")}`);
+  updateIndex(opts.taskDir, opts.run, entries, { scope: readJson(path.join(dir, "run.json"))?.scope || "all" });
+  updateRun(path.join(dir, "run.json"), { status: "completed", finishedAt: new Date().toISOString(), executed: entries.map((e) => e.n), counts: entries.reduce((acc, r) => ((acc[r.status] = (acc[r.status] || 0) + 1), acc), {}) });
+  console.log(`run ${opts.run}: ${entries.length} entr(ies) merged into ${INDEX_FILE}`);
+}
+
+// --------------------------------------------------------------------- db
+
+function dbDiscover(opts) {
+  const { candidates, running } = discoverDb({ cwd: opts.taskDir });
+  const project = discoverDb({ cwd: process.cwd() });
+  const all = [...candidates, ...project.candidates.filter((c) => !candidates.some((d) => d.source === c.source))];
+  if (!all.length && !running.length) {
+    console.log(`no docker-compose service with a database image found in ${opts.taskDir} or ${process.cwd()}, and no database container is running.\nWrite ${CONFIG_FILE} by hand:\n${JSON.stringify({ db: { engine: "mysql", docker: { container: "<name from docker ps>" }, database: "<db>", user: "<user>", passwordFrom: "container-env:MYSQL_PASSWORD", readOnly: true, writes: false, mask: [] } }, null, 2)}`);
+    return;
+  }
+  for (const c of all) {
+    console.log(`# ${c.source}: service ${c.db.docker.service} (${c.image}) — ${c.implemented ? "adapter available" : "NO adapter here (sqlite and mysql only)"}${c.running ? `, running as ${c.running}` : ", not running"}`);
+    console.log(JSON.stringify({ db: c.db }, null, 2));
+  }
+  const loose = (project.running.length ? project.running : running).filter((r) => !all.some((c) => c.running === r.name));
+  for (const r of loose) console.log(`# running container ${r.name} (${r.image}) with no compose file here — use "docker": { "container": "${r.name}" }`);
+  console.log(`\nFill in what is missing (database, user), keep passwordFrom as a pointer, add "probe" so --db-check can confirm the app reads this database, and save as ${path.join(path.dirname(opts.taskDir), CONFIG_FILE)}.`);
+}
+
+async function dbQuery(opts) {
+  const { db } = await openDbFor({ ...opts, db: opts.db }, { withDB: true });
+  try {
+    console.log(JSON.stringify(await db.query(opts.db, opts.params), null, 2));
+  } catch (e) {
+    die(2, e.message);
+  } finally {
+    db.close();
+  }
+}
+
+/** --db-check: describe the connection and run the probe against the app. */
+async function dbCheck(opts, pw) {
+  const { db, config } = await openDbFor(opts, { withDB: true });
+  const desc = db.describe();
+  console.log(`database: ${JSON.stringify(desc)}`);
+  const probe = config.db.probe;
+  if (!probe) {
+    console.log(`no "probe" in ${CONFIG_FILE}: the connection works, but nothing here shows that the app at ${opts.baseUrl} reads this database. Add one ({ "url", "js", "query", "path" }) or ask the user to confirm it, and say which in the report.`);
+    db.close();
+    return 0;
+  }
+  let dbValue;
+  try {
+    const rows = await db.query(probe.query, probe.params || []);
+    dbValue = getPath(rows, probe.path ?? "0");
+  } catch (e) {
+    die(2, `probe query failed: ${e.message}`);
+  }
+  const info = await ensureBrowser(opts, pw);
+  const { browser, context } = await connect(pw, info, opts);
+  const page = await context.newPage();
+  page.setDefaultTimeout(opts.timeout);
+  let uiValue;
+  try {
+    await page.goto(resolveUrl(probe.url || "/", opts.baseUrl), { waitUntil: "commit" });
+    await awaitReady(page, { ready: probe.ready || null, opts });
+    for (const step of probe.steps || []) await runStep(page, step, { values: {}, sources: {}, opts, readers: { js: (e) => page.evaluate(e) }, ready: null, sink: [] });
+    uiValue = await page.evaluate(probe.js);
+  } finally {
+    await page.close();
+    await browser.close();
+    db.close();
+  }
+  const { same } = await import("./lib/compare.mjs");
+  const agree = same(uiValue, dbValue);
+  console.log(`probe: UI ${probe.js} → ${JSON.stringify(uiValue)}; DB ${probe.query} → ${JSON.stringify(dbValue)}; ${agree ? "AGREE — the app reads this database" : "DISAGREE — the app at " + opts.baseUrl + " may not be using this database; do not run withDB until this is settled"}`);
+  return agree ? 0 : 1;
 }
 
 // -------------------------------------------------------------------- run
@@ -723,59 +607,58 @@ function applyVerdict(opts) {
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
 
-  if (opts.verdict) {
-    applyVerdict(opts);
-    return 0;
+  if (opts.verdict) { applyVerdict(opts); return 0; }
+  if (opts.newRun) { newRun(opts); return 0; }
+  if (opts.prepare) return prepareOnly(opts);
+  if (opts.cleanup) return cleanupOnly(opts);
+  if (opts.finish) { finishRun(opts); return 0; }
+  if (opts.dbDiscover) { dbDiscover(opts); return 0; }
+  if (opts.db !== null) { await dbQuery(opts); return 0; }
+
+  // The file and the database before Playwright: a broken file or an
+  // unreachable database should be reported as such, not as a missing browser.
+  let doc = null;
+  let selected = null;
+  if (!opts.open && opts.eval === null && !opts.close && !opts.dbCheck) {
+    const loaded = loadScenarios(opts);
+    doc = loaded.doc;
+    const dbCfg = dbConfigFor(opts, doc);
+    const problems = validateScenarios(doc, { only: opts.only, dbWrites: !!dbCfg.config.db?.writes });
+    if (problems.length) die(2, `${path.basename(loaded.file)} is not runnable:\n  - ${problems.join("\n  - ")}`);
+    const sel = selectScenarios(doc.scenarios, opts.only);
+    if (sel.pulled.length) console.log(`running ${sel.pulled.join(", ")} (requires)`);
+    selected = sel.selected;
   }
+  const { db } = doc ? await openDbFor(opts, doc, { writes: true }) : { db: null };
 
   const pw = loadPlaywright();
-
-  if (opts.close) {
-    await closeBrowser(pw);
-    return 0;
-  }
+  if (opts.close) { await closeBrowser(pw); return 0; }
+  if (opts.dbCheck) return dbCheck(opts, pw);
 
   const annotateSrc = fs.readFileSync(path.join(HERE, "annotate.js"), "utf8");
-
-  let list = null;
-  let selected = null;
-  if (!opts.open && opts.eval === null) {
-    // Validate before touching the browser: a broken file should not cost a tab.
-    const file = path.resolve(opts.scenarios);
-    if (!fs.existsSync(file)) die(2, `scenarios file not found: ${file}`);
-    const doc = JSON.parse(fs.readFileSync(file, "utf8"));
-    list = Array.isArray(doc) ? doc : doc.scenarios;
-    if (!Array.isArray(list) || list.length === 0) die(2, "no scenarios in the file (expected an array or { scenarios: [...] })");
-    const problems = validateScenarios(list);
-    if (problems.length) die(2, `${path.basename(file)} is not runnable:\n  - ${problems.join("\n  - ")}`);
-    selected = select(list, opts);
-  }
 
   const info = await ensureBrowser(opts, pw);
   const { browser, context } = await connect(pw, info, opts);
   await context.addInitScript({ content: annotateSrc });
 
   if (opts.open) {
-    // A freshly started window already shows the base URL in its first tab.
     const page = info.fresh && context.pages()[0] ? context.pages()[0] : await context.newPage();
-    if (!info.fresh || opts.url) await page.goto(resolveUrl(opts.url || "/", opts)).catch((e) => console.error(`run-scenarios: ${e.message.split("\n")[0]}`));
-    await page.waitForLoadState("networkidle").catch(() => {});
+    if (!info.fresh || opts.url) await page.goto(resolveUrl(opts.url || "/", opts.baseUrl), { waitUntil: "commit" }).catch((e) => console.error(`run-scenarios: ${e.message.split("\n")[0]}`));
+    await page.waitForLoadState("load").catch(() => {});
     console.log(`Tab open at: ${page.url()}`);
     console.log("If that is a login page, log in in the QA window; the session lives as long as the window does.");
-    // Disconnect without closing the tab: the window is the user's to look at.
     process.exit(0);
   }
 
   if (opts.eval !== null) {
     const page = await context.newPage();
     page.setDefaultTimeout(opts.timeout);
-    await page.goto(resolveUrl(opts.url || "/", opts));
-    await page.waitForLoadState("networkidle").catch(() => {});
+    await page.goto(resolveUrl(opts.url || "/", opts.baseUrl), { waitUntil: "commit" });
+    await page.waitForLoadState("load");
     let value;
     try {
-      // Steps first, so the page can be read in the state a scenario will find
-      // it in — inside the drawer, after the dialog opened — not only at a URL.
-      for (const step of opts.steps || []) await runStep(page, step, {}, opts, []);
+      const ctx = { values: {}, sources: {}, opts, readers: { js: (e) => page.evaluate(e) }, ready: null, sink: [] };
+      for (const step of opts.steps || []) await runStep(page, step, ctx);
       value = await page.evaluate(opts.eval);
     } finally {
       await page.close();
@@ -785,150 +668,57 @@ async function main() {
     return 0;
   }
 
-  fs.mkdirSync(opts.out, { recursive: true });
-  const prev = readResults(opts.results);
-  const prevByN = new Map((prev?.scenarios || []).map((r) => [r.n, r]));
+  const stale = markStaleRuns(opts.taskDir);
+  if (stale.length) console.log(`${stale.join(", ")} never finished — marked interrupted`);
+  const run = createRun(opts.taskDir, { scenariosDoc: doc, meta: runMeta(opts, doc, { browser: info.browser, browserVersion: info.version, executable: info.executable, profile: info.profile, db: db ? db.describe() : null }) });
+  console.log(`run ${run.runId} → ${path.relative(process.cwd(), run.dir) || "."}/`);
+  const { ledger, values, ctx: fixtures } = fixturesCtx(opts, run, doc, db, context);
+  const prevByN = new Map(loadIndex(opts.taskDir).scenarios.map((r) => [r.n, r]));
 
   const page = await context.newPage();
   await page.setViewportSize(opts.viewport);
   page.setDefaultTimeout(opts.timeout);
 
-  // Console and network noise, reset per scenario. A failed request explains an
-  // empty list faster than another screenshot does.
-  let noise = [];
-  page.on("console", (m) => { if (m.type() === "error") noise.push(`console.error: ${m.text()}`); });
-  page.on("pageerror", (e) => noise.push(`pageerror: ${e.message}`));
-  page.on("requestfailed", (r) => noise.push(`requestfailed: ${r.method()} ${r.url()} ${r.failure()?.errorText || ""}`));
-  page.on("response", (r) => { if (r.status() >= 400) noise.push(`http ${r.status()}: ${r.request().method()} ${r.url()}`); });
+  const abort = { requested: false };
+  const onSignal = (sig) => {
+    if (abort.requested) { console.error(`\nrun-scenarios: ${sig} again — leaving now; run ${run.runId} is marked interrupted, its data may still be there (--cleanup --run ${run.runId})`); updateRun(run.runFile, { status: "interrupted", finishedAt: new Date().toISOString(), pid: null, note: "killed by a second signal before cleanup finished" }); process.exit(130); }
+    abort.requested = true;
+    console.error(`\nrun-scenarios: ${sig} — finishing the current scenario, then cleaning up; press again to leave at once`);
+  };
+  process.on("SIGINT", onSignal);
+  process.on("SIGTERM", onSignal);
 
-  const startedAt = new Date().toISOString();
-  const values = {};
-  const results = [];
-  const statusOf = new Map(); // this run only: a dependency is satisfied by what happened now, not last time
-  let errored = 0;
-
-  for (const sc of selected) {
-    const n = String(sc.n).padStart(2, "0");
-    const slug = sc.slug || "scenario";
-    noise = [];
-    const expects = [];
-    const rec = { n, slug, title: sc.title, status: null, completed: false, at: new Date().toISOString(), stepsHash: hashOf(sc), values: {}, expects, caption: null, screenshot: null, console: noise };
-    const p = prevByN.get(n);
-    if (sc.revision) {
-      rec.revision = sc.revision;
-      // The same sentence as last time keeps the hash it was first written for;
-      // a new sentence belongs to the steps as they are now.
-      rec.revisionHash = p?.revision === sc.revision ? p.revisionHash || p.stepsHash : rec.stepsHash;
-    }
-    let stepAt = -1;
-    const shot = path.join(opts.out, `${n}-${slug}.jpg`);
-    const errShot = path.join(opts.out, `${n}-${slug}.error.jpg`);
-    const started = Date.now();
-    // The previous scenario's caption card is a fixed element with the highest
-    // z-index on the page; left there, it intercepts any click under it.
-    await page.evaluate(() => window.__annClear?.()).catch(() => {});
-    try {
-      // A dependency counts when its steps ran to the end, whatever the
-      // verdict. Error, blocked or not run — and an error somebody has since
-      // judged a FAIL is still an error in execution — means the state it
-      // builds was never reached, and running on top of that produces findings
-      // about nothing.
-      const unfinished = requiresOf(sc).find((d) => statusOf.get(d)?.completed !== true);
-      const given = [];
-      if (!unfinished) for (const spec of sc.given || []) given.push(await check(page, spec, values));
-      if (given.length) rec.given = given;
-      const unmet = given.filter((g) => !g.passed);
-      if (unfinished) {
-        const dep = statusOf.get(unfinished);
-        rec.status = "blocked";
-        rec.blockedBy = unfinished;
-        rec.reason = dep ? `${unfinished} ${dep.status}: ${dep.error || dep.reason || ""}`.trim() : `${unfinished} did not run`;
-      } else if (unmet.length) {
-        rec.status = "blocked";
-        rec.blockedBy = "given";
-        rec.reason = unmet.map((g) => `${g.desc} (actual ${JSON.stringify(g.actual)})`).join("; ");
-      } else {
-        const steps = sc.steps || [];
-        for (stepAt = 0; stepAt < steps.length; stepAt++) {
-          await runStep(page, steps[stepAt], values, opts, expects);
-        }
-        rec.completed = true;
-        const ok = sc.manual ? null : expects.every((e) => e.passed);
-        rec.status = ok === null ? "check" : ok ? "pass" : "fail";
-        const cap = sc.caption || {};
-        rec.caption = fill(cap.d || "", values);
-        await caption(page, annotateSrc, {
-          n, t: cap.t || sc.title || "", d: rec.caption, ok,
-          hl: cap.hl || [], pins: cap.pins || [], top: !!cap.top,
-        });
-        rec.screenshot = shot;
-        await page.screenshot(SHOT(shot));
-      }
-    } catch (e) {
-      rec.status = "error";
-      rec.error = String(e.message).split("\n")[0];
-      rec.errorDetail = errorDetail(e.message);
-      if (stepAt >= 0 && stepAt < (sc.steps || []).length) rec.failedStep = { index: stepAt, step: sc.steps[stepAt] };
-      // The same execution error a person already diagnosed — same steps, same
-      // step, same full message — keeps its verdict. Any of the three differing
-      // is a new error that needs its own look.
-      const sameFailure = p?.diagnosis && p.completed === false && p.stepsHash === rec.stepsHash && sameError(p.errorDetail, rec.errorDetail) && (p.failedStep?.index ?? -1) === (rec.failedStep?.index ?? -1);
-      if (sameFailure) {
-        rec.status = p.status;
-        rec.diagnosis = p.diagnosis;
-        rec.diagnosedAt = p.diagnosedAt;
-        rec.diagnosisCarried = true;
-        rec.screenshot = shot;
-      } else {
-        errored++;
-        rec.screenshot = errShot;
-      }
-      await page.screenshot(SHOT(rec.screenshot)).catch(() => { rec.screenshot = null; });
-    }
-    rec.values = Object.fromEntries((sc.steps || []).filter((s) => s.read).map((s) => [s.read.name, values[s.read.name]]));
-    rec.ms = Date.now() - started;
-    results.push(rec);
-    statusOf.set(n, rec);
-    // A picture from an earlier run is not evidence of this one: whichever of
-    // the two names this scenario did not write now, remove.
-    if (rec.screenshot !== shot) fs.rmSync(shot, { force: true });
-    if (rec.screenshot !== errShot) fs.rmSync(errShot, { force: true });
-    const tag = { pass: "PASS ", fail: "FAIL ", check: "CHECK", error: "ERROR", blocked: "BLOCK" }[rec.status];
-    const extra = rec.error ? ` — ${rec.error}`
-      : rec.status === "blocked" ? ` — ${rec.blockedBy === "given" ? "precondition" : "requires"}: ${rec.reason}`
-      : rec.status === "fail" ? ` — ${expects.filter((e) => !e.passed).map((e) => `${e.desc} (actual ${JSON.stringify(e.actual)})`).join("; ")}`
-      : "";
-    console.log(`${tag} ${n} ${sc.title || slug}${extra}`);
-    if (rec.diagnosisCarried) console.log(`      ↳ same error as the diagnosed run; verdict ${rec.status} kept: ${rec.diagnosis}`);
+  let outcome;
+  try {
+    outcome = await executeScenarios({
+      page, annotateSrc, taskDir: opts.taskDir, run, doc, selected, opts, db, ledger, values, fixtures, prevByN, abort,
+      scope: opts.only ? { only: opts.only.map((n) => n.padStart(2, "0")) } : "all", log: (l) => console.log(l),
+    });
+  } finally {
+    process.off("SIGINT", onSignal);
+    process.off("SIGTERM", onSignal);
+    await page.close().catch(() => {});
+    await browser.close().catch(() => {});
+    db?.close();
   }
 
-  // Close the tab, not the window: the session in it is what the next run needs.
-  await page.close();
-  await browser.close();
-
-  const merged = mergeResults(results, prev, opts);
-  const summary = {
-    driver: "playwright",
-    browser: info.browser,
-    browserVersion: info.version,
-    executable: info.executable,
-    profile: info.profile,
-    baseUrl: opts.baseUrl,
-    viewport: opts.viewport,
-    startedAt,
-    scenarios: merged,
-  };
-  fs.writeFileSync(opts.results, JSON.stringify(summary, null, 2) + "\n");
+  const { results, errored, interrupted } = outcome;
+  const index = loadIndex(opts.taskDir);
   const counts = results.reduce((acc, r) => ((acc[r.status] = (acc[r.status] || 0) + 1), acc), {});
-  const rewritten = results.filter((r) => r.history?.length).map((r) => r.n);
-  const unexplained = results.filter(unexplainedRewrite).map((r) => r.n);
+  const changed = index.scenarios.filter((r) => r.fresh && (r.rewritten || r.statusChangedFrom)).map((r) => `${r.n}${r.rewritten ? " (steps)" : ""}${r.statusChangedFrom ? ` (${r.statusChangedFrom} → ${r.status})` : ""}`);
+  const unexplained = index.scenarios.filter((r) => r.fresh && unexplainedRewrite(r)).map((r) => r.n);
   const blocked = results.filter((r) => r.status === "blocked");
-  console.log(`\n${results.length} scenario(s): ${Object.entries(counts).map(([k, v]) => `${v} ${k}`).join(", ")} → ${opts.results}, ${opts.out}/`);
-  if (rewritten.length) console.log(`${rewritten.join(", ")} changed status or steps since the previous results — say so in the report (see history in ${opts.results}).`);
-  if (unexplained.length) console.log(`${unexplained.join(", ")} rewritten since an earlier run with no "revision" for this version of the steps — add one saying what the earlier check got wrong (a second rewrite needs its own sentence), or check-evidence.js will refuse the report.`);
-  if (blocked.length) console.log(`${blocked.map((r) => r.n).join(", ")} blocked — a precondition did not hold or a required scenario did not finish. Not a result and not an error: fix the state or the dependency, then re-run with --only <n> (dependencies are pulled in).`);
+  const stale2 = index.scenarios.filter((r) => !r.fresh);
+  console.log(`\n${results.length} scenario(s): ${Object.entries(counts).map(([k, v]) => `${v} ${k}`).join(", ")} → ${path.relative(process.cwd(), run.dir) || "."}/ (run ${run.runId}${interrupted ? ", INTERRUPTED" : ""})`);
+  if (stale2.length) console.log(`${stale2.map((r) => r.n).join(", ")} not executed in this run — ${INDEX_FILE} keeps their last result with its own run id; the report has to show that run id, not this one.`);
+  if (changed.length) console.log(`${changed.join(", ")} changed since the previous execution — say so in the report (history in ${INDEX_FILE}).`);
+  if (unexplained.length) console.log(`${unexplained.join(", ")} rewritten with no "revision" for this version of the steps — add one saying what the earlier check got wrong, or check-evidence.js will refuse the report.`);
+  if (blocked.length) console.log(`${blocked.map((r) => r.n).join(", ")} blocked — a setup failed, a precondition did not hold or a required scenario did not finish. Not a result and not an error: fix the cause, then re-run with --only <n>.`);
   if (errored) console.log(`${errored} errored — establish why before touching the step: --eval whether the element exists, the console entries in the results, the code. A missing element the criterion requires is a FAIL (--verdict NN=fail --reason "…"); a wrong step is fixed with a "revision" and re-run with --only <n>.`);
-  return errored ? 1 : 0;
+  const meta = readJson(run.runFile);
+  if (meta?.data?.kept) console.log(`test data kept (${meta.data.records} record(s)); the report has to say so under Test data.`);
+  if (meta?.data?.failures?.length) console.log(`cleanup failed for ${meta.data.failures.length} record(s) — they are still in the database; list them in the report and remove them by hand or with --cleanup --run ${run.runId}.`);
+  return interrupted ? 130 : errored ? 1 : 0;
 }
 
 main().then((code) => process.exit(code), (e) => { console.error(e); process.exit(2); });
