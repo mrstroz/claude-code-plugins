@@ -90,7 +90,7 @@ Two drivers, chosen at the start of a run: Playwright in a QA window that stays 
 
 ### pair
 
-Pair programming, or a three-agent team, across separate Claude Code tabs in the same directory, talking through cross-session messages.
+Pair programming, or a team of any size, across separate Claude Code tabs in the same directory, talking through cross-session messages.
 
 | Skill | What it does |
 | --- | --- |
