@@ -27,9 +27,9 @@ Two kinds. `NOTE` and `DECISION` are conversation: nobody owes an answer and not
 | Type | Sent by | Carries | Owed in return |
 |---|---|---|---|
 | `START` | driver | the task as the user gave it, the expected result, the driver's session name, every member's role and session name, the absolute paths of this file and of the state file | a `NOTE` saying ready, with the sender's role, working directory and first questions or risks |
-| `NOTE` | anyone | a question, an observation, a proposal, a counter-proposal, a partial result, a relayed user instruction, a proposed diff, "I am investigating X, expect an answer later" | nothing; answer when there is something to say |
+| `NOTE` | anyone | a question, an observation, a proposal, a counter-proposal, a partial result, a relayed user instruction, a proposed diff, a claim on an exclusive resource or its release, "I am investigating X, expect an answer later" | nothing; answer when there is something to say |
 | `REVIEW` | the item's author | a request to review `item@rN`: the snapshot ref and its sha, what changed (every file, new ones included), what else the snapshot holds that is not the item, the evidence, who is asked to answer, and whether the scope is idle until the answer. One body for every reviewer, plus one line per role saying what that role is asked to look at | `OK` or `FIX` for the same `item@rN`, from each member asked |
-| `OK` | a reviewer | approval of `item@rN`, plus what was checked and where: the file and place read, the command run and against what. May carry suggestions; the author takes or leaves them and no new review is owed | nothing |
+| `OK` | a reviewer | approval of `item@rN`, plus what was checked and where: the file and place read, the command run and against what; on `final`, whether it covers the tree, the report or both. May carry suggestions; the author takes or leaves them and no new review is owed | nothing |
 | `FIX` | a reviewer | changes the item needs before it can pass, each with its reason and location. Reserved for that; a suggestion goes in an `OK` or a `NOTE` | a new revision and a new `REVIEW item@rN+1` |
 | `BLOCK` | anyone | a concrete problem, the evidence or the risk, which work stops because of it, and what unblocks it | a resolution, an experiment, or a note that the user was asked |
 | `DECISION` | whoever settled it, usually the driver | a change to the plan, the scope, an assumption or a resource, sent to every member it affects | nothing; a counter-proposal is a `NOTE`, a `BLOCK` only when the decision breaks something and the evidence says so |
@@ -46,22 +46,25 @@ A revision number alone says nothing about content: the driver sends `step1@r1` 
 
 ```sh
 snap.sh baseline TES-42            # once, before the first edit -> "TES-42-20260908-1402 refs/pair/TES-42-20260908-1402/baseline e1f4839"
+snap.sh baseline TES-42 --run TES-42-20260908-1402   # the same run id in a second repository the task spans
 snap.sh TES-42-20260908-1402 step1-r1   # with every REVIEW: <run> <item>-r<N> -> "refs/pair/.../step1-r1 14fa8fe"
 snap.sh list TES-42-20260908-1402       # every ref of the run with its sha
-snap.sh clean TES-42-20260908-1402      # removes the run's refs, after the closing report
+snap.sh clean TES-42-20260908-1402      # removes the run's refs, when the user asks for it
 snap.sh runs                            # every run with a baseline in this repository
 snap.sh state TES-42-20260908-1402      # the path of the run's state file
 ```
 
 The script initialises a temporary index from `HEAD` before adding the working tree, so tracked files that match `.gitignore` are snapshotted too (an empty index would silently drop them); it works in a repository with no commit yet; it removes its temporary index; and it refuses to overwrite an existing ref, because a revision that can change is not a revision. The `<run>` id carries a timestamp, so a second run of the same task gets its own namespace instead of replacing the first baseline. Run ids and snapshot names are validated (letters, digits, `.`, `_`, `-`), so `clean` cannot be handed a glob that matches other runs.
 
-- **Baseline.** Before the first edit the driver runs `snap.sh baseline <task>` and records the run id, the ref and sha, `git rev-parse --short HEAD` and `git status --short` in the state file. Files dirty at that point are the user's: never reverted, reformatted or staged by the team, and if the task cannot avoid editing one the driver tells the user before the first edit. The team's increment is `git diff refs/pair/<run>/baseline refs/pair/<run>/<item>-r<N>`, which shows the team's lines inside a file the user had already modified, shows new files, and still works after an authorised commit has emptied `git status`. Always diff snapshot against snapshot; a diff against the working tree hides untracked files and moving edits.
+- **Baseline.** Before the first edit the driver runs `snap.sh baseline <task>` and records the run id, the ref and sha, `git rev-parse --short HEAD` and `git status --short` in the state file. Files dirty at that point are the user's: never reverted, reformatted or staged by the team, and if the task cannot avoid editing one the driver tells the user before the first edit. The team's increment is `git diff refs/pair/<run>/baseline refs/pair/<run>/<item>-r<N>`, which shows the team's lines inside a file the user had already modified, shows new files, and still works after an authorised commit has emptied `git status`. Always diff snapshot against snapshot; a diff against the working tree hides untracked files and moving edits. A task that spans several repositories is one run and not several: the baseline is taken in the main repository first and in each of the others with `snap.sh baseline <task> --run <the same id>`, so a single id names the whole increment. Without the flag the two repositories get ids stamped a second apart, which is what the first multi-repository run had to work around, and two ids cannot be quoted as one revision.
 - **Revisions.** The author runs `snap.sh <run> <item>-r<N>` immediately before sending `REVIEW item@rN` and puts the ref and the sha it printed in the message; the reviewer's `OK` repeats the sha, so the two are provably talking about the same tree. The revision bumps every time the item changes after a `REVIEW` went out, and every time a step it depends on changes: an `OK` given against the old snapshot lapses with it. An `OK` names the revision it approves and approves nothing newer; `OK step3@r1` arriving after `step3@r2` was sent is answered with a `NOTE` and the gate stays closed until `OK step3@r2`.
 - **The snapshot is the whole tree, not the item.** It also holds whatever else was in the working tree at that moment: the tester's half-written tests, the driver's started next step. The `REVIEW` says what that is, and the reviewer diffs by the item's files. A check that runs through code outside the item, such as step 4's test reading a helper that step 5 is rewriting, is a partial result: it goes out as a `NOTE` naming the dependency, not as an `OK`. It does not open a gate the item needs; the `OK` follows once the dependency has its own `OK` or the check is rerun without it. For an async item the driver keeps working meanwhile. The driver's cheapest defence is order: snapshot and send before starting the next step.
+- **Files the author does not own.** The snapshot freezes whatever another member happened to be writing at that moment, and that cost four withdrawn revisions in the first six runs: a test file caught mid-move, tests appended a second after the ref was taken. So the `REVIEW` lists every file in the snapshot the author does not own with its hash (`git show <ref>:<path> | sha256sum`), and the owner compares that against its own tree before answering. A difference is a `NOTE` — *my file moved after your snapshot, this needs a new revision* — and not a `FIX`: nobody did anything wrong, the revision simply is not what the reviewer holds. Compare by hash rather than by diff, because `git diff --stat <ref>` reports an untracked file as a deletion whether it changed or not, so a tree can match the ref in every tracked file and differ exactly where the item lives. And read the exit status of whatever produced the hash: `git show <ref>:<a path that is not there>` piped into `sha256sum` prints the hash of empty input, and one run spent a round comparing the sha256 of git's error text against real content.
 - **Reading a revision.** `git diff <baseline> <ref> -- <files>` for the change, `git show <ref>:<path>` for a whole file. Running a check needs a tree. When the `REVIEW` declares the scope idle until the answer, the working tree is that tree; the scope is the item's files plus everything its checks import, load or run against, because a test that reads a helper the driver is editing checks a mixed tree. Otherwise `git worktree add --detach <dir> <ref>` under `~/.cache/claude-pair/` gives the reviewer the exact revision while the driver keeps editing (untracked build dependencies such as `node_modules` may need linking in). The `OK` says which of the two it ran against.
 - **Evidence** is the command, its result, the lines that matter, and the snapshot or environment it ran against. Not the whole log. A check that was not run is "not run: <reason>", never a pass. Evidence longer than a screen goes into one file next to the state file, `<state dir>/<run>/<item>-rN.md`, written once by the author; the message quotes the path and the decisive lines, and every reviewer reads the same artifact instead of a retelling.
 - The reviewer checks for themself and names in `OK` the place actually looked at; a verdict without a location is the rubber stamp the second session exists to avoid. The author of a fix is never its only reviewer: the driver's code is checked by the tester or the architect, the tester's tests by the driver or the architect, in particular whether they fail without the fix and test the criterion.
-- A task without a repository skips the refs and records the working directory and, for each revision, the paths and a copy under the state directory. When the task is over, `snap.sh clean <run>` removes the refs; the driver does it after the closing report, or leaves them when the user wants to look.
+- A task without a repository skips the refs and records the working directory and, for each revision, the paths and a copy under the state directory.
+- **The refs outlive the task.** `snap.sh clean <run>` removes them and it runs when the user asks for it, not as part of finishing: the closing report cites the refs by name, so cleaning empties its own evidence, and in the field the baseline twice held the only copy of a file that had disappeared from the working tree during the run. The closing report says in a line that the refs are there and how to remove them.
 
 ## State file
 
@@ -75,15 +78,17 @@ done when: <criteria, checkable>
 authorised: <what the user already allowed: run tests, reset the dev db, push to branch X, deploy to staging, ...>
 members: driver=<session> architect=<session> tester=<session>   (or navigator=<session>)
 run: <task>-<stamp>
-baseline: refs/pair/<run>/baseline <sha>, HEAD <sha>; user's own changes: <paths, or none>
+repos: <path> refs/pair/<run>/baseline <sha>, HEAD <sha>; user's own changes: <paths, or none>   (one line per repository, the main one first)
 plan:
   1. <step> — proof: <command or observation> — gate: architect | tester | user | async
   ...
 reviews: plan@r2 OK architect, OK tester | step1@r1 14fa8fe OK tester | step3@r2 9c1d0aa pending architect
 decisions: <date> <one line each>
 blockers: <open ones, who raised, what stops, what unblocks>
-resources: files: tests/** = tester, src/** = driver | db: shared dev db, tester runs migrations | port 3000: driver's dev server
+resources: files: tests/** = tester, src/** = driver | db: shared dev db = exclusive, keeper: driver, held by: <member or free> | port 3000: driver's dev server
 ```
+
+A run spanning several repositories keeps **one** state file, in the main repository's directory, and `START` carries that path. In every other repository's cache directory the driver leaves a one-line pointer, `see: <that path>`, so `snap.sh state <run>` from there leads somewhere after a context loss; a state file whose whole content is a `see:` line means the real one is elsewhere. The first multi-repository run kept two full copies instead, and the only thing holding them in step was that nobody edited the second.
 
 Update it at every `OK`, `FIX`, `BLOCK`, `DECISION` and step boundary, and take `updated:` from `date -Iseconds`: the model has no clock, and the first live run wrote times three hours ahead of the wall. It is written for a session that lost its context: after a compaction, read this file and the state file, then continue. A member whose state file is missing asks the driver with a `NOTE`; a driver whose file is missing tells the team it is rebuilding the file from their last `OK`s and `BLOCK`s and asks them to resend what is open.
 
@@ -111,6 +116,7 @@ What the tester finds in the product and what stops the team are two different t
 - Every file the team edits has one owner, named in the plan and the state file. Editing somebody else's file is a proposed diff in a `NOTE` to the owner, who applies it or says why not.
 - A separate worktree (`git worktree add`) is for the case where two members' edits would collide, such as tests written against code the driver is rebuilding at the same time. It is not the default, and it is recorded under resources when used.
 - Databases, servers, ports, builds and deployment environments are shared. A change that disturbs another member's run, such as a restart, a seed reset, a schema change or a port change, is announced in a `NOTE` to whoever is using the resource first, and not made while their check is running.
+- **A resource two members cannot use at once is marked exclusive in the plan, with a keeper**: `db: tesoro-test = exclusive, keeper: driver`. Whoever wants it asks for it in a `NOTE` and ends the turn; the run starts after the keeper answers that it is free, and a second `NOTE` releases it. Announcing is not enough for these, because announcing is what failed: in one run the driver and the tester each announced a full suite and each started anyway, and fixtures truncating the same collections produced errors in both tabs from identical code — 75 in one, 91 in the other — which took four discarded runs to explain. The announcement also cannot travel in the message the run begins in: messages arrive between tool calls, so by the time the other tab reads it the sender is already writing. A claim covers a window rather than a single command, or the two turns it costs are paid on every check. The keeper is the driver unless the plan says otherwise and records the current holder in the state file; a keeper that has not answered is a pending gate like any other, so the turn ends and the user hears about it rather than the run starting anyway. Resources not marked exclusive keep the announcement above, which is cheaper and enough for them.
 
 ## Result and finish
 
@@ -120,6 +126,10 @@ The order at the end is: reach the result, then review it, then close.
 
 1. The driver reaches the result within `authorised`: the code passes its checks, the deployment ran and its `-run` item was verified, the report is written. A result another member authored, such as the tester's report in a testing-only task, is its own item (`report@rN`), reviewed by the driver and the third member first.
 2. `REVIEW final@rN` goes to every member with a snapshot and evidence that fits the result: for code, the increment against the baseline and the test output; for a report or diagnosis, the document's path and the checks behind its claims; for a deployment, the verification command, its output and the environment it ran against. The reviewers read the whole, not the sum of the steps, because integration mistakes show only there. Every async item needs its `OK` by now.
+
+   **The closing report is written before that review, as a file**: `<state dir>/<run>/final-rN.md`, whose path the `REVIEW` carries next to the snapshot. A report living only inside the driver's messages cannot be signed off, because *approved the tree* and *approved the report* are two claims; one run discovered this with both `OK`s already given on a tree while the unread text over-claimed who had run what. So an `OK final` says which of the two it covers, or both, and the task closes when every reviewer has covered both. Editing the report after a reviewer read it bumps the revision exactly as editing the code does.
+
+   Every check in that report names **who ran it and on which tree or environment**. A collective *both reviewers reran this* over a block of evidence is the sentence that proved false twice, in two different runs, caught both times by the tester; one line, one author is what survives. Each criterion says how it is held: **executed**, with the command and the output, or **inspected**, by a diff, a grep or a read — a distinction worth keeping because a criterion nobody could execute is not a weaker pass, it is a different claim. A reviewer reads its own name in the report first; a check credited to somebody who did not run it is a `FIX`.
 3. The task closes on `OK final` from every reviewer, and the driver's closing report to the user carries the result, the evidence and the limitations. A suggestion that arrives inside `OK final` goes into the report as follow-up work by default, not into the code: taking it reopens `final` for every reviewer, and the first live run spent a full round on one. A `FIX` on `final` is still done at once. A `final` that got a `FIX`, an `OK` missing because a reviewer is unavailable, or an open `BLOCK` means the task is unfinished, and the report says so rather than closing around it.
 
 ## Disagreement
@@ -152,8 +162,8 @@ driver:    snap.sh baseline; START
 navigator: NOTE ready — role, cwd, first questions
 driver:    REVIEW plan@r1 (result, done-when, steps with proof, gates, file owners)
 navigator: FIX plan@r1  -> driver: REVIEW plan@r2 -> navigator: OK plan@r2
-driver:    edits, tests; snap.sh final-r1; REVIEW final@r1 (ref + sha, increment against baseline, test output)
-navigator: OK final@r1 (with a suggestion or two, nothing owed)
+driver:    edits, tests; writes <state dir>/<run>/final-r1.md; snap.sh final-r1; REVIEW final@r1 (ref + sha, report path, increment, test output)
+navigator: OK final@r1 on the tree and the report (with a suggestion or two, nothing owed)
 driver:    reports to the user; commits, pushes or opens the PR only if authorised
 ```
 
@@ -167,6 +177,8 @@ driver:    REVIEW plan@r1 -> both (step 1 = interface, gate: architect+tester; 2
 architect: OK plan@r1 ; tester: FIX plan@r1 (criterion 3 not checkable) -> driver: REVIEW plan@r2 -> both OK
 driver:    step 1; snap.sh; REVIEW step1@r1 (ref + sha) -> both
 tester:    OK step1@r1 ; writes tests against the interface, NOTE partial results (red by design)
+tester:    NOTE claiming the test database for a full suite -> driver (keeper) ; ends the turn
+driver:    NOTE free ; tester runs, then NOTE released
 architect: OK step1@r1
 driver:    steps 2–3, snap.sh + REVIEW each (async, scope idle: no)
 tester:    FIX step3@r1 — criterion 2 fails on 7e2b1c0 (worktree of the snapshot), output quoted  (copied to nobody: the driver is the addressee)
@@ -174,5 +186,7 @@ driver:    fixes; snap.sh; REVIEW step3@r2 ; tester: OK step3@r2
 tester:    REVIEW tests@r1 -> architect, copy driver ; architect: OK tests@r1 -> tester, copy driver
 driver:    REVIEW deploy@r1 (command, target, rollback) -> architect ; architect: OK ; user authorised in plan
 driver:    runs the deployment ; REVIEW deploy-run@r1 (verification output, environment) -> tester ; tester: OK
-driver:    snap.sh; REVIEW final@r1 -> both ; both OK ; driver reports to the user, snap.sh clean <run>
+driver:    snap.sh; writes <state dir>/<run>/final-r1.md; REVIEW final@r1 -> both (ref, sha, report path)
+architect, tester: OK final@r1, each saying it covers the tree and the report
+driver:    reports to the user; the run's refs stay unless the user asks for snap.sh clean <run>
 ```
