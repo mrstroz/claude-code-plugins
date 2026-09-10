@@ -42,7 +42,7 @@
     {
       "name": "pair",
       "source": "./pair",
-      "description": "Pair or three-agent team across Claude Code tabs — one session drives, a navigator or an architect plus a tester review the plan, approve the gated items and verify the result, talking through cross-session messages"
+      "description": "Pair or a team across Claude Code tabs — one session drives, a navigator or several architects and testers review the plan, approve the gated items and verify the result; architects pick the profiles they weigh, and every verdict is recorded against one member and revision"
     }
   ]
 }

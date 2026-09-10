@@ -96,12 +96,26 @@ Pair programming, or a three-agent team, across separate Claude Code tabs in the
 | --- | --- |
 | `driver` | Does the task: assembles the team, records the repository baseline, writes the plan with acceptance criteria and gates, keeps the shared state file, sends every review request with a revision and quoted evidence, integrates everybody's changes and reports to the user |
 | `navigator` | The one reviewing tab of a pair: holds the architect's and the tester's responsibilities together |
-| `architect` | Guards the shape of the change, the interfaces, the dependencies and the consequences; approves the gated items, reviews the rest asynchronously |
-| `tester` | Turns the criteria into checks, writes tests and reproductions in parallel with the implementation, runs the verification and reports command, result and the lines that matter |
+| `architect` | Guards the shape of the change, the interfaces, the dependencies and the consequences; approves the gated items, reviews the rest asynchronously. Picks the profiles it weighs especially, and a team may hold several architects with different ones |
+| `tester` | Turns the criteria into checks, writes tests and reproductions in parallel with the implementation, runs the verification and reports command, result and the lines that matter. A team may hold several, each with its own area, files and review artifacts |
 
-Pair: run `/pair:navigator` in tab B, then `/pair:driver <task>` in tab A. Team: `/pair:architect` in tab B, `/pair:tester` in tab C, then `/pair:driver <task>` in tab A. Renaming a reviewing tab with `/rename pair-nav`, `pair-architect` or `pair-tester` lets the driver find it without asking. The sessions are real tabs, not subagents; the protocol lives in `pair/references/protocol.md`, and the task's state (goal, members, plan, decisions, open blockers, pending reviews) in `~/.cache/claude-pair/<repo>-<hash>/<run>.md`, written by the driver only. Every review request points at a snapshot of the working tree, taken by `pair/scripts/snap.sh` as an immutable ref under `refs/pair/<run>/` without touching the index, so a reviewer reads the revision and not whatever the driver has typed since. Approval is required where the plan says so — the plan itself, interfaces, schema, and any deployment, migration or push before it runs — and asynchronous elsewhere; `--strict` gates every step.
+**Compositions.** A pair is one driver and one navigator: `/pair:navigator` in tab B, then `/pair:driver <task>` in tab A. A team is one driver, at least one architect and at least one tester, with no upper bound on either — the smallest is `/pair:architect` in tab B, `/pair:tester` in tab C, then `/pair:driver <task>` in tab A. A five-tab run looks like this:
 
-See the [workflow diagrams and explanation in Polish](pair/references/workflow.md) for the parallel work, review gates, deployment verification, and communication between roles.
+| tab | skill | rename to | covers |
+| --- | --- | --- | --- |
+| A | `/pair:driver <task>` | — | does the work, integrates, coordinates, reports |
+| B | `/pair:architect` → picks **Project Architect** | `pair-architect-[project]` | that the change follows what this repository already does |
+| C | `/pair:architect` → picks **Code Quality** + **Pragmatist** | `pair-architect-[code-quality]-[pragmatist]` | responsibilities and abstractions, and whether each of them earns its place |
+| D | `/pair:tester` | `pair-tester-[api]` | the API contract and its error cases |
+| E | `/pair:tester` | `pair-tester-[e2e]` | the checkout flow end to end, and the integration run |
+
+Start every reviewing tab before the driver; each waits for the driver's first message. There is exactly one driver, and a driver session belonging to another task is never taken over.
+
+**Architect profiles.** An architect (and a navigator) asks the user once, before it starts waiting, what to weigh especially: Default, Code Quality, Project Architect, Pragmatist, any combination. The standing duties — placement, interfaces, dependencies, compatibility, reversibility — apply either way and are not a profile; Default means nothing added and is neutral when ticked alongside others. The definitions live in `pair/references/architect-profiles/`. Two architects can hold the same profiles, different ones or none, and the plan gives each a scope of its own.
+
+**Names.** Renaming a reviewing tab lets the driver find it without asking: `pair-nav`, `pair-architect`, `pair-tester`, or the same with a suffix — `pair-architect-[project]-[code-quality]`, `pair-tester-[e2e]`, brackets optional. A suffix is a suggestion the driver reads into the question and the plan, never a configuration by itself, and a name that merely looks similar (`pair-architectural`, `pair-testers`, `my-pair-architect`) matches no role.
+
+The sessions are real tabs, not subagents; the protocol lives in `pair/references/protocol.md`, and the task's state (goal, members with their profiles and scopes, plan, decisions, open blockers, pending reviews) in `~/.cache/claude-pair/<repo>-<hash>/<run>.md`, written by the driver only. Every review request points at a snapshot of the working tree, taken by `pair/scripts/snap.sh` as an immutable ref under `refs/pair/<run>/` without touching the index, so a reviewer reads the revision and not whatever the driver has typed since. Every verdict is recorded against one member, one item, one revision and one sha: a gate opens when every required reviewer has approved that exact revision, one reviewer's `FIX` is not answered by another's `OK`, and a reviewer is never dropped from the required list to get past either. Approval is required where the plan says so — the plan itself, interfaces, schema, and any deployment, migration or push before it runs — and asynchronous elsewhere; `--strict` gates every step.
 
 ## Repository layout
 
