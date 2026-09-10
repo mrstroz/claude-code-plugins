@@ -1,11 +1,12 @@
 /*
- * Runs on disk. Every execution gets a directory of its own under
- * docs/qa/<TASK>/runs/<runId>/ — its metadata, the scenario file as it was
- * executed, its results, its data ledger and its screenshots — and the task
- * directory keeps one index, results.json, that says for every scenario which
- * run last executed it and what it found. Nothing from an earlier run is
- * overwritten: a re-run of 07 writes a new picture in a new directory, and the
- * index points at it while the old one stays where it was.
+ * The task directory on disk: docs/qa/<TASK>/ holds scenarios.json, one
+ * results.json, one screenshots/ directory and, only while something is left
+ * in the database, records.json. results.json carries the metadata of the
+ * latest run under `run` and one entry per scenario; a scenario the latest run
+ * did not execute keeps its earlier entry with its own runId, which is what
+ * the report's "(earlier)" mark comes from. Nothing is archived per run: the
+ * repository's history is the archive between builds, and a picture that a
+ * later run replaced was evidence for a result that no longer stands.
  *
  * Files are written atomically (tmp + rename) after every scenario, so a run
  * killed half way leaves a readable record with status "interrupted" rather
@@ -20,7 +21,8 @@ import { fileURLToPath } from "node:url";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
 export const INDEX_FILE = "results.json";
-export const RUNS_DIR = "runs";
+export const LEDGER_FILE = "records.json";
+export const SHOTS_DIR = "screenshots";
 
 export function runnerVersion() {
   try {
@@ -55,36 +57,6 @@ export function writeJsonAtomic(file, data) {
   fs.renameSync(tmp, file);
 }
 
-export const runDirOf = (taskDir, runId) => path.join(taskDir, RUNS_DIR, runId);
-
-export function listRuns(taskDir) {
-  const dir = path.join(taskDir, RUNS_DIR);
-  if (!fs.existsSync(dir)) return [];
-  return fs.readdirSync(dir).filter((d) => RUN_ID_RE.test(d)).sort();
-}
-
-const pidAlive = (pid) => {
-  if (!pid) return false;
-  try { process.kill(pid, 0); return true; } catch { return false; }
-};
-
-/** A run.json still "running" whose process is gone was killed; say so. */
-export function markStaleRuns(taskDir) {
-  const marked = [];
-  for (const id of listRuns(taskDir)) {
-    const file = path.join(runDirOf(taskDir, id), "run.json");
-    const meta = readJson(file);
-    if (meta?.status === "running" && !pidAlive(meta.pid)) {
-      meta.status = "interrupted";
-      meta.finishedAt = meta.finishedAt || null;
-      meta.note = "marked interrupted by a later run: the process that started it is gone and it never finished";
-      writeJsonAtomic(file, meta);
-      marked.push(id);
-    }
-  }
-  return marked;
-}
-
 /**
  * What the working tree says about the code — and only that. The app at
  * baseUrl may be a container built an hour ago or a remote deployment; the
@@ -109,86 +81,85 @@ export function gitBuildInfo(cwd) {
   }
 }
 
-/** Create runs/<runId>/ with run.json and the scenario snapshot. */
-export function createRun(taskDir, { runId = newRunId(), scenariosDoc, meta }) {
-  const dir = runDirOf(taskDir, runId);
-  if (fs.existsSync(dir)) throw new Error(`run ${runId} already exists`);
-  fs.mkdirSync(path.join(dir, "screenshots"), { recursive: true });
-  const runFile = path.join(dir, "run.json");
-  const run = { runId, status: "running", pid: process.pid, startedAt: new Date().toISOString(), finishedAt: null, ...meta };
-  writeJsonAtomic(runFile, run);
-  if (scenariosDoc !== undefined) writeJsonAtomic(path.join(dir, "scenarios.json"), scenariosDoc);
-  return { runId, dir, runFile, run };
-}
+const indexFile = (taskDir) => path.join(taskDir, INDEX_FILE);
+const DROPPED = ["history", "fresh", "rewritten", "statusChangedFrom", "sourceRunId"];
 
-export function updateRun(runFile, patch) {
-  const run = readJson(runFile) || {};
-  Object.assign(run, patch);
-  writeJsonAtomic(runFile, run);
-  return run;
-}
-
-/** What an earlier entry keeps when it moves into `history`. */
-export function snapshotEntry(p) {
-  return {
-    runId: p.sourceRunId || p.runId || null, at: p.at || null, status: p.status, completed: p.completed, title: p.title,
-    expects: p.expects, error: p.error, errorDetail: p.errorDetail, failedStep: p.failedStep,
-    stepsHash: p.stepsHash, hashVersion: p.hashVersion, revision: p.revision, revisionHash: p.revisionHash,
-    diagnosis: p.diagnosis, screenshot: p.screenshot,
-  };
-}
-
-/** The index, or an empty one; a pre-0.7.0 flat results.json is read as its predecessor. */
+/**
+ * The index, or an empty one. A 0.7.0 index (latestRunId + runs/) is read
+ * into the flat shape: the run that last executed each scenario becomes its
+ * runId, the per-run bookkeeping is dropped, and screenshot paths point at
+ * screenshots/ — the pictures themselves are not moved, the next run takes
+ * new ones. The caller says so when it notices `migratedFrom`.
+ */
 export function loadIndex(taskDir) {
-  const doc = readJson(path.join(taskDir, INDEX_FILE));
-  if (!doc) return { latestRunId: null, scenarios: [] };
-  if (doc.latestRunId !== undefined) return doc;
-  // 0.6.0 layout: one results.json, screenshots/ beside it. Keep its entries as history.
-  return {
-    latestRunId: null,
-    legacy: { driver: doc.driver, startedAt: doc.startedAt, note: "entries below were recorded by a pre-0.7.0 run into results.json + screenshots/" },
-    scenarios: (doc.scenarios || []).map((r) => ({ ...r, sourceRunId: "legacy", fresh: false })),
-  };
+  const doc = readJson(indexFile(taskDir));
+  if (!doc) return { runId: null, run: null, scenarios: [] };
+  if (doc.latestRunId === undefined && doc.run !== undefined) return doc;
+  const legacy = doc.latestRunId !== undefined ? "0.7.0" : "0.6.0";
+  const scenarios = (doc.scenarios || []).map((r) => {
+    const out = { ...r, runId: r.sourceRunId && r.sourceRunId !== "legacy" ? r.sourceRunId : r.runId || null };
+    for (const k of DROPPED) delete out[k];
+    if (out.screenshot) out.screenshot = path.posix.join(SHOTS_DIR, path.posix.basename(out.screenshot));
+    return out;
+  });
+  return { runId: doc.latestRunId || null, run: null, scenarios, migratedFrom: legacy };
+}
+
+/** Start a run: a fresh id, `run` in the index set to running, screenshots/ present. */
+export function startRun(taskDir, meta = {}, { runId = newRunId() } = {}) {
+  const index = loadIndex(taskDir);
+  const migratedFrom = index.migratedFrom;
+  delete index.migratedFrom;
+  index.runId = runId;
+  index.run = { runId, status: "running", startedAt: new Date().toISOString(), finishedAt: null, ...meta };
+  index.updatedAt = index.run.startedAt;
+  fs.mkdirSync(path.join(taskDir, SHOTS_DIR), { recursive: true });
+  writeJsonAtomic(indexFile(taskDir), index);
+  return { runId, dir: taskDir, shotsDir: path.join(taskDir, SHOTS_DIR), migratedFrom };
+}
+
+/** Merge fields into the latest run's metadata. */
+export function patchRun(taskDir, patch) {
+  const index = loadIndex(taskDir);
+  index.run = { ...(index.run || {}), ...patch };
+  index.updatedAt = new Date().toISOString();
+  writeJsonAtomic(indexFile(taskDir), index);
+  return index.run;
 }
 
 /**
- * Merge this run's entries into the index. An entry executed now replaces the
- * previous one for that number and points at this run; a scenario whose
- * status or steps changed keeps the earlier entry under history. Entries this
- * run did not execute stay as they were, marked fresh: false.
+ * Write this run's entries into the index. An entry executed now replaces the
+ * previous one for that number; entries this run did not execute stay as they
+ * were, with their own runId.
  */
-export function updateIndex(taskDir, runId, entries, { scope = "all" } = {}) {
+export function updateIndex(taskDir, runId, entries) {
   const index = loadIndex(taskDir);
+  delete index.migratedFrom;
   const byN = new Map(index.scenarios.map((r) => [r.n, r]));
-  for (const r of index.scenarios) r.fresh = false;
-  for (const e of entries) {
-    const p = byN.get(e.n);
-    const out = { ...e, sourceRunId: runId, fresh: true };
-    if (p && p.sourceRunId === runId) {
-      // The same run writing again after another scenario: keep what the first
-      // write worked out, do not make the run its own history.
-      for (const k of ["history", "rewritten", "statusChangedFrom"]) if (p[k] !== undefined) out[k] = p[k];
-    } else if (p) {
-      const comparable = p.hashVersion === e.hashVersion;
-      const rewritten = comparable && p.stepsHash !== e.stepsHash;
-      const older = p.history || [];
-      // Every earlier execution stays on record with its run id; the flags say
-      // what changed, so the report can tell a re-run from a rewrite.
-      out.history = [...older, snapshotEntry(p)];
-      if (rewritten) out.rewritten = true;
-      if (p.status !== e.status) out.statusChangedFrom = p.status;
-      if (out.history.length === 0) delete out.history;
-    }
-    byN.set(e.n, out);
-  }
-  index.latestRunId = runId;
-  index.latestScope = scope;
+  for (const e of entries) byN.set(e.n, { ...e, runId });
+  index.runId = runId;
   index.updatedAt = new Date().toISOString();
   index.scenarios = [...byN.values()].sort((a, b) => a.n.localeCompare(b.n));
-  writeJsonAtomic(path.join(taskDir, INDEX_FILE), index);
+  writeJsonAtomic(indexFile(taskDir), index);
   return index;
 }
 
-/** Rewritten since an earlier run and the revision does not cover this version of the steps. */
-export const unexplainedRewrite = (r) =>
-  (r.history || []).some((h) => h.stepsHash && h.hashVersion === r.hashVersion && h.stepsHash !== r.stepsHash) && (!r.revision || r.revisionHash !== r.stepsHash);
+/**
+ * What changed between the previous index and this run's entries: steps
+ * rewritten (same hash version, different hash), status changed, and a
+ * rewrite that carries no revision for the steps as they are now. Printed at
+ * the end of the run; the report's "Changes to the scenarios" section is
+ * written from that print, since the index keeps no history.
+ */
+export function diffAgainst(prevByN, entries) {
+  const out = [];
+  for (const e of entries) {
+    const p = prevByN?.get(e.n);
+    if (!p) continue;
+    const stepsChanged = !!(p.stepsHash && e.stepsHash && p.hashVersion === e.hashVersion && p.stepsHash !== e.stepsHash);
+    const statusFrom = p.status && p.status !== e.status ? p.status : null;
+    const revisionMissing = stepsChanged && (!e.revision || (e.revisionHash && e.revisionHash !== e.stepsHash));
+    if (stepsChanged || statusFrom) out.push({ n: e.n, stepsChanged, statusFrom, status: e.status, revisionMissing });
+  }
+  return out;
+}

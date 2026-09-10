@@ -12,14 +12,18 @@
  *     wrong state
  *   - the verdict is the expect steps' — a step that threw is an error, which is
  *     not a result until somebody has said why
- *   - the results file and the index are rewritten after every scenario, so an
- *     interrupted run leaves a record of what ran, and cleanup runs whether the
- *     loop finished, threw or was asked to stop
+ *   - results.json is rewritten after every scenario, so an interrupted run
+ *     leaves a record of what ran, and cleanup runs whether the loop finished,
+ *     threw or was asked to stop
+ *   - a scenario's earlier pictures are removed before it is captured again:
+ *     screenshots/ holds one picture per number, for the result the index
+ *     reports, and a picture of a result that no longer stands is not evidence
  */
+import fs from "node:fs";
 import path from "node:path";
 import { fill, fillDeep, normalize, check, operand } from "./compare.mjs";
 import { stepKind, numberOf, requiresOf, usesOf, hashOf, HASH_VERSION } from "./validate.mjs";
-import { writeJsonAtomic, updateIndex, updateRun } from "./runs.mjs";
+import { updateIndex, patchRun, SHOTS_DIR } from "./runs.mjs";
 import { prepareSetup, cleanupRun } from "./fixtures.mjs";
 
 // ---------------------------------------------------------------- selectors
@@ -198,11 +202,20 @@ export const sameError = (a, b) => !!a && !!b && a.replace(/\d+ms/g, "Nms") === 
 
 // -------------------------------------------------------------------- loop
 
+/** Remove every picture of scenario `n` — the slug may have changed. */
+export function clearShots(shotsDir, n) {
+  let files;
+  try { files = fs.readdirSync(shotsDir); } catch { return []; }
+  const gone = files.filter((f) => f.startsWith(`${n}-`) && /\.(jpg|jpeg|png)$/.test(f));
+  for (const f of gone) fs.rmSync(path.join(shotsDir, f), { force: true });
+  return gone;
+}
+
 const STATUS_TAG = { pass: "PASS ", fail: "FAIL ", check: "CHECK", error: "ERROR", blocked: "BLOCK" };
 
 /**
  * Execute the selected scenarios. `ctx`:
- *   page, annotateSrc, taskDir, run ({ runId, dir, runFile }), doc, selected,
+ *   page, annotateSrc, taskDir, run ({ runId }), doc, selected,
  *   opts ({ baseUrl, timeout, keepData }), db (adapter or null), ledger,
  *   fixtures (ctx for fixture steps), prevByN (index entries by number),
  *   abort ({ requested }), log(line), scope
@@ -216,22 +229,19 @@ export async function executeScenarios(ctx) {
   const sources = ctx.sources || (ctx.sources = {});
   values.runId = run.runId;
   const readers = readersFor(page, ctx.db);
-  const shotsDir = path.join(run.dir, "screenshots");
-  const relShots = path.relative(taskDir, shotsDir) || "screenshots";
-  const runResults = path.join(run.dir, "results.json");
+  const shotsDir = path.join(taskDir, SHOTS_DIR);
+  const relShots = SHOTS_DIR;
+  fs.mkdirSync(shotsDir, { recursive: true });
 
   const results = [];
   const statusOf = new Map(); // this run only
-  const prepared = new Set(ctx.ledger?.prepared || []);
+  const prepared = new Set(ctx.ledger?.preparedNames() || []);
   const setupFailed = new Map();
   let errored = 0;
   let interrupted = false;
   let thrown = null;
 
-  const persist = () => {
-    writeJsonAtomic(runResults, { runId: run.runId, driver: "playwright", startedAt: run.run?.startedAt, scenarios: results });
-    updateIndex(taskDir, run.runId, results, { scope: ctx.scope || "all" });
-  };
+  const persist = () => updateIndex(taskDir, run.runId, results);
 
   // Console and network noise, reset per scenario.
   let noise = [];
@@ -262,7 +272,8 @@ export async function executeScenarios(ctx) {
       let stepAt = -1;
       const shot = path.join(shotsDir, `${n}-${slug}.jpg`);
       const errShot = path.join(shotsDir, `${n}-${slug}.error.jpg`);
-      const rel = (f) => path.join(relShots, path.basename(f));
+      const rel = (f) => path.posix.join(relShots, path.basename(f));
+      clearShots(shotsDir, n);
       const started = Date.now();
       const stepCtx = { values, sources, opts, readers, ready, sink: expects };
       await page.evaluate(() => window.__annClear?.()).catch(() => {});
@@ -374,11 +385,12 @@ export async function executeScenarios(ctx) {
     thrown = e;
   } finally {
     if (ctx.abort?.requested && results.length < selected.length) interrupted = true;
-    let data = { records: ctx.ledger?.records.length || 0, cleaned: 0, skipped: 0, kept: false, failures: [] };
+    let data = { records: ctx.ledger ? ctx.ledger.records.filter((r) => r.runId === run.runId).length : 0, cleaned: 0, skipped: 0, kept: false, failures: [] };
     if (ctx.ledger) {
       if (opts.keepData) {
         data.kept = true;
-        log(`--keep-data: ${data.records} record(s) left in place for diagnosis; remove them later with --cleanup --run ${run.runId}`);
+        ctx.ledger.compact();
+        log(`--keep-data: ${data.records} record(s) left in place for diagnosis; remove them later with --cleanup`);
       } else {
         try {
           const c = await cleanupRun(ctx.fixtures, { setups });
@@ -388,12 +400,14 @@ export async function executeScenarios(ctx) {
         } catch (e) {
           data.failures = [...data.failures, { error: e.message }];
         }
+        const left = ctx.ledger.compact();
         if (data.failures.length) log(`cleanup: ${data.failures.length} failure(s) — see ${path.relative(taskDir, ctx.ledger.file)}`);
+        else if (left) log(`records.json still lists ${ctx.ledger.records.length} record(s) — from an earlier run or without a cleanup step; --cleanup removes what it can`);
       }
     }
     const status = thrown ? "interrupted" : interrupted ? "interrupted" : "completed";
-    updateRun(run.runFile, {
-      status, finishedAt: new Date().toISOString(), pid: null,
+    patchRun(taskDir, {
+      status, finishedAt: new Date().toISOString(),
       executed: results.map((r) => r.n), stoppedAfter: interrupted || thrown ? results[results.length - 1]?.n || null : undefined,
       error: thrown ? String(thrown.message).split("\n")[0] : undefined,
       counts: results.reduce((acc, r) => ((acc[r.status] = (acc[r.status] || 0) + 1), acc), {}),

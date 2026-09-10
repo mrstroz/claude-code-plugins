@@ -14,21 +14,17 @@ Defaults: `--scenarios scenarios.json` in the current directory (`--task-dir DIR
 ```
 docs/qa/<TASK>/
   scenarios.json                 the plan
-  results.json                   the index: per scenario, the last execution and its run id
-  report.md                      the latest report
-  runs/20260910-103212-9f3a/
-    run.json                     when, what, where, with which browser, on which build
-    scenarios.json               the file as it was executed
-    results.json                 this run's entries only
-    records.json                 the data ledger
-    screenshots/NN-slug.jpg
+  results.json                   the latest run under `run`; per scenario, the last result and the run that produced it
+  report.md                      the report
+  screenshots/NN-slug.jpg        one picture per scenario
+  records.json                   only while test data is still in the database
 ```
 
-Nothing from an earlier run is overwritten. A `--only 07` writes `runs/<new id>/screenshots/07-….jpg` and points the index at it; the previous picture stays in its own run directory, and the index keeps the previous entry under `history` with its run id. The index says, for every scenario, `sourceRunId` (the run that last executed it) and `fresh` (whether that was the latest run). The runner prints which scenarios were **not** executed this time; those rows keep their old run id in the report, where the reader can see they are not a result on the current state.
+Every execution gets a run id, and `results.json` says which run last executed each scenario. A `--only 07` removes 07's earlier picture, writes the new one under the same name and replaces 07's entry; the other entries stay as they were, with their own run id. The runner prints which scenarios were **not** executed this time; their rows read `(earlier)` in the report, where the reader can see they are not a result on the current state. Nothing is archived per run — the repository's history is the archive between builds, and a picture of a result that a later run replaced was evidence for a result that no longer stands. The runner keeps no history of earlier executions either: what changed since the previous `results.json` is printed at the end of the run, and that print is what the report's "Changes to the scenarios" section is written from.
 
-`run.json` records the run id, status (`running` → `completed` or `interrupted`), start and end, scope (`all` or `{ only }`), driver, base URL, browser and version, viewport, slow motion, runner version, a hash of the scenario file, `fixturesVersion` from `setups.version`, whether withDB was on and which database (no secret), the build, the executed numbers, the counts, and `data` — records created, cleaned, kept, cleanup failures. The build block is `git rev-parse HEAD` and `git status` of the task directory's repository: branch, commit, whether the tree was dirty and how many files — with a note saying it is the local checkout and **not verified as the build running at the base URL**. The report repeats that qualification; a local commit is evidence about the checkout, not about a container built this morning or a remote deployment.
+The `run` block records the run id, status (`running` → `completed` or `interrupted`), start and end, scope (`all` or `{ only }`), driver, base URL, browser and version, viewport, slow motion, runner version, a hash of the scenario file, `fixturesVersion` from `setups.version`, whether withDB was on and which database (no secret), the build, the executed numbers, the counts, and `data` — records created, cleaned, kept, cleanup failures. The build block is `git rev-parse HEAD` and `git status` of the task directory's repository: branch, commit, whether the tree was dirty and how many files — with a note saying it is the local checkout and **not verified as the build running at the base URL**. The report repeats that qualification; a local commit is evidence about the checkout, not about a container built this morning or a remote deployment.
 
-Results are written after every scenario, atomically, and so is the index. Ctrl-C finishes the current scenario, cleans up the run's data, marks the run `interrupted` and exits 130; a second Ctrl-C leaves at once, and the run is marked with a note that cleanup may not have finished. A run whose process died without either — power, `kill -9` — is marked `interrupted` by the next run that starts in the directory. `check-evidence.js` refuses a report that cites an interrupted run without saying so.
+`results.json` is rewritten after every scenario, atomically. Ctrl-C finishes the current scenario, cleans up the run's data, marks the run `interrupted` and exits 130; a second Ctrl-C leaves at once, and the run is marked with a note that cleanup may not have finished. A run whose process died without either — power, `kill -9` — stays `running` in the file, which `check-evidence.js` treats the same way: it refuses a report whose run did not complete without the report saying so.
 
 ## The QA window
 
@@ -71,12 +67,12 @@ node …/run-scenarios.mjs --db "SELECT id, ref FROM properties WHERE type = 'vi
 
 ## Reading the results
 
-The index entry for a scenario:
+`results.json`: `runId` and `run` for the latest run, then one entry per scenario:
 
 ```json
 {
   "n": "03", "slug": "apply-villa-chip-url", "status": "pass", "at": "2026-09-10T10:52:31.104Z",
-  "sourceRunId": "20260910-105210-3c1e", "fresh": true, "stepsHash": "f1e2e604b7a3", "hashVersion": 2,
+  "runId": "20260910-105210-3c1e", "stepsHash": "f1e2e604b7a3", "hashVersion": 2,
   "requires": ["01"], "uses": ["villaSeed"],
   "given": [{ "desc": "the unfiltered list had 11 rows", "source": "ui", "passed": true, "actual": 11, "expected": 11 }],
   "values": { "ids": ["P-101", "P-103"], "save": { "status": 201, "ok": true, "json": { "id": 42 } } },
@@ -86,10 +82,9 @@ The index entry for a scenario:
     { "desc": "one row in the database", "source": "db", "passed": false, "actual": 2, "expected": 1, "reason": "expected number 1, got number 2", "actualType": "number" }
   ],
   "caption": "…", "captionDiag": { "missing": [".chip"] },
-  "screenshot": "runs/20260910-105210-3c1e/screenshots/03-apply-villa-chip-url.jpg",
+  "screenshot": "screenshots/03-apply-villa-chip-url.jpg",
   "completed": true, "console": [],
-  "revision": "…", "revisionHash": "f1e2e604b7a3",
-  "history": [{ "runId": "20260910-103212-9f3a", "at": "…", "status": "fail", "stepsHash": "591434db6bd8", "hashVersion": 2, "screenshot": "runs/20260910-103212-9f3a/screenshots/03-….jpg" }]
+  "revision": "…", "revisionHash": "f1e2e604b7a3"
 }
 ```
 
@@ -97,11 +92,12 @@ The index entry for a scenario:
 - `blocked` means the scenario did not run: a setup failed (`blockedBy: "setup:name"`), a `given` did not hold (`"given"`), or a required scenario did not finish (`"04"`), with `reason`. No screenshot. BLOCKED in the report, an entry under Not run
 - `error` means a step could not run. Not a FAIL, not a CHECK; the screenshot is `NN-slug.error.jpg`, which `check-evidence.js` refuses. The next section says what to do
 - `completed` says whether the steps ran to the end, independently of the verdict; it is what `requires` looks at
-- `history` holds every earlier execution with its run id; `rewritten: true` and `statusChangedFrom` on the entry say what changed since the previous one. Steps are compared by hash (`hashVersion: 2` covers requires, uses and the setups' content), so a changed comparator or a changed fixture counts as a rewrite even when the description stayed the same. A rewritten scenario is expected to carry `revision`, tied to the version of the steps it first appeared with (`revisionHash`)
+- `runId` is the run that produced the entry; one that differs from the file's `runId` was not executed by the latest run, and its row reads `(earlier)` in the report
+- Steps are compared by hash (`hashVersion: 2` covers requires, uses and the setups' content) against the previous `results.json`, so a changed comparator or a changed fixture counts as a rewrite even when the description stayed the same; the runner names such scenarios at the end of the run, with `(steps)` and the status change, and says when the `revision` does not cover the steps as they are now (`revisionHash`). The file itself keeps no history — the print and the report's "Changes" section are the record
 - `captionDiag.missing` lists caption selectors — the target first — that matched nothing; the card on the picture says the same
 - `diagnosis` is the reason recorded with `--verdict`; `diagnosisCarried: true` means a later run hit the same failure and kept the verdict. `console` holds console errors, page errors, failed requests and HTTP 4xx/5xx seen during the scenario
 
-Nothing in the report should carry a number that is not in the index.
+Nothing in the report should carry a number that is not in `results.json`.
 
 ## When a scenario errors
 
@@ -113,20 +109,20 @@ A timeout on a click is what a missing button looks like, and a missing button m
 
 Then one of two things:
 
-- **The step was wrong.** Fix it in `scenarios.json`, put one sentence in `revision`, and re-run with `--only NN`. The fix keeps checking the same requirement: replacing `equals` with `lt` because `equals` failed, or dropping the step that failed, is a weaker test, and the history in the index shows it
+- **The step was wrong.** Fix it in `scenarios.json`, put one sentence in `revision`, and re-run with `--only NN`. The fix keeps checking the same requirement: replacing `equals` with `lt` because `equals` failed, or dropping the step that failed, is a weaker test, and the runner's end-of-run print names it
 - **The element the criterion requires is not there.** The scenario is a FAIL and the error is its evidence:
 
   ```bash
   node …/run-scenarios.mjs --verdict 04=fail --reason "Export button is not rendered on the filtered list (no element, no request in console); the criterion requires it"
   ```
 
-  The entry as it was goes to `history`, the error message stays on the entry, `diagnosis` holds the reason, and the run's `04-slug.error.jpg` is renamed to `04-slug.jpg`. `--verdict NN=check` is the same move for something the tooling turned out unable to drive. A verdict applies to the scenario's latest execution (`--run <id>` may name it, and has to match); on the next run the runner keeps the verdict when it hits the same failure — same steps, same step, same message — and says so
+  The error message stays on the entry, `diagnosis` holds the reason, and `04-slug.error.jpg` is renamed to `04-slug.jpg`. `--verdict NN=check` is the same move for something the tooling turned out unable to drive. A verdict applies to the scenario's entry as it is now; on the next run the runner keeps the verdict when it hits the same failure — same steps, same step, same message — and says so
 
 `--verdict NN=fail` also overturns a PASS whose picture shows something the assertions did not cover. The badge on the picture stays what it was at capture; the entry records it (`pictureSays`), and the finding has to say in one line that the verdict supersedes the caption, or `check-evidence.js` refuses the report. `--verdict NN=pass` exists only to withdraw such a verdict: it is accepted for a completed run whose assertions all held, and for nothing else. It refuses a blocked scenario: nothing ran, so there is nothing to judge.
 
 ## Re-running
 
-`--only 07` runs 07 and, before it, everything 07 `requires`, transitively and in file order, plus the setups 07 `uses` — on fresh data, in a new run directory. A PASS from an earlier run is not a state the app is in now, so the dependency runs again rather than being trusted. The validator checks the selection first: a value 07 reads that only 02 stores, with 02 not in `requires`, stops the run before the browser with the scenario to add. `--fast` drops the slow motion for a re-run nobody needs to watch; nothing else changes, and no scenario is ever retried on its own.
+`--only 07` runs 07 and, before it, everything 07 `requires`, transitively and in file order, plus the setups 07 `uses` — on fresh data, under a new run id. A PASS from an earlier run is not a state the app is in now, so the dependency runs again rather than being trusted. The validator checks the selection first: a value 07 reads that only 02 stores, with 02 not in `requires`, stops the run before the browser with the scenario to add. `--fast` drops the slow motion for a re-run nobody needs to watch; nothing else changes, and no scenario is ever retried on its own.
 
 ## When to use the Chrome extension instead
 
@@ -134,7 +130,7 @@ Then one of two things:
 - a browser extension is part of what is under test
 - the app refuses automated browsers outright
 
-Then choose the Chrome driver at the start; the scenario file is still written, and [browser-driving.md](browser-driving.md) covers executing it by hand, and what the runner still does for such a run (the run directory, the setups, the database, the index).
+Then choose the Chrome driver at the start; the scenario file is still written, and [browser-driving.md](browser-driving.md) covers executing it by hand, and what the runner still does for such a run (the run in `results.json`, the setups, the database, the closing check).
 
 ## What the runner does not do
 

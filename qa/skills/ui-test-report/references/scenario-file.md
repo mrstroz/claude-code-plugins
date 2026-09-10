@@ -69,7 +69,7 @@ The second scenario is the shape most rows take: data prepared by a setup, a pre
 | `feature` | one line for the report |
 | `withDB` | `true` when the run checks the database as well as the UI — the answer to the start-up question, kept here so a re-run does not ask again. Without it every `db` step and `sql` fixture is a validation error |
 | `ready` | what "the app is ready" means after `goto` and `reload`: a selector that has to be visible, or `{ "js": "…" }` that has to hold. Checked after the `load` event; a timeout is an error of the step. There is no network-idle guess |
-| `setups` | named blocks of test data, see [test-data.md](test-data.md); `version` is free text recorded in `run.json` as `fixturesVersion` |
+| `setups` | named blocks of test data, see [test-data.md](test-data.md); `version` is free text recorded in `results.json` under `run.fixturesVersion` |
 | `scenarios` | the rows |
 
 ## Scenario fields
@@ -150,7 +150,7 @@ The file is validated before the first click, all problems at once: two operatio
 
 ## Identity of a scenario
 
-The runner hashes what a scenario checks — `given`, `steps`, `manual`, `requires`, `uses` and the content of the setups it uses — and keeps the hash with every result. A changed comparator, a changed fixture or a new dependency is a rewrite, recorded in the index's history; a rewritten scenario is expected to carry `revision`, and `check-evidence.js` refuses a report where one is missing. The title is not part of the hash.
+The runner hashes what a scenario checks — `given`, `steps`, `manual`, `requires`, `uses` and the content of the setups it uses — and keeps the hash with every result. A changed comparator, a changed fixture or a new dependency is a rewrite; the runner compares against the previous `results.json` and names every rewritten scenario at the end of the run, and says when its `revision` was written for an earlier version of the steps. A rewritten scenario is expected to carry `revision` — the file keeps no history, so the sentence and the report's "Changes" section are the only record of what the earlier check got wrong. The title is not part of the hash.
 
 ## Ordering
 

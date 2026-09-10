@@ -4,17 +4,24 @@
  * A setup is a named block of prepare steps — http, sql, shell — that a
  * scenario declares with `uses`. It runs once per run, before the first
  * scenario that needs it, so `--only 07` prepares 07's data without replaying
- * the six scenarios before it. Every record a step creates is written to the
- * run's ledger with the run id, and cleanup walks that ledger backwards. Only
- * the ledger: nothing is truncated, reset or guessed, and a record the run did
- * not create is never touched. Names built with ${runId} carry the provenance
- * into the data itself, so a stray "QA 20260910-103212-9f3a villas" in a
- * shared database says where it came from without opening any file.
+ * the six scenarios before it. Every record a step creates is written to
+ * records.json in the task directory with the run id, and cleanup walks that
+ * ledger backwards. Only the ledger: nothing is truncated, reset or guessed,
+ * and a record the run did not create is never touched. Names built with
+ * ${runId} carry the provenance into the data itself, so a stray
+ * "QA 20260910-103212-9f3a villas" in a shared database says where it came
+ * from without opening any file.
+ *
+ * The ledger lists what is still there. A record that cleanup removed leaves
+ * the file, and a file with nothing left in it is deleted — so records.json
+ * existing at all means something is in the database. A run cleans its own
+ * records; --cleanup walks everything the file lists.
  *
  * The runner opens no transaction around the app's own writes and does not
  * pretend one exists; cleanup is explicit, recorded, and reported when it
  * fails.
  */
+import fs from "node:fs";
 import { execFileSync } from "node:child_process";
 import { fill, getPath } from "./compare.mjs";
 import { fixtureKind } from "./validate.mjs";
@@ -26,20 +33,37 @@ export class Ledger {
     this.runId = runId;
     const existing = readJson(file);
     this.records = existing?.records || [];
-    this.cleaned = existing?.cleaned || [];
     this.failures = existing?.failures || [];
-    this.prepared = existing?.prepared || [];
+    // 0.7.0 wrote prepared as plain names; every entry now says which run.
+    this.prepared = (existing?.prepared || []).map((p) => (typeof p === "string" ? { name: p, runId: existing?.runId || null } : p));
+  }
+  /** Setups this run has prepared. */
+  preparedNames() {
+    return this.prepared.filter((p) => p.runId === this.runId).map((p) => p.name);
   }
   markPrepared(name) {
-    if (!this.prepared.includes(name)) this.prepared.push(name);
+    if (!this.preparedNames().includes(name)) this.prepared.push({ name, runId: this.runId });
     this.save();
   }
   add(record) {
     this.records.push({ runId: this.runId, at: new Date().toISOString(), ...record });
     this.save();
   }
+  /** Records other runs left behind — kept with --keep-data or not removable. */
+  leftovers() {
+    return this.records.filter((r) => r.runId !== this.runId);
+  }
   save() {
-    writeJsonAtomic(this.file, { runId: this.runId, prepared: this.prepared, records: this.records, cleaned: this.cleaned, failures: this.failures });
+    writeJsonAtomic(this.file, { prepared: this.prepared, records: this.records, failures: this.failures });
+  }
+  /** Save, or remove the file when nothing is left to tell. */
+  compact() {
+    if (this.records.length === 0 && this.failures.length === 0) {
+      try { fs.rmSync(this.file); } catch { /* never written */ }
+      return false;
+    }
+    this.save();
+    return true;
   }
 }
 
@@ -142,39 +166,45 @@ export async function prepareSetup(name, setup, ctx) {
 }
 
 /**
- * Remove what this run created: records in reverse order, each through its own
- * cleanup step with ${id} and ${runId} filled in; then every prepared setup's
- * cleanup block. A failure is recorded and the walk continues, so one record
- * that will not delete does not leave ten others behind unreported.
+ * Remove what a run created: its records in reverse order, each through its
+ * own cleanup step with ${id} and ${runId} filled in; then every setup it
+ * prepared, through the setup's cleanup block. A removed record leaves the
+ * ledger; a failure is recorded and the walk continues, so one record that
+ * will not delete does not leave ten others behind unreported. With
+ * `all: true` (--cleanup) the walk covers every run the ledger lists.
  */
-export async function cleanupRun(ctx, { setups = {} } = {}) {
+export async function cleanupRun(ctx, { setups = {}, all = false } = {}) {
   const ledger = ctx.ledger;
-  const prepared = ledger.prepared;
-  const done = new Set(ledger.cleaned.map((c) => c.index));
-  const before = { cleaned: ledger.cleaned.length, failures: ledger.failures.length };
+  const mine = (r) => all || r.runId === ledger.runId;
+  const before = ledger.failures.length;
+  let cleaned = 0;
+  let skipped = 0;
   for (let i = ledger.records.length - 1; i >= 0; i--) {
-    if (done.has(i)) continue;
     const rec = ledger.records[i];
-    if (!rec.cleanup) { ledger.cleaned.push({ index: i, at: new Date().toISOString(), skipped: "no cleanup step" }); continue; }
+    if (!mine(rec)) continue;
+    // No cleanup step: the record is still there, so it stays listed.
+    if (!rec.cleanup) { skipped++; continue; }
     try {
-      await runFixtureStep(rec.cleanup, ctx, { id: rec.id });
-      ledger.cleaned.push({ index: i, at: new Date().toISOString() });
+      await runFixtureStep(rec.cleanup, { ...ctx, runId: rec.runId }, { id: rec.id });
+      ledger.records.splice(i, 1);
+      cleaned++;
     } catch (e) {
-      ledger.failures.push({ index: i, kind: rec.kind, id: rec.id, at: new Date().toISOString(), error: e.message });
+      ledger.failures.push({ kind: rec.kind, id: rec.id, runId: rec.runId, at: new Date().toISOString(), error: e.message });
     }
     ledger.save();
   }
-  for (const name of [...prepared].reverse()) {
-    for (const [i, step] of (setups[name]?.cleanup || []).entries()) {
+  const preparedHere = ledger.prepared.filter(mine);
+  for (const p of [...preparedHere].reverse()) {
+    for (const [i, step] of (setups[p.name]?.cleanup || []).entries()) {
       try {
-        await runFixtureStep(step, ctx);
-        ledger.cleaned.push({ setup: name, step: i, at: new Date().toISOString() });
+        await runFixtureStep(step, { ...ctx, runId: p.runId });
       } catch (e) {
-        ledger.failures.push({ setup: name, step: i, at: new Date().toISOString(), error: e.message });
+        ledger.failures.push({ setup: p.name, step: i, runId: p.runId, at: new Date().toISOString(), error: e.message });
       }
-      ledger.save();
     }
+    ledger.prepared.splice(ledger.prepared.indexOf(p), 1);
+    ledger.save();
   }
-  const now = ledger.cleaned.slice(before.cleaned);
-  return { cleaned: now.filter((c) => !c.skipped).length, skipped: now.filter((c) => c.skipped).length, failures: ledger.failures.slice(before.failures), allFailures: ledger.failures };
+  const failures = ledger.failures.slice(before);
+  return { cleaned, skipped, failures, allFailures: ledger.failures };
 }

@@ -3,9 +3,10 @@
 //
 // The browser is not here. The scenario loop takes a page object, so these
 // tests hand it a fake one whose `evaluate` reads a scripted state, and check
-// what the loop writes to disk: results, index, ledger, run.json. Everything
-// that decides a verdict — comparators, validation, retry, history, cleanup,
-// the database guard — is exercised directly.
+// what the loop writes to disk: results.json, records.json, screenshots/.
+// Everything that decides a verdict — comparators, validation, retry, the
+// diff against the previous results, cleanup, the database guard — is
+// exercised directly.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -17,11 +18,11 @@ import { fileURLToPath } from "node:url";
 
 import { same, COMPARATORS, check, normalize, fill, getPath } from "./lib/compare.mjs";
 import { validateScenarios, hashOf, selectScenarios } from "./lib/validate.mjs";
-import { createRun, updateIndex, loadIndex, markStaleRuns, writeJsonAtomic, readJson, updateRun } from "./lib/runs.mjs";
+import { startRun, loadIndex, writeJsonAtomic, readJson, patchRun, diffAgainst } from "./lib/runs.mjs";
 import { openDb, maskRows, isReadQuery } from "./lib/db.mjs";
 import { buildScript, parseXml, escapeLiteral } from "./lib/db-mysql-docker.mjs";
 import { Ledger, prepareSetup, cleanupRun } from "./lib/fixtures.mjs";
-import { executeScenarios } from "./lib/engine.mjs";
+import { executeScenarios, clearShots } from "./lib/engine.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "qa-runner-"));
@@ -221,16 +222,17 @@ function setupTask(scenariosDoc) {
 async function runOnce(taskDir, doc, state, { only = null, keepData = false, abort = { requested: false }, ledger = null, fixtures = null, db = null, prevByN = null } = {}) {
   const list = doc.scenarios;
   const { selected } = selectScenarios(list, only);
-  const run = createRun(taskDir, { scenariosDoc: doc, meta: { driver: "playwright", scope: only ? { only } : "all" } });
+  const prev = prevByN || new Map(loadIndex(taskDir).scenarios.map((r) => [r.n, r]));
+  const run = startRun(taskDir, { driver: "playwright", scope: only ? { only } : "all" });
   const page = fakePage(state);
-  const led = ledger || new Ledger(path.join(run.dir, "records.json"), run.runId);
+  const led = ledger || new Ledger(path.join(taskDir, "records.json"), run.runId);
   const values = { runId: run.runId };
   const fx = fixtures || { runId: run.runId, baseUrl: "http://app", values, db, ledger: led, cwd: taskDir };
   const out = await executeScenarios({
     page, annotateSrc: "", taskDir, run, doc, selected, opts: { baseUrl: "http://app", timeout: 100, keepData }, db, ledger: led, values, fixtures: fx,
-    prevByN: prevByN || new Map(loadIndex(taskDir).scenarios.map((r) => [r.n, r])), abort, scope: only ? { only } : "all", log: () => {},
+    prevByN: prev, abort, log: () => {},
   });
-  return { ...out, run, page };
+  return { ...out, run, page, prevByN: prev, meta: loadIndex(taskDir).run };
 }
 
 // --------------------------------------------------------------- loop
@@ -256,58 +258,77 @@ test("loop: pass, fail with reason and source, blocked by given, blocked by requ
   assert.equal(by["04"].blockedBy, "03");
   assert.equal(by["05"].status, "error");
   assert.equal(by["05"].failedStep.index, 0);
-  assert.match(by["05"].screenshot, /runs\/.*\/screenshots\/05-s05\.error\.jpg$/);
+  assert.equal(by["05"].screenshot, "screenshots/05-s05.error.jpg");
   assert.equal(errored, 1);
   assert.equal(by["01"].values.total, 3);
   assert.equal(by["01"].hashVersion, 2);
-  const meta = readJson(run.runFile);
-  assert.equal(meta.status, "completed");
-  assert.deepEqual(meta.executed, ["01", "02", "03", "04", "05"]);
+  const index = loadIndex(taskDir);
+  assert.equal(index.run.status, "completed");
+  assert.deepEqual(index.run.executed, ["01", "02", "03", "04", "05"]);
   assert.ok(fs.existsSync(path.join(taskDir, by["01"].screenshot)));
   assert.equal(by["03"].screenshot, null, "blocked has no picture");
-  const index = loadIndex(taskDir);
-  assert.equal(index.latestRunId, run.runId);
-  assert.ok(index.scenarios.every((r) => r.sourceRunId === run.runId && r.fresh));
+  assert.equal(index.runId, run.runId);
+  assert.ok(index.scenarios.every((r) => r.runId === run.runId));
+  assert.equal(index.scenarios[0].history, undefined, "no history in the index");
+  assert.ok(!fs.existsSync(path.join(taskDir, "runs")), "no per-run directories");
+  assert.ok(!fs.existsSync(path.join(taskDir, "records.json")), "nothing created, no ledger file");
 });
 
-test("partial re-run: the index keeps the untouched scenario with its old run id, old pictures stay", async () => {
+test("partial re-run: the untouched scenario keeps its old run id and its picture, the re-run one is overwritten in place", async () => {
   const doc = { scenarios: [okScenario("01"), okScenario("02", { requires: ["01"] })] };
   const taskDir = setupTask(doc);
   const first = await runOnce(taskDir, doc, {});
   const pic01 = path.join(taskDir, first.results[0].screenshot);
   const pic02 = path.join(taskDir, first.results[1].screenshot);
+  const stamp02 = fs.statSync(pic02).mtimeMs;
+  fs.writeFileSync(pic01, Buffer.alloc(6000, 7));
   const second = await runOnce(taskDir, doc, {}, { only: ["02"] });
   assert.deepEqual(second.results.map((r) => r.n), ["01", "02"], "02 pulls 01 in");
   const index = loadIndex(taskDir);
-  assert.ok(index.scenarios.every((r) => r.sourceRunId === second.run.runId));
-  assert.ok(fs.existsSync(pic01) && fs.existsSync(pic02), "the first run's pictures are untouched");
-  assert.ok(fs.existsSync(path.join(taskDir, index.scenarios[1].screenshot)));
-  assert.notEqual(index.scenarios[1].screenshot, first.results[1].screenshot);
-  const h = index.scenarios[0].history;
-  assert.equal(h.length, 1);
-  assert.equal(h[0].runId, first.run.runId);
-  // A third run touching only 01 leaves 02 pointing at the second run.
+  assert.ok(index.scenarios.every((r) => r.runId === second.run.runId));
+  assert.equal(index.scenarios[1].screenshot, "screenshots/02-s02.jpg", "same path, overwritten");
+  assert.ok(fs.statSync(pic02).mtimeMs >= stamp02);
+  assert.equal(index.scenarios[0].history, undefined);
+  // A third run touching only 01 leaves 02 pointing at the second run, picture untouched.
+  const before02 = fs.readFileSync(pic02);
   const third = await runOnce(taskDir, doc, {}, { only: ["01"] });
   const idx3 = loadIndex(taskDir);
-  assert.equal(idx3.scenarios[0].sourceRunId, third.run.runId);
-  assert.equal(idx3.scenarios[1].sourceRunId, second.run.runId);
-  assert.equal(idx3.scenarios[1].fresh, false);
-  assert.equal(idx3.scenarios[0].fresh, true);
+  assert.equal(idx3.runId, third.run.runId);
+  assert.equal(idx3.scenarios[0].runId, third.run.runId);
+  assert.equal(idx3.scenarios[1].runId, second.run.runId);
+  assert.deepEqual(fs.readFileSync(pic02), before02, "02 was not re-captured");
+  assert.deepEqual(fs.readdirSync(path.join(taskDir, "screenshots")).sort(), ["01-s01.jpg", "02-s02.jpg"]);
 });
 
-test("rewrite detection and history: a changed comparator is a rewrite, the revision has to be for this version", async () => {
+test("clearShots: a re-run removes the scenario's earlier pictures, whatever their slug or suffix", () => {
+  const dir = tmp();
+  for (const f of ["03-old-slug.jpg", "03-old-slug.error.jpg", "030-other.jpg", "04-keep.jpg"]) fs.writeFileSync(path.join(dir, f), "x");
+  assert.deepEqual(clearShots(dir, "03").sort(), ["03-old-slug.error.jpg", "03-old-slug.jpg"]);
+  assert.deepEqual(fs.readdirSync(dir).sort(), ["030-other.jpg", "04-keep.jpg"]);
+  assert.deepEqual(clearShots(path.join(dir, "missing"), "01"), []);
+});
+
+test("rewrite detection: a changed comparator is reported against the previous results.json, with the revision's coverage", async () => {
   const doc = { scenarios: [okScenario("01", { steps: [{ goto: "/" }, { read: { name: "n", js: "state.n" } }, { expect: { name: "n", equals: 5 } }] })] };
   const taskDir = setupTask(doc);
   await runOnce(taskDir, doc, { n: 4 });
   const doc2 = { scenarios: [okScenario("01", { revision: "5 was the seed before the migration; 4 is right", steps: [{ goto: "/" }, { read: { name: "n", js: "state.n" } }, { expect: { name: "n", equals: 4 } }] })] };
   fs.writeFileSync(path.join(taskDir, "scenarios.json"), JSON.stringify(doc2));
-  await runOnce(taskDir, doc2, { n: 4 });
+  const second = await runOnce(taskDir, doc2, { n: 4 });
   const r = loadIndex(taskDir).scenarios[0];
   assert.equal(r.status, "pass");
-  assert.equal(r.rewritten, true);
-  assert.equal(r.statusChangedFrom, "fail");
   assert.equal(r.revisionHash, r.stepsHash);
-  assert.equal(r.history[0].status, "fail");
+  assert.equal(r.history, undefined);
+  const diff = diffAgainst(second.prevByN, second.results);
+  assert.deepEqual(diff, [{ n: "01", stepsChanged: true, statusFrom: "fail", status: "pass", revisionMissing: false }]);
+  // The same revision sentence on a second rewrite does not cover the new steps.
+  const doc3 = { scenarios: [okScenario("01", { revision: doc2.scenarios[0].revision, steps: [{ goto: "/" }, { read: { name: "n", js: "state.n" } }, { expect: { name: "n", lt: 10 } }] })] };
+  fs.writeFileSync(path.join(taskDir, "scenarios.json"), JSON.stringify(doc3));
+  const third = await runOnce(taskDir, doc3, { n: 4 });
+  const diff3 = diffAgainst(third.prevByN, third.results);
+  assert.equal(diff3[0].stepsChanged, true);
+  assert.equal(diff3[0].revisionMissing, true);
+  assert.deepEqual(diffAgainst(new Map(), third.results), [], "nothing to compare on the first run");
 });
 
 test("interrupt: results written after every scenario, the run is marked interrupted, cleanup still runs", async () => {
@@ -324,35 +345,49 @@ test("interrupt: results written after every scenario, the run is marked interru
   const origEval = fakePage(state).evaluate;
   void origEval;
   const page = fakePage(state);
-  const run = createRun(taskDir, { scenariosDoc: doc, meta: { driver: "playwright", scope: "all" } });
-  const ledger = new Ledger(path.join(run.dir, "records.json"), run.runId);
+  const run = startRun(taskDir, { driver: "playwright", scope: "all" });
+  const ledger = new Ledger(path.join(taskDir, "records.json"), run.runId);
   const values = { runId: run.runId };
   const fixtures = { runId: run.runId, baseUrl: "http://app", values, db: null, ledger, cwd: taskDir };
   let count = 0;
   const out = await executeScenarios({
     page, annotateSrc: "", taskDir, run, doc, selected: doc.scenarios, opts: { baseUrl: "http://app", timeout: 100 }, db: null, ledger, values, fixtures,
-    prevByN: new Map(), abort, scope: "all", log: () => { if (++count === 2) abort.requested = true; }, // "setup seed prepared" then "PASS 01"
+    prevByN: new Map(), abort, log: () => { if (++count === 2) abort.requested = true; }, // "setup seed prepared" then "PASS 01"
   });
   assert.equal(out.interrupted, true);
   assert.deepEqual(out.results.map((r) => r.n), ["01"]);
-  const meta = readJson(run.runFile);
-  assert.equal(meta.status, "interrupted");
-  assert.equal(meta.stoppedAfter, "01");
-  assert.equal(readJson(path.join(run.dir, "results.json")).scenarios.length, 1);
-  assert.equal(meta.data.records, 1);
-  assert.equal(meta.data.cleaned, 1);
-  assert.match(fs.readFileSync(log, "utf8"), /cleaned 41/);
   const idx = loadIndex(taskDir);
+  assert.equal(idx.run.status, "interrupted");
+  assert.equal(idx.run.stoppedAfter, "01");
+  assert.equal(idx.run.data.records, 1);
+  assert.equal(idx.run.data.cleaned, 1);
+  assert.match(fs.readFileSync(log, "utf8"), /cleaned 41/);
   assert.equal(idx.scenarios.length, 1);
+  assert.ok(!fs.existsSync(path.join(taskDir, "records.json")), "cleaned up: the ledger file is gone");
 });
 
-test("stale runs: a run.json left 'running' by a dead process is marked interrupted on the next start", () => {
+test("loadIndex reads a 0.7.0 index into the flat shape and drops what nothing reads any more", () => {
   const taskDir = tmp();
-  const run = createRun(taskDir, { meta: {} });
-  updateRun(run.runFile, { pid: 999999999 });
-  assert.deepEqual(markStaleRuns(taskDir), [run.runId]);
-  assert.equal(readJson(run.runFile).status, "interrupted");
-  assert.deepEqual(markStaleRuns(taskDir), []);
+  writeJsonAtomic(path.join(taskDir, "results.json"), {
+    latestRunId: "20260910-172617-d964", latestScope: "all",
+    scenarios: [
+      { n: "01", status: "pass", sourceRunId: "20260910-172617-d964", fresh: true, screenshot: "runs/20260910-172617-d964/screenshots/01-a.jpg", history: [{ runId: "x" }], rewritten: true, statusChangedFrom: "fail" },
+      { n: "02", status: "fail", sourceRunId: "20260910-171010-1aef", fresh: false, screenshot: "runs/20260910-171010-1aef/screenshots/02-b.jpg" },
+    ],
+  });
+  const idx = loadIndex(taskDir);
+  assert.equal(idx.migratedFrom, "0.7.0");
+  assert.equal(idx.runId, "20260910-172617-d964");
+  assert.equal(idx.run, null);
+  assert.deepEqual(idx.scenarios.map((r) => [r.n, r.runId, r.screenshot]), [["01", "20260910-172617-d964", "screenshots/01-a.jpg"], ["02", "20260910-171010-1aef", "screenshots/02-b.jpg"]]);
+  for (const k of ["history", "fresh", "rewritten", "statusChangedFrom", "sourceRunId"]) assert.equal(idx.scenarios[0][k], undefined, k);
+  const run = startRun(taskDir, { driver: "playwright" });
+  assert.equal(run.migratedFrom, "0.7.0", "startRun says where the index came from");
+  const after = loadIndex(taskDir);
+  assert.equal(after.migratedFrom, undefined, "written once in the new shape, it is no longer a migration");
+  assert.equal(after.run.status, "running");
+  assert.equal(after.scenarios[1].runId, "20260910-171010-1aef", "entries survive the start of a run");
+  assert.deepEqual(loadIndex(tmp()), { runId: null, run: null, scenarios: [] });
 });
 
 // ------------------------------------------------------------ fixtures
@@ -394,14 +429,12 @@ test("setups: prepare once per run, records in the ledger with the run id, clean
   assert.equal(results[0].status, "pass", JSON.stringify(results[0].expects));
   assert.equal(results[0].expects[0].source, "db");
   assert.equal(results[1].status, "pass", "setup ran once: still one seeded row");
-  const ledger = readJson(path.join(run.dir, "records.json"));
-  assert.equal(ledger.records.length, 1);
-  assert.equal(ledger.records[0].runId, run.runId);
-  assert.deepEqual(ledger.prepared, ["seed"]);
-  assert.equal(ledger.cleaned.length, 1);
+  assert.ok(!fs.existsSync(path.join(taskDir, "records.json")), "everything cleaned: no ledger file left");
   const left = await db.query("SELECT name FROM views");
   assert.deepEqual(left.map((r) => r.name), ["someone else's view"], "cleanup removed the run's row and nothing else");
-  assert.equal(readJson(run.runFile).data.cleaned, 1);
+  const meta = loadIndex(taskDir).run;
+  assert.equal(meta.data.records, 1);
+  assert.equal(meta.data.cleaned, 1);
 });
 
 test("--keep-data leaves the records and says so; cleanupRun later removes them", async () => {
@@ -413,11 +446,27 @@ test("--keep-data leaves the records and says so; cleanupRun later removes them"
   };
   const taskDir = setupTask(doc);
   const { run } = await runOnce(taskDir, doc, {}, { db, keepData: true });
-  assert.equal(readJson(run.runFile).data.kept, true);
+  assert.equal(loadIndex(taskDir).run.data.kept, true);
   assert.equal((await db.query("SELECT COUNT(*) AS n FROM views"))[0].n, 2);
-  const ledger = new Ledger(path.join(run.dir, "records.json"), run.runId);
-  const c = await cleanupRun({ runId: run.runId, values: {}, db, ledger, cwd: taskDir }, { setups: doc.setups });
+  const file = path.join(taskDir, "records.json");
+  const kept = readJson(file);
+  assert.equal(kept.records.length, 1, "the ledger stays while the row is there");
+  assert.deepEqual(kept.prepared, [{ name: "seed", runId: run.runId }]);
+  assert.equal(kept.cleaned, undefined, "no cleaned list: what is cleaned leaves the file");
+  // A second run sees the leftover, cleans only its own, and the file keeps the old row.
+  const second = await runOnce(taskDir, doc, {}, { db });
+  assert.equal(second.results[0].status, "pass");
+  assert.equal((await db.query("SELECT COUNT(*) AS n FROM views"))[0].n, 2, "the kept row is still there, the second run's row is gone");
+  const stillThere = readJson(file);
+  assert.deepEqual(stillThere.records.map((r) => r.runId), [run.runId]);
+  assert.equal(second.meta.data.records, 1, "counts this run's records only");
+  // --cleanup walks everything.
+  const ledger = new Ledger(file, "cleanup");
+  assert.equal(ledger.leftovers().length, 1);
+  const c = await cleanupRun({ runId: "cleanup", values: {}, db, ledger, cwd: taskDir }, { setups: doc.setups, all: true });
   assert.equal(c.cleaned, 1);
+  assert.equal(ledger.compact(), false);
+  assert.ok(!fs.existsSync(file), "nothing left, no file");
   assert.equal((await db.query("SELECT COUNT(*) AS n FROM views"))[0].n, 1);
 });
 
@@ -434,9 +483,14 @@ test("a failing setup blocks the scenarios that use it; a failing cleanup is rec
   assert.equal(results[0].status, "blocked");
   assert.equal(results[0].blockedBy, "setup:broken");
   assert.equal(results[1].status, "pass");
-  const meta = readJson(run.runFile);
+  const meta = loadIndex(taskDir).run;
   assert.equal(meta.data.failures.length, 1);
   assert.equal(meta.data.failures[0].id, "7");
+  const ledger = readJson(path.join(taskDir, "records.json"));
+  assert.ok(ledger, "a failed cleanup keeps the file");
+  assert.equal(ledger.records.length, 1, "the record it could not remove is still listed");
+  assert.equal(ledger.failures.length, 1);
+  void run;
 });
 
 test("http fixture step: creates through the API, records the id from the response, cleans up through DELETE", async () => {
@@ -539,32 +593,61 @@ test("mysql adapter: literals are escaped into SET, the statement is a constant,
 
 // ------------------------------------------------------- check-evidence
 
-test("check-evidence: runs layout — accepts a consistent report, refuses a wrong run id, a missing picture and an unmarked interrupted run", async () => {
+test("check-evidence: accepts a consistent report, refuses a wrong (earlier) mark, a missing picture, an unmarked interrupted run and a leftover ledger", async () => {
   const doc = { scenarios: [okScenario("01"), okScenario("02", { given: [{ js: "false", truthy: true, desc: "never" }] })] };
   const taskDir = setupTask(doc);
   const { run } = await runOnce(taskDir, doc, {});
-  const report = (runFor01, extra = "") => `# QA — demo\n\nRun ${run.runId} on http://app.${extra}\n\n| # | Scenario | Result | Run |\n| --- | --- | --- | --- |\n| 01 | S 01 | PASS | ${runFor01} |\n| 02 | S 02 | BLOCKED | ${run.runId} |\n\n## Not run\n\n- **02** — precondition never held.\n`;
+  const report = (result01, extra = "") => `# QA — demo\n\nRun ${run.runId} on http://app.${extra}\n\n| # | Scenario | Result |\n| --- | --- | --- |\n| 01 | S 01 | ${result01} |\n| 02 | S 02 | BLOCKED |\n\n## Not run\n\n- **02** — precondition never held.\n`;
   const file = path.join(taskDir, "report.md");
   const check = () => spawnSync("node", [path.join(HERE, "check-evidence.js"), file], { encoding: "utf8" });
-  fs.writeFileSync(file, report(run.runId));
+  fs.writeFileSync(file, report("PASS"));
   let r = check();
   assert.equal(r.status, 0, r.stderr);
-  fs.writeFileSync(file, report("20200101-000000-dead"));
+  assert.match(r.stdout, new RegExp(`run ${run.runId}`));
+  // "(earlier)" on a row this run executed
+  fs.writeFileSync(file, report("PASS (earlier)"));
   r = check();
   assert.equal(r.status, 1);
-  assert.match(r.stderr, /the report says run 20200101-000000-dead, the index says/);
-  fs.writeFileSync(file, report(run.runId));
-  fs.unlinkSync(path.join(taskDir, loadIndex(taskDir).scenarios[0].screenshot));
+  assert.match(r.stderr, /marked "\(earlier\)" but run .* executed it/);
+  // a row from an earlier run without the mark
+  const idx = loadIndex(taskDir);
+  idx.scenarios[0].runId = "20200101-000000-dead";
+  writeJsonAtomic(path.join(taskDir, "results.json"), idx);
+  fs.writeFileSync(file, report("PASS"));
   r = check();
-  assert.match(r.stderr, /01-s01\.jpg not found/);
-  // an interrupted run has to be named as such
-  fs.writeFileSync(path.join(taskDir, loadIndex(taskDir).scenarios[0].screenshot), Buffer.alloc(6000, 1));
-  updateRun(run.runFile, { status: "interrupted" });
-  r = check();
-  assert.match(r.stderr, /rows from it are partial; the report has to say the run was interrupted/);
-  fs.writeFileSync(file, report(run.runId, ` The run ${run.runId} was interrupted after 02.`));
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /last executed by run 20200101-000000-dead, not the latest .* "PASS \(earlier\)"/);
+  fs.writeFileSync(file, report("PASS (earlier)"));
   r = check();
   assert.equal(r.status, 0, r.stderr);
+  idx.scenarios[0].runId = run.runId;
+  writeJsonAtomic(path.join(taskDir, "results.json"), idx);
+  fs.writeFileSync(file, report("PASS"));
+  // a missing picture
+  fs.unlinkSync(path.join(taskDir, idx.scenarios[0].screenshot));
+  r = check();
+  assert.match(r.stderr, /01 \(S 01\): no screenshot/);
+  fs.writeFileSync(path.join(taskDir, idx.scenarios[0].screenshot), Buffer.alloc(6000, 1));
+  // an interrupted run has to be named as such
+  patchRun(taskDir, { status: "interrupted" });
+  r = check();
+  assert.match(r.stderr, /rows from it are partial; the report has to say the run was interrupted/);
+  fs.writeFileSync(file, report("PASS", ` The run ${run.runId} was interrupted after 02.`));
+  r = check();
+  assert.equal(r.status, 0, r.stderr);
+  // a ledger still listing rows has to be mentioned
+  writeJsonAtomic(path.join(taskDir, "records.json"), { prepared: [], records: [{ runId: run.runId, kind: "x", id: 1 }], failures: [] });
+  r = check();
+  assert.match(r.stderr, /records\.json exists, so test data is still in the database/);
+  fs.writeFileSync(file, report("PASS", ` The run ${run.runId} was interrupted after 02.\n\n## Test data\n\nOne record is still there, see records.json; --cleanup removes it.`));
+  r = check();
+  assert.equal(r.status, 0, r.stderr);
+  // a 0.7.0 leftover and the old four-column table are refused
+  fs.mkdirSync(path.join(taskDir, "runs", "x"), { recursive: true });
+  fs.writeFileSync(file, report("PASS", ` The run ${run.runId} was interrupted after 02.\n\n## Test data\n\nrecords.json`).replace("| # | Scenario | Result |", "| # | Scenario | Result | Run |"));
+  r = check();
+  assert.match(r.stderr, /runs\/ exists — a 0\.7\.0 layout/);
+  assert.match(r.stderr, /the table has a "Run" column/);
 });
 
 test("the CLI validates before touching a browser and explains the file", () => {
@@ -617,43 +700,50 @@ test("a record created through the UI is in the ledger before the step that erro
   process.env.QA_CLEAN_LOG = log;
   const { results, run } = await runOnce(taskDir, doc, { created: 77, hidden: ["#missing-button"] });
   assert.equal(results[0].status, "error");
-  const ledger = readJson(path.join(run.dir, "records.json"));
-  assert.equal(ledger.records.length, 1);
-  assert.equal(ledger.records[0].id, 77);
-  assert.equal(ledger.records[0].via, "ui");
   assert.match(fs.readFileSync(log, "utf8"), /cleaned 77/);
-  assert.equal(readJson(run.runFile).data.cleaned, 1);
+  const meta = loadIndex(taskDir).run;
+  assert.equal(meta.data.records, 1);
+  assert.equal(meta.data.cleaned, 1);
+  assert.ok(!fs.existsSync(path.join(taskDir, "records.json")));
+  void run;
 });
 
-test("check-evidence: an error picture left in an earlier run for a scenario a later run re-executed is history, not a problem", async () => {
+test("an error picture is replaced when a later run re-executes the scenario, and refused while the row is still an error", async () => {
   const doc = { scenarios: [okScenario("01"), okScenario("02", { steps: [{ wait: "#gone" }, { expect: { js: "1", equals: 1 } }] })] };
   const taskDir = setupTask(doc);
   const runA = await runOnce(taskDir, doc, { hidden: ["#gone"] });
   assert.equal(runA.results[1].status, "error");
-  assert.ok(fs.existsSync(path.join(runA.run.dir, "screenshots", "02-s02.error.jpg")));
+  const shots = path.join(taskDir, "screenshots");
+  assert.ok(fs.existsSync(path.join(shots, "02-s02.error.jpg")));
+  const file = path.join(taskDir, "report.md");
+  fs.writeFileSync(file, `# QA\n\nRun ${runA.run.runId} on http://app.\n\n| # | Scenario | Result |\n| --- | --- | --- |\n| 01 | S 01 | PASS |\n| 02 | S 02 | PASS |\n`);
+  const r1 = spawnSync("node", [path.join(HERE, "check-evidence.js"), file], { encoding: "utf8" });
+  assert.equal(r1.status, 1);
+  assert.match(r1.stderr, /02-s02\.error\.jpg: an errored scenario/);
+  assert.match(r1.stderr, /still "error" in results\.json/);
   const runB = await runOnce(taskDir, doc, {}, { only: ["02"] });
   assert.equal(runB.results[0].status, "pass");
-  const idx = loadIndex(taskDir);
-  const file = path.join(taskDir, "report.md");
-  fs.writeFileSync(file, `# QA\n\nRun ${runB.run.runId} on http://app; 01 from run ${runA.run.runId}.\n\n| # | Scenario | Result | Run |\n| --- | --- | --- | --- |\n| 01 | S 01 | PASS | ${idx.scenarios[0].sourceRunId} |\n| 02 | S 02 | PASS | ${runB.run.runId} |\n`);
-  const r = spawnSync("node", [path.join(HERE, "check-evidence.js"), file], { encoding: "utf8" });
-  assert.equal(r.status, 0, r.stderr);
-  // but the same error picture is a problem when the row still cites run A
-  fs.writeFileSync(file, `# QA\n\nRun ${runA.run.runId} on http://app.\n\n| # | Scenario | Result | Run |\n| --- | --- | --- | --- |\n| 01 | S 01 | PASS | ${runA.run.runId} |\n| 02 | S 02 | PASS | ${runA.run.runId} |\n`);
+  assert.deepEqual(fs.readdirSync(shots).sort(), ["01-s01.jpg", "02-s02.jpg"], "the error picture is gone, one picture per number");
+  fs.writeFileSync(file, `# QA\n\nRun ${runB.run.runId} on http://app; 01 from run ${runA.run.runId}.\n\n| # | Scenario | Result |\n| --- | --- | --- |\n| 01 | S 01 | PASS (earlier) |\n| 02 | S 02 | PASS |\n`);
   const r2 = spawnSync("node", [path.join(HERE, "check-evidence.js"), file], { encoding: "utf8" });
-  assert.equal(r2.status, 1);
-  assert.match(r2.stderr, /02-s02\.error\.jpg: an errored scenario/);
+  assert.equal(r2.status, 0, r2.stderr);
 });
 
 test("--cleanup with a browser-session step: refused with the way out when no QA window is open", () => {
   const taskDir = tmp();
   const doc = { setups: { s: { prepare: [{ http: { method: "POST", url: "/x", session: "browser", record: { kind: "x", id: "json.id", cleanup: { http: { method: "DELETE", url: "/x/${id}", session: "browser" } } } } }] } }, scenarios: [okScenario("01", { uses: ["s"] })] };
   fs.writeFileSync(path.join(taskDir, "scenarios.json"), JSON.stringify(doc));
-  const run = createRun(taskDir, { scenariosDoc: doc, meta: { baseUrl: "http://127.0.0.1:1", scope: "all" } });
-  writeJsonAtomic(path.join(run.dir, "records.json"), { runId: run.runId, prepared: ["s"], records: [{ runId: run.runId, kind: "x", id: 5, via: "http", cleanup: { http: { method: "DELETE", url: "/x/${id}", session: "browser" } } }], cleaned: [], failures: [] });
-  const r = spawnSync("node", [path.join(HERE, "run-scenarios.mjs"), "--task-dir", taskDir, "--cleanup", "--run", run.runId, "--port", "1"], { encoding: "utf8", cwd: taskDir, env: { ...process.env, HOME: taskDir } });
+  const run = startRun(taskDir, { baseUrl: "http://127.0.0.1:1", scope: "all" });
+  writeJsonAtomic(path.join(taskDir, "records.json"), { prepared: [{ name: "s", runId: run.runId }], records: [{ runId: run.runId, kind: "x", id: 5, via: "http", cleanup: { http: { method: "DELETE", url: "/x/${id}", session: "browser" } } }], failures: [] });
+  const r = spawnSync("node", [path.join(HERE, "run-scenarios.mjs"), "--task-dir", taskDir, "--cleanup", "--port", "1"], { encoding: "utf8", cwd: taskDir, env: { ...process.env, HOME: taskDir } });
   assert.equal(r.status, 2, r.stdout + r.stderr);
   assert.match(r.stderr, /needs the QA window and none is open — start it with --open/);
+  // With nothing to clean the command says so and creates no file.
+  fs.unlinkSync(path.join(taskDir, "records.json"));
+  const r2 = spawnSync("node", [path.join(HERE, "run-scenarios.mjs"), "--task-dir", taskDir, "--cleanup"], { encoding: "utf8", cwd: taskDir, env: { ...process.env, HOME: taskDir } });
+  assert.equal(r2.status, 0, r2.stdout + r2.stderr);
+  assert.match(r2.stdout, /nothing to clean/);
+  assert.ok(!fs.existsSync(path.join(taskDir, "records.json")));
 });
 
 test("writeJsonAtomic leaves no partial file behind", () => {

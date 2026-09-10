@@ -101,6 +101,6 @@ Two exist: `db-sqlite.mjs` (`node:sqlite`, built into Node 22, used by the runne
 
 - scenario steps only read, and the connection enforces it, not a keyword check: SQLite runs with `PRAGMA query_only` on except inside a fixture write, MySQL sets `SESSION TRANSACTION READ ONLY` before every read, so a `WITH … UPDATE … RETURNING` that starts with a read keyword fails with a read-only error instead of changing the row. The keyword refusal (`SELECT` / `SHOW` / `DESCRIBE` / `EXPLAIN` / `WITH`) is only the early, readable message
 - fixture writes need `writes: true` in the config **and** a `sql` step in `setups`; a `db` step in a scenario cannot write
-- no password, DSN or connection string in `qa.config.json`, `scenarios.json`, `results.json` or the report; `run.json` records engine, container, database and user
+- no password, DSN or connection string in `qa.config.json`, `scenarios.json`, `results.json` or the report; the `run.db` block in `results.json` records engine, container, database and user
 - masked columns never leave the adapter
 - `--db "SELECT …" --params '[…]'` runs one read-only query from the shell for reconnaissance; a write through it is refused the same way

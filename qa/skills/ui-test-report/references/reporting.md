@@ -2,7 +2,7 @@
 
 Write it for someone who was not there and will not re-run it: a table they can scan, findings they can act on, and a picture behind every claim — with the run that produced each row named, so a result from last week cannot be read as a result on today's build.
 
-Save it as `docs/qa/<TASK>/report.md`, and give the same content back in the conversation — the user usually wants to read it without opening a file. The report is the latest one; the runs it draws on are under `runs/`.
+Save it as `docs/qa/<TASK>/report.md`, and give the same content back in the conversation — the user usually wants to read it without opening a file. It describes the latest run; a row the latest run did not execute says so.
 
 ## Structure
 
@@ -22,13 +22,13 @@ result if it were different — a feature flag, a role — goes here too.>
 
 ## Scenarios
 
-| # | Scenario | Result | Run |
-| --- | --- | --- | --- |
-| 01 | Baseline — list loads with no filters | PASS | 20260910-105210-3c1e |
-| 02 | Filter drawer opens from the funnel | PASS | 20260910-105210-3c1e |
-| 18 | Cancel reverts changes Auto apply already applied | FAIL | 20260910-105210-3c1e |
-| 22 | Reset with the price filter active | BLOCKED | 20260910-105210-3c1e |
-| 37 | Row reordering by drag & drop | CHECK | 20260908-151200-1a2b (earlier) |
+| # | Scenario | Result |
+| --- | --- | --- |
+| 01 | Baseline — list loads with no filters | PASS |
+| 02 | Filter drawer opens from the funnel | PASS |
+| 18 | Cancel reverts changes Auto apply already applied | FAIL |
+| 22 | Reset with the price filter active | BLOCKED |
+| 37 | Row reordering by drag & drop | CHECK (earlier) |
 
 ## Things to fix
 
@@ -45,7 +45,7 @@ result if it were different — a feature flag, a role — goes here too.>
 ## Files
 ```
 
-Four columns. The **Run** column is the run id from the index (`sourceRunId`) — the execution the row comes from. A row from an earlier run says `(earlier)` after the id, and the opening paragraph says why it was not re-run. `check-evidence.js` reads the column and refuses a row whose run id differs from the index, so a PASS obtained on the build before this one cannot sit in the table looking current. The result column carries one of the four tokens below, in English whatever the report's language.
+Three columns. The opening paragraph names the run; a row the latest run did not execute — its entry in `results.json` carries an earlier run id — says `(earlier)` after its status, and the opening paragraph says why it was not re-run. `check-evidence.js` refuses a row from an earlier run without the mark, and the mark on a row the latest run did execute, so a PASS obtained on the build before this one cannot sit in the table looking current. The result column carries one of the four tokens below, in English whatever the report's language.
 
 ## Statuses
 
@@ -98,11 +98,11 @@ Leave the section out when nothing was blocked.
 
 ## Changes to the scenarios during the run
 
-One line per scenario whose steps, dependencies or fixtures were rewritten since an earlier run: what the first version checked, why it was wrong, what the final one checks — the `revision` from the scenario file, expanded if it needs to be. The index marks such entries `rewritten` and keeps the earlier one under `history` with its run id; the runner lists them at the end of the run. A change that kept the requirement but replaced a wrong step belongs here; a change that made the check weaker is a finding about the report. Leave the section out when nothing was rewritten.
+One line per scenario whose steps, dependencies or fixtures were rewritten since an earlier run: what the first version checked, why it was wrong, what the final one checks — the `revision` from the scenario file, expanded if it needs to be. The runner lists them at the end of the run, compared against the previous `results.json`; that print is the source, since the file keeps no history. A change that kept the requirement but replaced a wrong step belongs here; a change that made the check weaker is a finding about the report. Leave the section out when nothing was rewritten.
 
 ## Visual observations
 
-What the pictures show that the assertions did not measure. Start with which pictures were looked at, then one line per observation with its number and run. A caption whose target matched nothing (`captionDiag` in the index; the card says "no element matched") is worth a line here too: the picture has no frame around its evidence. An observation never changes a row on its own; when it breaks an explicit criterion, record it with `--verdict NN=fail --reason "…"` and move it to Things to fix.
+What the pictures show that the assertions did not measure. Start with which pictures were looked at, then one line per observation with its number. A caption whose target matched nothing (`captionDiag` in the index; the card says "no element matched") is worth a line here too: the picture has no frame around its evidence. An observation never changes a row on its own; when it breaks an explicit criterion, record it with `--verdict NN=fail --reason "…"` and move it to Things to fix.
 
 ## Proposed additions (not run)
 
@@ -110,8 +110,8 @@ When the list was handed over and the run suggested cases it did not cover, one 
 
 ## Test data
 
-From `run.json`'s `data` block and the ledger: how many records the run created and through what (setups, `leaves`), how many cleanup removed, how many had no cleanup step, and any cleanup failure with the record's kind and id — those rows are still in the database. When the run was made with `--keep-data`, say so and name the command that removes them (`--cleanup --run <id>`); `check-evidence.js` refuses a report whose run kept data without a word about it. Anything created outside the ledger — by hand, in a shared environment — is listed here too, with where it is.
+From the `run.data` block in `results.json` and the ledger: how many records the run created and through what (setups, `leaves`), how many cleanup removed, how many had no cleanup step, and any cleanup failure with the record's kind and id — those rows are still in the database. When the run was made with `--keep-data`, say so and name the command that removes them (`--cleanup`); `check-evidence.js` refuses a report whose run kept data without a word about it, and one whose `records.json` still exists — rows still in the database — without this section naming the file. Anything created outside the ledger — by hand, in a shared environment — is listed here too, with where it is.
 
 ## Files
 
-`runs/<runId>/screenshots/NN-slug.jpg`, numbered to match the table; `results.json` (the index: assertions, values, verdicts, history, the run each row comes from); `runs/<runId>/run.json` and `results.json` for each run cited; `scenarios.json` — the run as data, which is what lets somebody repeat it. If captions were written in a language other than the report, say which.
+`screenshots/NN-slug.jpg`, numbered to match the table; `results.json` (the run's metadata, and per scenario the assertions, values, verdict and the run it comes from); `scenarios.json` — the run as data, which is what lets somebody repeat it; `records.json` only when test data is still in the database. If captions were written in a language other than the report, say which.

@@ -4,18 +4,18 @@ The Chrome MCP drives a real browser with the user's real session. That is the p
 
 ## What the runner still does, and what it does not
 
-The scenario file, the run directory, the test data and the database are the runner's under both drivers. Clicking, waiting, asserting and captioning are yours here — the extension has no `awaitResponse`, no `within`, no automatic blocking on a failed precondition. Be explicit about which is which in the report: a hand-driven run is a hand-driven run.
+The scenario file, the results file, the test data and the database are the runner's under both drivers. Clicking, waiting, asserting and captioning are yours here — the extension has no `awaitResponse`, no `within`, no automatic blocking on a failed precondition. Be explicit about which is which in the report: a hand-driven run is a hand-driven run.
 
 ```bash
 cd docs/qa/<TASK>
-node …/run-scenarios.mjs --task-dir . --new-run --driver chrome            # prints the run id, creates runs/<id>/
-node …/run-scenarios.mjs --base-url http://localhost:3000 --prepare --run <id>   # setups into the run's ledger
+node …/run-scenarios.mjs --task-dir . --new-run --driver chrome            # prints the run id, starts the run in results.json
+node …/run-scenarios.mjs --base-url http://localhost:3000 --prepare        # setups into the ledger, records.json
 node …/run-scenarios.mjs --db "SELECT …" --params '[…]'                    # one read-only query, with withDB
-node …/run-scenarios.mjs --cleanup --run <id>                              # the ledger's records, afterwards
-node …/run-scenarios.mjs --finish --run <id>                               # your results.json into the index
+node …/run-scenarios.mjs --finish                                          # checks your entries, cleans up, closes the run
+node …/run-scenarios.mjs --cleanup                                         # whatever records.json still lists, later
 ```
 
-`--new-run` writes `run.json` (driver `chrome`, status `manual`, the build block) and a snapshot of the scenario file. You write `runs/<id>/results.json` by hand as you go — one entry per scenario with `n`, `slug`, `title`, `status`, `expects` (each with `desc`, `source`, `passed`, `actual`, `expected`), `values`, `screenshot` (`runs/<id>/screenshots/NN-slug.jpg`) and `reason` for a blocked one — and `--finish` validates it (a PASS needs passed expects and a picture) and merges it into the index with this run's id. `check-evidence.js` then checks the report against it exactly as for a Playwright run.
+`--new-run` writes the `run` block into `results.json` (driver `chrome`, status `manual`, the build block). You write the entries by hand as you go, under `scenarios` in that file — one per scenario with `n`, `slug`, `title`, `status`, `runId` (the id `--new-run` printed), `expects` (each with `desc`, `source`, `passed`, `actual`, `expected`), `values`, `screenshot` (`screenshots/NN-slug.jpg`) and `reason` for a blocked one — and `--finish` validates them (a PASS needs passed expects and a picture), removes the run's test data and marks the run completed. `check-evidence.js` then checks the report against it exactly as for a Playwright run.
 
 ## Batching
 
@@ -67,7 +67,7 @@ For a `db` check, run `--db` from the shell with the same query and params the f
 
 The Chrome driver runs the same `scenarios.json` the Playwright runner would, one batch per scenario, so the file's rules hold here too — they are just yours to apply:
 
-- **`uses`** — `--prepare --run <id>` before the first scenario that needs the setup; the ledger records what it made, `--cleanup --run <id>` removes it at the end, also after a failed run
+- **`uses`** — `--prepare` before the first scenario that needs the setup; the ledger records what it made, `--finish` removes it at the end, `--cleanup` after a run that never reached `--finish`
 - **`given`** is a `javascript_tool` call before the batch. When a check does not hold, the scenario is BLOCKED: no batch, no screenshot, a `reason` in the results, a line under Not run
 - **`requires`** is your reading order. When a required scenario errored or was blocked, the ones that build on it are BLOCKED too
 - **An error** — the element `find` cannot see, a click that times out — gets the same triage as under Playwright: is the element there at all, what does the console say, what does the code render. A missing element the criterion requires is a FAIL with the error as evidence; a wrong step is fixed in the file with a `revision`

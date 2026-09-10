@@ -45,27 +45,27 @@ appended to the ledger the moment the id can be read — after the step that sto
 
 ## The ledger
 
-`runs/<runId>/records.json`:
+`docs/qa/<TASK>/records.json`:
 
 ```json
-{ "runId": "20260910-103212-9f3a", "prepared": ["villaSeed"],
+{ "prepared": [{ "name": "villaSeed", "runId": "20260910-103212-9f3a" }],
   "records": [{ "runId": "20260910-103212-9f3a", "at": "…", "setup": "villaSeed", "kind": "view", "id": 42, "via": "http", "cleanup": { "http": { "method": "DELETE", "url": "/api/views/${id}" } } }],
-  "cleaned": [{ "index": 0, "at": "…" }], "failures": [] }
+  "failures": [] }
 ```
 
-Every record is written the moment it exists, not at the end, so a setup that fails on its third step still leaves the first two where cleanup will find them.
+Every record is written the moment it exists, not at the end, so a setup that fails on its third step still leaves the first two where cleanup will find them. The file lists what is still in the database: a record that cleanup removed leaves it, and when nothing is left — no record, no failure — the file is deleted. So `records.json` existing at all means rows are there, which is why `check-evidence.js` refuses a report that does not mention it. A run cleans its own records and warns when the file lists another run's; `--cleanup` walks everything.
 
 ## Cleanup
 
-At the end of the run — after the last scenario, after an error, and after Ctrl-C (the runner finishes the current scenario, then cleans up; a second Ctrl-C leaves at once and says the data may still be there) — the runner walks the ledger backwards and runs each record's cleanup step, then each prepared setup's `cleanup` block in reverse order. It touches only what the ledger lists: no truncate, no reset, no "delete everything named QA". A record whose cleanup fails is recorded under `failures` with the error and the walk continues; the runner prints the count and `run.json` keeps it, so the report can list what is still there.
+At the end of the run — after the last scenario, after an error, and after Ctrl-C (the runner finishes the current scenario, then cleans up; a second Ctrl-C leaves at once and says the data may still be there) — the runner walks the ledger backwards and runs each record's cleanup step, then each prepared setup's `cleanup` block in reverse order. It touches only what the ledger lists: no truncate, no reset, no "delete everything named QA". A record whose cleanup fails stays listed and is recorded under `failures` with the error, and the walk continues; the runner prints the count and the `run.data` block in `results.json` keeps it, so the report can list what is still there. A record with no cleanup step stays listed too.
 
 `--keep-data` skips cleanup and records `data.kept: true` — for looking at the rows behind a FAIL. The report has to say so under Test data, and `check-evidence.js` refuses one that does not. Later:
 
 ```bash
-node …/run-scenarios.mjs --cleanup --run 20260910-103212-9f3a
+node …/run-scenarios.mjs --cleanup
 ```
 
-removes what that run's ledger says it created, using the base URL the run recorded. A cleanup step with `"session": "browser"` needs the QA window: the command attaches to it when it is open and stops with the way out (`--open`, log in, run again) when it is not — a window started now would have no session. The same holds for `--prepare`. `--prepare --run <id> [--setups a,b]` runs setups into a run's ledger without a browser, for a run driven by hand.
+removes everything the ledger lists, from any run, using the base URL the latest run recorded, and deletes the file when it is empty. A cleanup step with `"session": "browser"` needs the QA window: the command attaches to it when it is open and stops with the way out (`--open`, log in, run again) when it is not — a window started now would have no session. The same holds for `--prepare`. `--prepare [--setups a,b]` runs setups into the ledger for the current run without a browser, for a run driven by hand.
 
 What cleanup does not do: it does not roll anything back. The runner opens no transaction and assumes none covers the application's writes — the app wrote through its own connection, and the only way to undo that is the explicit cleanup step. Shared rows, other people's records and the schema are never touched, because nothing in the ledger names them.
 

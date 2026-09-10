@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /*
- * Run a scenarios.json file in the QA browser window. Every execution is a
- * run of its own under runs/<runId>/ — metadata, the scenario file as
- * executed, results, the test-data ledger, screenshots — and results.json in
- * the task directory is the index: for every scenario, which run last executed
- * it and what it found.
+ * Run a scenarios.json file in the QA browser window. The task directory
+ * (docs/qa/<TASK>/) holds scenarios.json, results.json — the latest run's
+ * metadata under `run` and one entry per scenario, each saying which run
+ * executed it — screenshots/ with one picture per scenario, and records.json
+ * only while test data is still in the database.
  *
  *   cd docs/qa/<TASK>
  *   node run-scenarios.mjs --base-url http://localhost:3000 [--scenarios scenarios.json] \
@@ -15,11 +15,11 @@
  *   --open                     open the QA window (or a tab in it) and print where it landed
  *   --eval JS [--url /p] [--steps '[…]']     read one value; --steps runs scenario steps first
  *   --inspect [--url /p] [--steps '[…]']     inventory of the page: controls, selects, tables, dialogs
- *   --verdict 07=fail --reason "…" [--run ID]   record a QA judgement without re-running
- *   --new-run [--driver chrome]  create runs/<runId>/ for a run driven by hand (Chrome extension)
- *   --prepare --run ID [--setups a,b]         run setups into that run's ledger, no browser needed
- *   --cleanup --run ID           remove what that run's ledger says it created
- *   --finish --run ID            close a hand-driven run: merge its results.json into the index
+ *   --verdict 07=fail --reason "…"   record a QA judgement without re-running
+ *   --new-run [--driver chrome]  start a run driven by hand (Chrome extension): results.json gets the run
+ *   --prepare [--setups a,b]     run setups into the ledger for the current run, no browser needed
+ *   --cleanup                    remove everything records.json still lists, from any run
+ *   --finish                     close a hand-driven run: check the entries written into results.json
  *   --db-discover                propose a db block for qa.config.json from docker-compose / docker ps
  *   --db-check                   connect, describe, and run the configured probe against the app
  *   --db "SELECT …" [--params '[…]']          one read-only query, rows as JSON
@@ -44,8 +44,8 @@ import { fileURLToPath } from "node:url";
 import { fillDeep, getPath } from "./lib/compare.mjs";
 import { validateScenarios, selectScenarios, numberOf, hashOf } from "./lib/validate.mjs";
 import {
-  INDEX_FILE, readJson, writeJsonAtomic, runDirOf, listRuns, markStaleRuns, gitBuildInfo,
-  createRun, updateRun, snapshotEntry, loadIndex, updateIndex, unexplainedRewrite, runnerVersion, RUN_ID_RE,
+  INDEX_FILE, LEDGER_FILE, SHOTS_DIR, readJson, writeJsonAtomic, gitBuildInfo,
+  startRun, patchRun, loadIndex, updateIndex, diffAgainst, runnerVersion,
 } from "./lib/runs.mjs";
 import { loadConfig, openDb, discoverDb, CONFIG_FILE } from "./lib/db.mjs";
 import { Ledger, prepareSetup, cleanupRun } from "./lib/fixtures.mjs";
@@ -67,7 +67,7 @@ function parseArgs(argv) {
     slowMo: 250, only: null, viewport: { width: 1440, height: 900 }, timeout: 10000, keepData: false,
     taskDir: process.cwd(), config: null, driver: "playwright",
     open: false, close: false, eval: null, url: null, verdict: null, reason: null, steps: null, inspect: false,
-    newRun: false, prepare: false, cleanup: false, finish: false, run: null, setups: null,
+    newRun: false, prepare: false, cleanup: false, finish: false, setups: null,
     dbDiscover: false, dbCheck: false, db: null, params: [],
   };
   for (let i = 0; i < argv.length; i++) {
@@ -108,7 +108,6 @@ function parseArgs(argv) {
         break;
       }
       case "--reason": opts.reason = next(); break;
-      case "--run": opts.run = next(); break;
       case "--inspect": opts.inspect = true; break;
       case "--new-run": opts.newRun = true; break;
       case "--prepare": opts.prepare = true; break;
@@ -135,7 +134,6 @@ function parseArgs(argv) {
   if (opts.browser && !["chromium", "brave"].includes(opts.browser)) die(2, "--browser must be chromium or brave");
   if (!["playwright", "chrome"].includes(opts.driver)) die(2, "--driver must be playwright or chrome");
   if (!Number.isInteger(opts.port) || opts.port <= 0) die(2, "--port must be a port number");
-  if (opts.run && !RUN_ID_RE.test(opts.run)) die(2, `--run wants a run id like 20260910-103212-9f3a, got ${opts.run}`);
   const offline = opts.close || opts.verdict || opts.newRun || opts.prepare || opts.cleanup || opts.finish || opts.dbDiscover || opts.db !== null;
   if (!offline && !opts.baseUrl) die(2, "--base-url is required (e.g. http://localhost:3000)");
   if (opts.baseUrl) opts.baseUrl = opts.baseUrl.replace(/\/+$/, "");
@@ -144,7 +142,6 @@ function parseArgs(argv) {
     opts.eval = fs.readFileSync(path.join(HERE, "inspect.js"), "utf8");
   }
   if (opts.steps && opts.eval === null) die(2, "--steps only makes sense with --eval or --inspect");
-  if ((opts.cleanup || opts.finish) && !opts.run) die(2, `--${opts.cleanup ? "cleanup" : "finish"} needs --run <id>`);
   return opts;
 }
 
@@ -340,8 +337,6 @@ function applyVerdict(opts) {
   const index = loadIndex(opts.taskDir);
   const rec = index.scenarios.find((r) => r.n === opts.verdict.n);
   if (!rec) die(2, `no scenario ${opts.verdict.n} in ${INDEX_FILE}`);
-  const runId = opts.run || rec.sourceRunId;
-  if (runId !== rec.sourceRunId) die(2, `${rec.n} was last executed by run ${rec.sourceRunId}, not ${runId}; a verdict applies to the latest execution`);
   if (rec.status === "blocked") die(2, `${rec.n} is blocked (${rec.reason}); it did not run, so there is nothing to judge — fix the precondition and re-run it with --only ${rec.n}`);
   if (opts.verdict.status === "pass" && !(rec.completed === true && (rec.expects || []).length > 0 && rec.expects.every((e) => e.passed))) {
     die(2, `${rec.n} cannot be passed by verdict: a PASS is a completed run whose assertions held. Fix the scenario and re-run it with --only ${rec.n}`);
@@ -349,7 +344,6 @@ function applyVerdict(opts) {
   if (rec.pictureSays === undefined && rec.caption !== null && rec.completed === true) {
     rec.pictureSays = { pass: "PASS", fail: "FAIL", check: "CHECK" }[rec.status] || null;
   }
-  rec.history = [...(rec.history || []), snapshotEntry(rec)];
   if (rec.screenshot && /\.error\.jpg$/.test(rec.screenshot)) {
     const evidence = rec.screenshot.replace(/\.error\.jpg$/, ".jpg");
     const abs = path.join(opts.taskDir, rec.screenshot);
@@ -362,19 +356,9 @@ function applyVerdict(opts) {
   rec.diagnosis = opts.reason;
   rec.diagnosedAt = new Date().toISOString();
   delete rec.diagnosisCarried;
+  delete index.migratedFrom;
   writeJsonAtomic(path.join(opts.taskDir, INDEX_FILE), index);
-  // The run's own results file records the verdict too, so the run directory
-  // stands on its own.
-  if (runId && runId !== "legacy") {
-    const runResults = path.join(runDirOf(opts.taskDir, runId), "results.json");
-    const doc = readJson(runResults);
-    if (doc) {
-      const i = (doc.scenarios || []).findIndex((r) => r.n === rec.n);
-      if (i >= 0) doc.scenarios[i] = { ...doc.scenarios[i], status: rec.status, diagnosis: rec.diagnosis, diagnosedAt: rec.diagnosedAt, pictureSays: rec.pictureSays, screenshot: rec.screenshot, history: rec.history };
-      writeJsonAtomic(runResults, doc);
-    }
-  }
-  console.log(`${rec.n} ${from} → ${rec.status} (run ${runId}): ${opts.reason}`);
+  console.log(`${rec.n} ${from} → ${rec.status} (run ${rec.runId || index.runId}): ${opts.reason}`);
   if (rec.error) console.log(`      the execution error stays on the entry as evidence: ${rec.error}`);
   const word = { pass: "PASS", fail: "FAIL", check: "CHECK" }[rec.status];
   if (rec.pictureSays && rec.pictureSays !== word) console.log(`      the caption on ${rec.screenshot} still reads ${rec.pictureSays}; the finding has to say the verdict supersedes it`);
@@ -400,7 +384,7 @@ function runMeta(opts, doc, extra = {}) {
 }
 
 function fixturesCtx(opts, run, doc, db, context) {
-  const ledger = new Ledger(path.join(run.dir, "records.json"), run.runId);
+  const ledger = new Ledger(path.join(opts.taskDir, LEDGER_FILE), run.runId);
   const values = { runId: run.runId };
   const ctx = {
     runId: run.runId, baseUrl: opts.baseUrl, values, db, ledger, cwd: opts.taskDir,
@@ -429,43 +413,40 @@ async function browserSessionFor(opts, needed) {
 
 const wantsBrowserSession = (...parts) => JSON.stringify(parts).includes('"session":"browser"');
 
-/** --new-run: a run directory for a hand-driven (Chrome extension) run. */
+/** --new-run: start a hand-driven (Chrome extension) run in the index. */
 function newRun(opts) {
   const { doc } = loadScenarios(opts);
   const problems = validateScenarios(doc, { only: opts.only, dbWrites: !!dbConfigFor(opts, doc).config.db?.writes });
   if (problems.length) die(2, `${opts.scenarios} is not runnable:\n  - ${problems.join("\n  - ")}`);
-  markStaleRuns(opts.taskDir);
-  const run = createRun(opts.taskDir, { scenariosDoc: doc, meta: runMeta(opts, doc, { status: "manual", pid: null, note: `driven by hand through the ${opts.driver} driver; results.json in this directory is written by whoever drives it, then --finish --run ${"<id>"} merges it into the index` }) });
-  updateRun(run.runFile, { status: "manual" });
-  new Ledger(path.join(run.dir, "records.json"), run.runId).save();
+  const run = startRun(opts.taskDir, runMeta(opts, doc, { note: `driven by hand through the ${opts.driver} driver; the entries under "scenarios" are written by whoever drives it, then --finish checks them and closes the run` }));
+  patchRun(opts.taskDir, { status: "manual" });
   console.log(run.runId);
-  console.log(`created ${path.relative(process.cwd(), run.dir) || "."}/ — screenshots go to screenshots/NN-slug.jpg there, results to results.json; then --finish --run ${run.runId}`);
+  console.log(`run ${run.runId} started in ${INDEX_FILE} — screenshots go to ${SHOTS_DIR}/NN-slug.jpg, one entry per scenario under "scenarios"; then --finish`);
+  if (run.migratedFrom === "0.7.0") console.log(`${INDEX_FILE} was a 0.7.0 index; runs/ is no longer read — delete it`);
 }
 
-/** --prepare: run setups into a run's ledger, without a browser. */
+/** The run results.json says is current; --prepare and --finish work on it. */
+function currentRun(opts, what) {
+  const index = loadIndex(opts.taskDir);
+  if (!index.run) die(2, `${what} needs a run in ${INDEX_FILE} — start one with --new-run (Chrome driver) or run the scenarios`);
+  return { index, run: { runId: index.runId, dir: opts.taskDir } };
+}
+
+/** --prepare: run setups into the ledger for the current run, without a browser. */
 async function prepareOnly(opts) {
   const { doc } = loadScenarios(opts);
   const { db } = await openDbFor(opts, doc, { writes: true });
   const setups = doc.setups || {};
   const names = opts.setups || Object.keys(setups).filter((k) => k !== "version");
   for (const n of names) if (!setups[n]) die(2, `no setup "${n}" in ${opts.scenarios}`);
-  let run;
-  if (opts.run) {
-    const dir = runDirOf(opts.taskDir, opts.run);
-    if (!fs.existsSync(dir)) die(2, `no run ${opts.run} under ${opts.taskDir}`);
-    run = { runId: opts.run, dir, runFile: path.join(dir, "run.json") };
-    opts.baseUrl = opts.baseUrl || readJson(run.runFile)?.baseUrl || null;
-    if (opts.baseUrl) updateRun(run.runFile, { baseUrl: opts.baseUrl });
-  } else {
-    run = createRun(opts.taskDir, { scenariosDoc: doc, meta: runMeta(opts, doc, { status: "manual", pid: null, note: "created by --prepare" }) });
-    updateRun(run.runFile, { status: "manual" });
-    console.log(`run ${run.runId} created for the prepared data`);
-  }
+  const { index, run } = currentRun(opts, "--prepare");
+  opts.baseUrl = opts.baseUrl || index.run.baseUrl || null;
+  if (opts.baseUrl && index.run.baseUrl !== opts.baseUrl) patchRun(opts.taskDir, { baseUrl: opts.baseUrl });
   const session = await browserSessionFor(opts, wantsBrowserSession(names.map((n) => setups[n])));
   const { ledger, ctx } = fixturesCtx(opts, run, doc, db, session.context);
   let failed = 0;
   for (const n of names) {
-    if (ledger.prepared.includes(n)) { console.log(`setup ${n} already prepared in ${run.runId}`); continue; }
+    if (ledger.preparedNames().includes(n)) { console.log(`setup ${n} already prepared in ${run.runId}`); continue; }
     try {
       await prepareSetup(n, setups[n], ctx);
       ledger.markPrepared(n);
@@ -477,47 +458,51 @@ async function prepareOnly(opts) {
   }
   db?.close();
   await session.close();
-  console.log(`ledger: ${path.relative(process.cwd(), ledger.file)}; clean up with --cleanup --run ${run.runId}`);
+  console.log(`ledger: ${path.relative(process.cwd(), ledger.file)}; clean up with --cleanup`);
   return failed ? 1 : 0;
 }
 
-/** --cleanup: remove what a run's ledger says it created. */
+/** --cleanup: remove everything records.json still lists, whichever run made it. */
 async function cleanupOnly(opts) {
-  const dir = runDirOf(opts.taskDir, opts.run);
-  if (!fs.existsSync(dir)) die(2, `no run ${opts.run} under ${opts.taskDir}`);
-  const doc = readJson(path.join(dir, "scenarios.json")) || loadScenarios(opts).doc;
-  const run = { runId: opts.run, dir, runFile: path.join(dir, "run.json") };
+  const file = path.join(opts.taskDir, LEDGER_FILE);
+  const previous = readJson(file);
+  if (!previous || !(previous.records?.length || previous.prepared?.length)) {
+    console.log(`nothing to clean — no ${LEDGER_FILE} with records in ${opts.taskDir}`);
+    if (previous) new Ledger(file, "cleanup").compact();
+    return 0;
+  }
+  const doc = loadScenarios(opts).doc;
+  const index = loadIndex(opts.taskDir);
   // The run remembers where the app was; http cleanup steps need it.
-  opts.baseUrl = opts.baseUrl || readJson(run.runFile)?.baseUrl || null;
+  opts.baseUrl = opts.baseUrl || index.run?.baseUrl || null;
   const { db } = await openDbFor(opts, doc, { writes: true });
-  const previous = readJson(path.join(dir, "records.json"));
   const setups = doc.setups || {};
-  const session = await browserSessionFor(opts, wantsBrowserSession(previous?.records?.map((r) => r.cleanup), (previous?.prepared || []).map((n) => setups[n]?.cleanup)));
+  const session = await browserSessionFor(opts, wantsBrowserSession(previous.records?.map((r) => r.cleanup), (previous.prepared || []).map((p) => setups[typeof p === "string" ? p : p.name]?.cleanup)));
+  const run = { runId: index.runId || "cleanup", dir: opts.taskDir };
   const { ledger, ctx } = fixturesCtx(opts, run, doc, db, session.context);
-  const c = await cleanupRun(ctx, { setups });
+  const c = await cleanupRun(ctx, { setups, all: true });
+  const left = ledger.compact();
   db?.close();
   await session.close();
-  const meta = readJson(run.runFile) || {};
-  updateRun(run.runFile, { data: { ...(meta.data || {}), records: ledger.records.length, cleaned: c.cleaned, skipped: c.skipped, kept: false, failures: c.failures, cleanedAt: new Date().toISOString() } });
-  console.log(`run ${opts.run}: ${c.cleaned} record(s) removed, ${c.skipped} without a cleanup step, ${c.failures.length} failure(s)`);
+  if (index.run) patchRun(opts.taskDir, { data: { ...(index.run.data || {}), cleaned: (index.run.data?.cleaned || 0) + c.cleaned, skipped: c.skipped, kept: false, failures: c.failures, cleanedAt: new Date().toISOString() } });
+  console.log(`${c.cleaned} record(s) removed, ${c.skipped} without a cleanup step, ${c.failures.length} failure(s)${left ? ` — ${LEDGER_FILE} still lists what is left` : ` — ${LEDGER_FILE} removed`}`);
   for (const f of c.failures) console.error(`  - ${f.kind || f.setup} ${f.id ?? ""}: ${f.error}`);
   return c.failures.length ? 1 : 0;
 }
 
-/** --finish: a hand-driven run's results.json into the index. */
-function finishRun(opts) {
-  const dir = runDirOf(opts.taskDir, opts.run);
-  const file = path.join(dir, "results.json");
-  const doc = readJson(file);
-  if (!doc) die(2, `no readable results.json in ${dir} — write one entry per scenario there first ({ "scenarios": [ { "n", "slug", "title", "status", "completed", "expects", "screenshot" … } ] })`);
-  const snap = readJson(path.join(dir, "scenarios.json"));
-  const setups = snap?.setups || {};
-  const byN = new Map((snap?.scenarios || []).map((sc) => [numberOf(sc), sc]));
+/** --finish: check the entries a hand-driven run wrote into results.json and close the run. */
+async function finishRun(opts) {
+  const { index, run } = currentRun(opts, "--finish");
+  const { doc } = loadScenarios(opts);
+  const setups = doc.setups || {};
+  const byN = new Map((doc.scenarios || []).map((sc) => [numberOf(sc), sc]));
   const problems = [];
-  const entries = (doc.scenarios || []).map((r) => {
+  const mine = index.scenarios.filter((r) => r.runId === run.runId);
+  if (!mine.length) problems.push(`no entry under "scenarios" carries runId ${run.runId} — write one per scenario ({ "n", "slug", "title", "status", "completed", "expects", "screenshot", "runId" })`);
+  const entries = mine.map((r) => {
     const n = String(r.n ?? "").padStart(2, "0");
     const sc = byN.get(n);
-    if (!sc) problems.push(`entry ${n}: not in the run's scenarios.json`);
+    if (!sc) problems.push(`entry ${n}: not in ${opts.scenarios}`);
     if (!["pass", "fail", "check", "blocked", "error"].includes(r.status)) problems.push(`entry ${n}: status "${r.status}" is not pass|fail|check|blocked|error`);
     if (r.status === "pass" && !(Array.isArray(r.expects) && r.expects.length && r.expects.every((e) => e.passed))) problems.push(`entry ${n}: a PASS needs expects that passed — what was asserted and what value it saw`);
     if (["pass", "fail", "check"].includes(r.status)) {
@@ -525,12 +510,27 @@ function finishRun(opts) {
       else if (!fs.existsSync(path.join(opts.taskDir, r.screenshot))) problems.push(`entry ${n}: screenshot ${r.screenshot} not found`);
     }
     if (r.status === "blocked" && !r.reason) problems.push(`entry ${n}: blocked without a reason`);
-    return { completed: ["pass", "fail", "check"].includes(r.status), at: doc.startedAt || new Date().toISOString(), ...r, n, runId: opts.run, stepsHash: sc ? hashOf(sc, setups) : undefined, hashVersion: 2, driver: "chrome" };
+    return { completed: ["pass", "fail", "check"].includes(r.status), at: index.run.startedAt || new Date().toISOString(), ...r, n, stepsHash: sc ? hashOf(sc, setups) : undefined, hashVersion: 2, driver: "chrome" };
   });
-  if (problems.length) die(2, `${file} is not complete:\n  - ${problems.join("\n  - ")}`);
-  updateIndex(opts.taskDir, opts.run, entries, { scope: readJson(path.join(dir, "run.json"))?.scope || "all" });
-  updateRun(path.join(dir, "run.json"), { status: "completed", finishedAt: new Date().toISOString(), executed: entries.map((e) => e.n), counts: entries.reduce((acc, r) => ((acc[r.status] = (acc[r.status] || 0) + 1), acc), {}) });
-  console.log(`run ${opts.run}: ${entries.length} entr(ies) merged into ${INDEX_FILE}`);
+  if (problems.length) die(2, `${INDEX_FILE} is not complete:\n  - ${problems.join("\n  - ")}`);
+  updateIndex(opts.taskDir, run.runId, entries);
+  // The hand-driven run's data: cleanup as the Playwright loop would.
+  const ledger = new Ledger(path.join(opts.taskDir, LEDGER_FILE), run.runId);
+  let data = { records: ledger.records.filter((r) => r.runId === run.runId).length, cleaned: 0, skipped: 0, kept: opts.keepData, failures: [] };
+  if (data.records && !opts.keepData) {
+    const { db } = await openDbFor(opts, doc, { writes: true });
+    opts.baseUrl = opts.baseUrl || index.run.baseUrl || null;
+    const session = await browserSessionFor(opts, wantsBrowserSession(ledger.records.map((r) => r.cleanup)));
+    const { ctx } = fixturesCtx(opts, run, doc, db, session.context);
+    const c = await cleanupRun(ctx, { setups });
+    data = { ...data, cleaned: c.cleaned, skipped: c.skipped, failures: c.failures };
+    db?.close();
+    await session.close();
+  }
+  ledger.compact();
+  patchRun(opts.taskDir, { status: "completed", finishedAt: new Date().toISOString(), executed: entries.map((e) => e.n), counts: entries.reduce((acc, r) => ((acc[r.status] = (acc[r.status] || 0) + 1), acc), {}), data });
+  console.log(`run ${run.runId}: ${entries.length} entr(ies) checked, run closed in ${INDEX_FILE}`);
+  return 0;
 }
 
 // --------------------------------------------------------------------- db
@@ -611,7 +611,7 @@ async function main() {
   if (opts.newRun) { newRun(opts); return 0; }
   if (opts.prepare) return prepareOnly(opts);
   if (opts.cleanup) return cleanupOnly(opts);
-  if (opts.finish) { finishRun(opts); return 0; }
+  if (opts.finish) return finishRun(opts);
   if (opts.dbDiscover) { dbDiscover(opts); return 0; }
   if (opts.db !== null) { await dbQuery(opts); return 0; }
 
@@ -668,12 +668,13 @@ async function main() {
     return 0;
   }
 
-  const stale = markStaleRuns(opts.taskDir);
-  if (stale.length) console.log(`${stale.join(", ")} never finished — marked interrupted`);
-  const run = createRun(opts.taskDir, { scenariosDoc: doc, meta: runMeta(opts, doc, { browser: info.browser, browserVersion: info.version, executable: info.executable, profile: info.profile, db: db ? db.describe() : null }) });
-  console.log(`run ${run.runId} → ${path.relative(process.cwd(), run.dir) || "."}/`);
-  const { ledger, values, ctx: fixtures } = fixturesCtx(opts, run, doc, db, context);
   const prevByN = new Map(loadIndex(opts.taskDir).scenarios.map((r) => [r.n, r]));
+  const run = startRun(opts.taskDir, runMeta(opts, doc, { browser: info.browser, browserVersion: info.version, executable: info.executable, profile: info.profile, db: db ? db.describe() : null }));
+  console.log(`run ${run.runId} → ${path.relative(process.cwd(), opts.taskDir) || "."}/${INDEX_FILE}`);
+  if (run.migratedFrom === "0.7.0") console.log(`${INDEX_FILE} was a 0.7.0 index; runs/ is no longer read and its pictures are not reused — delete it once this run has its own`);
+  const { ledger, values, ctx: fixtures } = fixturesCtx(opts, run, doc, db, context);
+  const leftovers = ledger.leftovers();
+  if (leftovers.length) console.log(`${LEDGER_FILE} lists ${leftovers.length} record(s) from an earlier run — this run cleans only its own; --cleanup removes those too`);
 
   const page = await context.newPage();
   await page.setViewportSize(opts.viewport);
@@ -681,7 +682,7 @@ async function main() {
 
   const abort = { requested: false };
   const onSignal = (sig) => {
-    if (abort.requested) { console.error(`\nrun-scenarios: ${sig} again — leaving now; run ${run.runId} is marked interrupted, its data may still be there (--cleanup --run ${run.runId})`); updateRun(run.runFile, { status: "interrupted", finishedAt: new Date().toISOString(), pid: null, note: "killed by a second signal before cleanup finished" }); process.exit(130); }
+    if (abort.requested) { console.error(`\nrun-scenarios: ${sig} again — leaving now; run ${run.runId} is marked interrupted, its data may still be there (--cleanup)`); patchRun(opts.taskDir, { status: "interrupted", finishedAt: new Date().toISOString(), note: "killed by a second signal before cleanup finished" }); process.exit(130); }
     abort.requested = true;
     console.error(`\nrun-scenarios: ${sig} — finishing the current scenario, then cleaning up; press again to leave at once`);
   };
@@ -692,7 +693,7 @@ async function main() {
   try {
     outcome = await executeScenarios({
       page, annotateSrc, taskDir: opts.taskDir, run, doc, selected, opts, db, ledger, values, fixtures, prevByN, abort,
-      scope: opts.only ? { only: opts.only.map((n) => n.padStart(2, "0")) } : "all", log: (l) => console.log(l),
+      log: (l) => console.log(l),
     });
   } finally {
     process.off("SIGINT", onSignal);
@@ -705,19 +706,20 @@ async function main() {
   const { results, errored, interrupted } = outcome;
   const index = loadIndex(opts.taskDir);
   const counts = results.reduce((acc, r) => ((acc[r.status] = (acc[r.status] || 0) + 1), acc), {});
-  const changed = index.scenarios.filter((r) => r.fresh && (r.rewritten || r.statusChangedFrom)).map((r) => `${r.n}${r.rewritten ? " (steps)" : ""}${r.statusChangedFrom ? ` (${r.statusChangedFrom} → ${r.status})` : ""}`);
-  const unexplained = index.scenarios.filter((r) => r.fresh && unexplainedRewrite(r)).map((r) => r.n);
+  const diff = diffAgainst(prevByN, results);
+  const changed = diff.map((d) => `${d.n}${d.stepsChanged ? " (steps)" : ""}${d.statusFrom ? ` (${d.statusFrom} → ${d.status})` : ""}`);
+  const unexplained = diff.filter((d) => d.revisionMissing).map((d) => d.n);
   const blocked = results.filter((r) => r.status === "blocked");
-  const stale2 = index.scenarios.filter((r) => !r.fresh);
-  console.log(`\n${results.length} scenario(s): ${Object.entries(counts).map(([k, v]) => `${v} ${k}`).join(", ")} → ${path.relative(process.cwd(), run.dir) || "."}/ (run ${run.runId}${interrupted ? ", INTERRUPTED" : ""})`);
-  if (stale2.length) console.log(`${stale2.map((r) => r.n).join(", ")} not executed in this run — ${INDEX_FILE} keeps their last result with its own run id; the report has to show that run id, not this one.`);
-  if (changed.length) console.log(`${changed.join(", ")} changed since the previous execution — say so in the report (history in ${INDEX_FILE}).`);
-  if (unexplained.length) console.log(`${unexplained.join(", ")} rewritten with no "revision" for this version of the steps — add one saying what the earlier check got wrong, or check-evidence.js will refuse the report.`);
+  const earlier = index.scenarios.filter((r) => r.runId !== run.runId);
+  console.log(`\n${results.length} scenario(s): ${Object.entries(counts).map(([k, v]) => `${v} ${k}`).join(", ")} → ${path.relative(process.cwd(), opts.taskDir) || "."}/ (run ${run.runId}${interrupted ? ", INTERRUPTED" : ""})`);
+  if (earlier.length) console.log(`${earlier.map((r) => r.n).join(", ")} not executed in this run — ${INDEX_FILE} keeps their last result with its own run id; their rows read "(earlier)" in the report.`);
+  if (changed.length) console.log(`${changed.join(", ")} changed since the previous ${INDEX_FILE} — say so in the report under "Changes to the scenarios"; the index keeps no history, this line is the record.`);
+  if (unexplained.length) console.log(`${unexplained.join(", ")} rewritten with no "revision" for this version of the steps — add one saying what the earlier check got wrong.`);
   if (blocked.length) console.log(`${blocked.map((r) => r.n).join(", ")} blocked — a setup failed, a precondition did not hold or a required scenario did not finish. Not a result and not an error: fix the cause, then re-run with --only <n>.`);
   if (errored) console.log(`${errored} errored — establish why before touching the step: --eval whether the element exists, the console entries in the results, the code. A missing element the criterion requires is a FAIL (--verdict NN=fail --reason "…"); a wrong step is fixed with a "revision" and re-run with --only <n>.`);
-  const meta = readJson(run.runFile);
-  if (meta?.data?.kept) console.log(`test data kept (${meta.data.records} record(s)); the report has to say so under Test data.`);
-  if (meta?.data?.failures?.length) console.log(`cleanup failed for ${meta.data.failures.length} record(s) — they are still in the database; list them in the report and remove them by hand or with --cleanup --run ${run.runId}.`);
+  const data = index.run?.data;
+  if (data?.kept) console.log(`test data kept (${data.records} record(s)); the report has to say so under Test data.`);
+  if (data?.failures?.length) console.log(`cleanup failed for ${data.failures.length} record(s) — they are still in the database; list them in the report and remove them by hand or with --cleanup.`);
   return interrupted ? 130 : errored ? 1 : 0;
 }
 
