@@ -95,7 +95,7 @@ export function open({ …config }) {
 }
 ```
 
-Two exist: `db-sqlite.mjs` (`node:sqlite`, built into Node 22, used by the runner's tests) and `db-mysql-docker.mjs`, which runs the `mysql` client inside the container — `docker exec -i -e MYSQL_PWD <container> mysql --xml` with the password in the exec'd process's environment, not in argv — and binds parameters server-side (`SET @p0 = …; PREPARE … ; EXECUTE … USING @p0`). No driver is installed; the container that runs the database has its client. **Postgres and MongoDB have no adapter here.** Adding one is one file that meets the contract (for Postgres, `psql` in the container with `\copy`/`json_agg`; for Mongo, `mongosh --eval` with a JSON filter) and one branch in `openDb`; until then `--db-discover` says "NO adapter here" for such a service and a withDB run against it does not start.
+Two exist: `db-sqlite.mjs` (`node:sqlite`, built into Node 22, used by the runner's tests) and `db-mysql-docker.mjs`, which runs the `mysql` client inside the container — `docker exec -i -e MYSQL_PWD <container> mysql --xml` with the password in the exec'd process's environment, not in argv — and binds parameters server-side (`SET @p0 = …; PREPARE … ; EXECUTE … USING @p0`). No driver is installed; the container that runs the database has its client. **Those two are the whole list: Postgres and MongoDB have no adapter here.** `--db-discover` says "NO adapter here" for such a service, and a withDB run against it does not start rather than reporting a UI-only PASS. Writing one is a file that meets the contract above plus a branch in `openDb`.
 
 ## Rules the runner enforces
 

@@ -1,7 +1,7 @@
 {
   "name": "qa",
   "description": "Manual QA runs driven through a browser \u2014 derive the scenarios from the ticket and the diff or execute the list you were handed, write them down as a scenario file under docs/qa/<TASK>/ with the test data they need, preconditions and dependencies, execute them with Playwright in a QA window that stays open between runs (Chromium or Brave, own profile) or through the user's own Chrome, optionally check the saved data in the local database next to the UI (withDB), assert against values fixed before the run, caption every screenshot with what it proves and a frame around the element that shows it, and report pass/fail/blocked with reproduction steps, all as one scenario file, one results file, one report and one screenshots directory under docs/qa/<TASK>/",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "author": {
     "name": "mrstroz"
   }

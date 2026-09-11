@@ -12,10 +12,16 @@
  * "QA 20260910-103212-9f3a villas" in a shared database says where it came
  * from without opening any file.
  *
- * The ledger lists what is still there. A record that cleanup removed leaves
- * the file, and a file with nothing left in it is deleted — so records.json
- * existing at all means something is in the database. A run cleans its own
- * records; --cleanup walks everything the file lists.
+ * The ledger lists what is still there and what could not be explained. A
+ * record that cleanup removed leaves the file, a failure that a retry solved
+ * leaves it too, and a file with nothing left — no record, no prepared setup
+ * owed its cleanup block, no failure — is deleted. So records.json existing at
+ * all means there is still something to remove or to explain. A run cleans its
+ * own records; --cleanup walks everything the file lists.
+ *
+ * Every record remembers the base URL it was created against, because an http
+ * cleanup step is relative and a later run may point at another environment.
+ * Cleanup uses the record's own URL, never the current run's.
  *
  * The runner opens no transaction around the app's own writes and does not
  * pretend one exists; cleanup is explicit, recorded, and reported when it
@@ -27,6 +33,12 @@ import { fill, getPath } from "./compare.mjs";
 import { fixtureKind } from "./validate.mjs";
 import { writeJsonAtomic, readJson } from "./runs.mjs";
 
+/** What a failure is about, so a solved one can be dropped instead of piling up. */
+const failureKey = (f) =>
+  f.setup !== undefined
+    ? `setup:${f.runId ?? ""}:${f.setup}`
+    : `record:${f.runId ?? ""}:${f.kind ?? ""}:${String(f.id ?? "")}`;
+
 export class Ledger {
   constructor(file, runId) {
     this.file = file;
@@ -34,17 +46,17 @@ export class Ledger {
     const existing = readJson(file);
     this.records = existing?.records || [];
     this.failures = existing?.failures || [];
-    // 0.7.0 wrote prepared as plain names; every entry now says which run.
-    this.prepared = (existing?.prepared || []).map((p) => (typeof p === "string" ? { name: p, runId: existing?.runId || null } : p));
+    this.prepared = existing?.prepared || [];
   }
   /** Setups this run has prepared. */
   preparedNames() {
     return this.prepared.filter((p) => p.runId === this.runId).map((p) => p.name);
   }
-  markPrepared(name) {
-    if (!this.preparedNames().includes(name)) this.prepared.push({ name, runId: this.runId });
+  markPrepared(name, baseUrl = null) {
+    if (!this.preparedNames().includes(name)) this.prepared.push({ name, runId: this.runId, baseUrl: baseUrl ?? undefined });
     this.save();
   }
+  /** The caller passes `baseUrl` — where the record was made; cleanup goes back to that one. */
   add(record) {
     this.records.push({ runId: this.runId, at: new Date().toISOString(), ...record });
     this.save();
@@ -53,12 +65,17 @@ export class Ledger {
   leftovers() {
     return this.records.filter((r) => r.runId !== this.runId);
   }
+  /** Forget what was recorded about one record or setup before trying it again. */
+  dropFailuresFor(target) {
+    const key = failureKey(target);
+    this.failures = this.failures.filter((f) => failureKey(f) !== key);
+  }
   save() {
     writeJsonAtomic(this.file, { prepared: this.prepared, records: this.records, failures: this.failures });
   }
-  /** Save, or remove the file when nothing is left to tell. */
+  /** Save, or remove the file when nothing is left to clean up or explain. */
   compact() {
-    if (this.records.length === 0 && this.failures.length === 0) {
+    if (this.records.length === 0 && this.prepared.length === 0 && this.failures.length === 0) {
       try { fs.rmSync(this.file); } catch { /* never written */ }
       return false;
     }
@@ -158,53 +175,102 @@ export async function prepareSetup(name, setup, ctx) {
     if (spec.name) ctx.values[spec.name] = result;
     if (spec.record) {
       const id = idOf(result, spec.record.id);
-      ctx.ledger.add({ setup: name, kind: spec.record.kind, id, via: kind, cleanup: spec.record.cleanup || null, note: spec.record.note });
+      ctx.ledger.add({ setup: name, kind: spec.record.kind, id, via: kind, baseUrl: ctx.baseUrl ?? undefined, cleanup: spec.record.cleanup || null, note: spec.record.note });
     }
     results.push({ step: i, kind, ok: true });
   }
   return results;
 }
 
+/** An http cleanup step with a relative url cannot run without knowing where. */
+function needsBaseUrl(step) {
+  if (fixtureKind(step) !== "http") return false;
+  const url = typeof step?.http?.url === "string" ? step.http.url : "";
+  return !/^https?:\/\//.test(url);
+}
+
 /**
  * Remove what a run created: its records in reverse order, each through its
- * own cleanup step with ${id} and ${runId} filled in; then every setup it
- * prepared, through the setup's cleanup block. A removed record leaves the
- * ledger; a failure is recorded and the walk continues, so one record that
- * will not delete does not leave ten others behind unreported. With
- * `all: true` (--cleanup) the walk covers every run the ledger lists.
+ * own cleanup step with ${id} and ${runId} filled in, against the base URL the
+ * record itself remembers; then every setup it prepared, through the setup's
+ * cleanup block. A record or setup that came off cleanly leaves the ledger,
+ * together with whatever failure an earlier attempt had recorded about it; one
+ * that did not stays listed with the reason, and the walk continues, so one
+ * record that will not delete does not leave ten others behind unreported.
+ * With `all: true` (--cleanup) the walk covers every run the ledger lists, and
+ * `baseUrl` overrides what the records remember — the way out when the app has
+ * moved since.
  */
-export async function cleanupRun(ctx, { setups = {}, all = false } = {}) {
+export async function cleanupRun(ctx, { setups = {}, all = false, baseUrl = null, log = null } = {}) {
   const ledger = ctx.ledger;
   const mine = (r) => all || r.runId === ledger.runId;
-  const before = ledger.failures.length;
+  const failures = [];
   let cleaned = 0;
   let skipped = 0;
+  const fail = (entry) => {
+    const f = { ...entry, at: new Date().toISOString() };
+    ledger.failures.push(f);
+    failures.push(f);
+  };
+
   for (let i = ledger.records.length - 1; i >= 0; i--) {
     const rec = ledger.records[i];
     if (!mine(rec)) continue;
     // No cleanup step: the record is still there, so it stays listed.
     if (!rec.cleanup) { skipped++; continue; }
+    const target = { runId: rec.runId, kind: rec.kind, id: rec.id };
+    ledger.dropFailuresFor(target);
+    const where = baseUrl || rec.baseUrl || null;
+    if (needsBaseUrl(rec.cleanup) && !where) {
+      fail({ ...target, error: `no base URL on this record and its cleanup step is a relative http call — run --cleanup --base-url <where it was created> rather than send it somewhere else` });
+      ledger.save();
+      continue;
+    }
     try {
-      await runFixtureStep(rec.cleanup, { ...ctx, runId: rec.runId }, { id: rec.id });
+      await runFixtureStep(rec.cleanup, { ...ctx, runId: rec.runId, baseUrl: where }, { id: rec.id });
       ledger.records.splice(i, 1);
       cleaned++;
+      log?.(`removed ${rec.kind} ${rec.id ?? ""} of run ${rec.runId}${where ? ` at ${where}` : ""}`);
     } catch (e) {
-      ledger.failures.push({ kind: rec.kind, id: rec.id, runId: rec.runId, at: new Date().toISOString(), error: e.message });
+      fail({ ...target, error: e.message });
     }
     ledger.save();
   }
-  const preparedHere = ledger.prepared.filter(mine);
-  for (const p of [...preparedHere].reverse()) {
-    for (const [i, step] of (setups[p.name]?.cleanup || []).entries()) {
+
+  for (const p of [...ledger.prepared.filter(mine)].reverse()) {
+    const target = { runId: p.runId, setup: p.name };
+    ledger.dropFailuresFor(target);
+    const setup = setups[p.name];
+    if (!setup) {
+      fail({ ...target, error: `setup "${p.name}" is no longer in the scenario file, so its cleanup cannot be run — restore it, or drop this entry from records.json by hand` });
+      ledger.save();
+      continue;
+    }
+    const steps = setup.cleanup || [];
+    const where = baseUrl || p.baseUrl || null;
+    // Which of this setup's cleanup steps already ran. A retry repeats only
+    // what is left: a DELETE that worked the first time answers 404 the
+    // second, which would look like a new failure of a job already done.
+    const cleanedSteps = new Set(p.cleanupDone || []);
+    for (const [i, step] of steps.entries()) {
+      if (cleanedSteps.has(i)) continue;
+      if (needsBaseUrl(step) && !where) {
+        fail({ ...target, step: i, error: `no base URL on this setup and cleanup step ${i + 1} is a relative http call — run --cleanup --base-url <where it was prepared>` });
+        continue;
+      }
       try {
-        await runFixtureStep(step, { ...ctx, runId: p.runId });
+        await runFixtureStep(step, { ...ctx, runId: p.runId, baseUrl: where });
+        cleanedSteps.add(i);
       } catch (e) {
-        ledger.failures.push({ setup: p.name, step: i, runId: p.runId, at: new Date().toISOString(), error: e.message });
+        fail({ ...target, step: i, error: e.message });
       }
     }
-    ledger.prepared.splice(ledger.prepared.indexOf(p), 1);
+    // The entry leaves only when nothing is owed any more; a teardown that
+    // did not finish stays retryable, remembering how far it got.
+    if (cleanedSteps.size === steps.length) ledger.prepared.splice(ledger.prepared.indexOf(p), 1);
+    else p.cleanupDone = [...cleanedSteps].sort((a, b) => a - b);
     ledger.save();
   }
-  const failures = ledger.failures.slice(before);
-  return { cleaned, skipped, failures, allFailures: ledger.failures };
+
+  return { cleaned, skipped, failures };
 }

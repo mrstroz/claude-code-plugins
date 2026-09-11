@@ -18,7 +18,8 @@
  *   --verdict 07=fail --reason "…"   record a QA judgement without re-running
  *   --new-run [--driver chrome]  start a run driven by hand (Chrome extension): results.json gets the run
  *   --prepare [--setups a,b]     run setups into the ledger for the current run, no browser needed
- *   --cleanup                    remove everything records.json still lists, from any run
+ *   --cleanup                    remove everything records.json still lists, from any run,
+ *                                each at the base URL it was created at (--base-url overrides)
  *   --finish                     close a hand-driven run: check the entries written into results.json
  *   --db-discover                propose a db block for qa.config.json from docker-compose / docker ps
  *   --db-check                   connect, describe, and run the configured probe against the app
@@ -356,7 +357,6 @@ function applyVerdict(opts) {
   rec.diagnosis = opts.reason;
   rec.diagnosedAt = new Date().toISOString();
   delete rec.diagnosisCarried;
-  delete index.migratedFrom;
   writeJsonAtomic(path.join(opts.taskDir, INDEX_FILE), index);
   console.log(`${rec.n} ${from} → ${rec.status} (run ${rec.runId || index.runId}): ${opts.reason}`);
   if (rec.error) console.log(`      the execution error stays on the entry as evidence: ${rec.error}`);
@@ -422,7 +422,6 @@ function newRun(opts) {
   patchRun(opts.taskDir, { status: "manual" });
   console.log(run.runId);
   console.log(`run ${run.runId} started in ${INDEX_FILE} — screenshots go to ${SHOTS_DIR}/NN-slug.jpg, one entry per scenario under "scenarios"; then --finish`);
-  if (run.migratedFrom === "0.7.0") console.log(`${INDEX_FILE} was a 0.7.0 index; runs/ is no longer read — delete it`);
 }
 
 /** The run results.json says is current; --prepare and --finish work on it. */
@@ -449,7 +448,7 @@ async function prepareOnly(opts) {
     if (ledger.preparedNames().includes(n)) { console.log(`setup ${n} already prepared in ${run.runId}`); continue; }
     try {
       await prepareSetup(n, setups[n], ctx);
-      ledger.markPrepared(n);
+      ledger.markPrepared(n, opts.baseUrl);
       console.log(`setup ${n} prepared (${ledger.records.length} record(s) in the ledger)`);
     } catch (e) {
       failed++;
@@ -466,27 +465,48 @@ async function prepareOnly(opts) {
 async function cleanupOnly(opts) {
   const file = path.join(opts.taskDir, LEDGER_FILE);
   const previous = readJson(file);
-  if (!previous || !(previous.records?.length || previous.prepared?.length)) {
+  const pending = (previous?.records?.length || 0) + (previous?.prepared?.length || 0) + (previous?.failures?.length || 0);
+  if (!pending) {
     console.log(`nothing to clean — no ${LEDGER_FILE} with records in ${opts.taskDir}`);
     if (previous) new Ledger(file, "cleanup").compact();
     return 0;
   }
   const doc = loadScenarios(opts).doc;
   const index = loadIndex(opts.taskDir);
-  // The run remembers where the app was; http cleanup steps need it.
-  opts.baseUrl = opts.baseUrl || index.run?.baseUrl || null;
   const { db } = await openDbFor(opts, doc, { writes: true });
   const setups = doc.setups || {};
-  const session = await browserSessionFor(opts, wantsBrowserSession(previous.records?.map((r) => r.cleanup), (previous.prepared || []).map((p) => setups[typeof p === "string" ? p : p.name]?.cleanup)));
+  const session = await browserSessionFor(opts, wantsBrowserSession((previous.records || []).map((r) => r.cleanup), (previous.prepared || []).map((p) => setups[p.name]?.cleanup)));
   const run = { runId: index.runId || "cleanup", dir: opts.taskDir };
+  const mineBefore = (previous.records || []).filter((r) => r.runId === index.runId).length;
   const { ledger, ctx } = fixturesCtx(opts, run, doc, db, session.context);
-  const c = await cleanupRun(ctx, { setups, all: true });
+  // Each record is removed where it was made; --base-url overrides that, and
+  // nothing is sent to an address nobody named.
+  if (opts.baseUrl) console.log(`--base-url ${opts.baseUrl}: every http cleanup goes there, whatever the record remembers`);
+  const c = await cleanupRun(ctx, { setups, all: true, baseUrl: opts.baseUrl, log: (l) => console.log(`  ${l}`) });
   const left = ledger.compact();
   db?.close();
   await session.close();
-  if (index.run) patchRun(opts.taskDir, { data: { ...(index.run.data || {}), cleaned: (index.run.data?.cleaned || 0) + c.cleaned, skipped: c.skipped, kept: false, failures: c.failures, cleanedAt: new Date().toISOString() } });
+  if (index.run) {
+    // `records` is how many this run created — a fact about the run, not a
+    // count of what is left — so it stays; `cleaned` adds this walk to what
+    // earlier ones removed, and `failures` is read back from the ledger, so a
+    // failure a retry solved disappears from the run's data too.
+    const mineLeft = ledger.records.filter((r) => r.runId === index.runId);
+    patchRun(opts.taskDir, {
+      data: {
+        ...(index.run.data || {}),
+        cleaned: (index.run.data?.cleaned || 0) + (mineBefore - mineLeft.length),
+        skipped: mineLeft.filter((r) => !r.cleanup).length,
+        kept: false,
+        failures: ledger.failures.filter((f) => f.runId === index.runId),
+        cleanedAt: new Date().toISOString(),
+      },
+    });
+  }
   console.log(`${c.cleaned} record(s) removed, ${c.skipped} without a cleanup step, ${c.failures.length} failure(s)${left ? ` — ${LEDGER_FILE} still lists what is left` : ` — ${LEDGER_FILE} removed`}`);
-  for (const f of c.failures) console.error(`  - ${f.kind || f.setup} ${f.id ?? ""}: ${f.error}`);
+  for (const f of c.failures) console.error(`  - ${f.setup ? `setup ${f.setup}` : `${f.kind} ${f.id ?? ""}`} (run ${f.runId}): ${f.error}`);
+  const older = ledger.failures.length - c.failures.length;
+  if (older > 0) console.error(`${older} earlier failure(s) in ${LEDGER_FILE} concern nothing this walk touched — read them, then remove the entries by hand`);
   return c.failures.length ? 1 : 0;
 }
 
@@ -510,24 +530,36 @@ async function finishRun(opts) {
       else if (!fs.existsSync(path.join(opts.taskDir, r.screenshot))) problems.push(`entry ${n}: screenshot ${r.screenshot} not found`);
     }
     if (r.status === "blocked" && !r.reason) problems.push(`entry ${n}: blocked without a reason`);
-    return { completed: ["pass", "fail", "check"].includes(r.status), at: index.run.startedAt || new Date().toISOString(), ...r, n, stepsHash: sc ? hashOf(sc, setups) : undefined, hashVersion: 2, driver: "chrome" };
+    return { completed: ["pass", "fail", "check"].includes(r.status), at: index.run.startedAt || new Date().toISOString(), ...r, n, stepsHash: sc ? hashOf(sc, setups) : undefined, driver: "chrome" };
   });
   if (problems.length) die(2, `${INDEX_FILE} is not complete:\n  - ${problems.join("\n  - ")}`);
   updateIndex(opts.taskDir, run.runId, entries);
-  // The hand-driven run's data: cleanup as the Playwright loop would.
-  const ledger = new Ledger(path.join(opts.taskDir, LEDGER_FILE), run.runId);
-  let data = { records: ledger.records.filter((r) => r.runId === run.runId).length, cleaned: 0, skipped: 0, kept: opts.keepData, failures: [] };
-  if (data.records && !opts.keepData) {
+  // The hand-driven run's data: cleanup as the Playwright loop would. One
+  // Ledger object throughout — a second one built before cleanup would write
+  // its pre-cleanup snapshot back over the result.
+  const ledgerFile = path.join(opts.taskDir, LEDGER_FILE);
+  const onDisk = readJson(ledgerFile) || {};
+  const myRecords = (onDisk.records || []).filter((r) => r.runId === run.runId);
+  const myPrepared = (onDisk.prepared || []).filter((p) => p.runId === run.runId);
+  // Anything this run left in the ledger is settled here, records and prepared
+  // setups alike — a setup whose teardown lives in its cleanup block records
+  // nothing, and one with no cleanup block at all owes nothing but still has to
+  // leave the file rather than keep it alive for ever.
+  const leftHere = myRecords.length > 0 || myPrepared.length > 0;
+  let data = { records: myRecords.length, cleaned: 0, skipped: 0, kept: opts.keepData, failures: [] };
+  if (leftHere && !opts.keepData) {
     const { db } = await openDbFor(opts, doc, { writes: true });
     opts.baseUrl = opts.baseUrl || index.run.baseUrl || null;
-    const session = await browserSessionFor(opts, wantsBrowserSession(ledger.records.map((r) => r.cleanup)));
-    const { ctx } = fixturesCtx(opts, run, doc, db, session.context);
-    const c = await cleanupRun(ctx, { setups });
+    const session = await browserSessionFor(opts, wantsBrowserSession(myRecords.map((r) => r.cleanup), myPrepared.map((p) => setups[p.name]?.cleanup)));
+    const { ledger, ctx } = fixturesCtx(opts, run, doc, db, session.context);
+    const c = await cleanupRun(ctx, { setups, log: (l) => console.log(`  ${l}`) });
     data = { ...data, cleaned: c.cleaned, skipped: c.skipped, failures: c.failures };
     db?.close();
     await session.close();
+    ledger.compact();
+  } else {
+    new Ledger(ledgerFile, run.runId).compact();
   }
-  ledger.compact();
   patchRun(opts.taskDir, { status: "completed", finishedAt: new Date().toISOString(), executed: entries.map((e) => e.n), counts: entries.reduce((acc, r) => ((acc[r.status] = (acc[r.status] || 0) + 1), acc), {}), data });
   console.log(`run ${run.runId}: ${entries.length} entr(ies) checked, run closed in ${INDEX_FILE}`);
   return 0;
@@ -671,7 +703,6 @@ async function main() {
   const prevByN = new Map(loadIndex(opts.taskDir).scenarios.map((r) => [r.n, r]));
   const run = startRun(opts.taskDir, runMeta(opts, doc, { browser: info.browser, browserVersion: info.version, executable: info.executable, profile: info.profile, db: db ? db.describe() : null }));
   console.log(`run ${run.runId} → ${path.relative(process.cwd(), opts.taskDir) || "."}/${INDEX_FILE}`);
-  if (run.migratedFrom === "0.7.0") console.log(`${INDEX_FILE} was a 0.7.0 index; runs/ is no longer read and its pictures are not reused — delete it once this run has its own`);
   const { ledger, values, ctx: fixtures } = fixturesCtx(opts, run, doc, db, context);
   const leftovers = ledger.leftovers();
   if (leftovers.length) console.log(`${LEDGER_FILE} lists ${leftovers.length} record(s) from an earlier run — this run cleans only its own; --cleanup removes those too`);

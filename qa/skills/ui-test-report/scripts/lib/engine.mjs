@@ -22,7 +22,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fill, fillDeep, normalize, check, operand } from "./compare.mjs";
-import { stepKind, numberOf, requiresOf, usesOf, hashOf, HASH_VERSION } from "./validate.mjs";
+import { stepKind, numberOf, requiresOf, usesOf, hashOf } from "./validate.mjs";
 import { updateIndex, patchRun, SHOTS_DIR } from "./runs.mjs";
 import { prepareSetup, cleanupRun } from "./fixtures.mjs";
 
@@ -261,7 +261,7 @@ export async function executeScenarios(ctx) {
       const expects = [];
       const rec = {
         n, slug, title: sc.title, status: null, completed: false, at: new Date().toISOString(),
-        runId: run.runId, stepsHash: hashOf(sc, setups), hashVersion: HASH_VERSION,
+        runId: run.runId, stepsHash: hashOf(sc, setups),
         requires: requiresOf(sc), uses: usesOf(sc), values: {}, expects, caption: null, screenshot: null, console: noise,
       };
       const p = ctx.prevByN?.get(n);
@@ -285,7 +285,7 @@ export async function executeScenarios(ctx) {
           try {
             await prepareSetup(u, setups[u], ctx.fixtures);
             prepared.add(u);
-            ctx.ledger?.markPrepared(u);
+            ctx.ledger?.markPrepared(u, opts.baseUrl);
             log(`setup ${u} prepared`);
           } catch (e) {
             setupFailed.set(u, String(e.message).split("\n")[0]);
@@ -323,7 +323,7 @@ export async function executeScenarios(ctx) {
               let id;
               try { id = operand(l.id, values); } catch { continue; }
               if (id === undefined || id === null) continue;
-              ctx.ledger?.add({ scenario: n, kind: l.kind, id, via: "ui", cleanup: l.cleanup || null, note: l.note });
+              ctx.ledger?.add({ scenario: n, kind: l.kind, id, via: "ui", baseUrl: opts.baseUrl ?? undefined, cleanup: l.cleanup || null, note: l.note });
               pendingLeaves.splice(pendingLeaves.indexOf(l), 1);
             }
           };
@@ -393,10 +393,7 @@ export async function executeScenarios(ctx) {
         log(`--keep-data: ${data.records} record(s) left in place for diagnosis; remove them later with --cleanup`);
       } else {
         try {
-          const c = await cleanupRun(ctx.fixtures, { setups });
-          const { allFailures, ...c2 } = c;
-          void allFailures;
-          data = { ...data, ...c2 };
+          data = { ...data, ...(await cleanupRun(ctx.fixtures, { setups })) };
         } catch (e) {
           data.failures = [...data.failures, { error: e.message }];
         }

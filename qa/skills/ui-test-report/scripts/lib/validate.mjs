@@ -82,7 +82,6 @@ export function usedRefsOf(sc) {
  * scenarios it builds on, and the setups it runs on — with their content, so a
  * changed fixture changes the hash of every scenario that depends on it.
  */
-export const HASH_VERSION = 2;
 export function hashOf(sc, setups = {}) {
   const body = JSON.stringify({
     given: sc.given || [],
@@ -250,7 +249,6 @@ export function validateScenarios(doc, { only = null, dbWrites = false } = {}) {
   });
 
   if (only) {
-    const byN = new Map(list.map((sc) => [numberOf(sc), sc]));
     const { selected, missing } = selectScenarios(list, only);
     for (const m of missing) problems.push(`--only ${m}: no such scenario in the file`);
     const chosen = new Set(selected.map(numberOf));
@@ -261,7 +259,6 @@ export function validateScenarios(doc, { only = null, dbWrites = false } = {}) {
         const reader = readerOf.get(ref);
         if (reader && !chosen.has(reader)) problems.push(`scenario ${numberOf(sc)} uses \${${ref}}, read by ${reader}, which is not in this run — add ${reader} to its requires`);
       }
-      void byN;
     }
   }
   return problems;

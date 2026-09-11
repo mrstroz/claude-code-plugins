@@ -31,7 +31,7 @@ const READ_RE = /^\s*(select|show|describe|desc|explain|with|pragma)\b/i;
 export const isReadQuery = (sql) => READ_RE.test(String(sql));
 
 /** qa.config.json next to the task directory or one level up (docs/qa/). */
-export function findConfig(taskDir, explicit = null) {
+function findConfig(taskDir, explicit = null) {
   if (explicit) return path.resolve(explicit);
   for (const dir of [taskDir, path.dirname(taskDir)]) {
     const f = path.join(dir, CONFIG_FILE);
@@ -64,7 +64,7 @@ function dockerExec(container, args, opts = {}) {
 }
 
 /** "container-env:VAR" | "env:VAR" → the value, without ever printing it. */
-export function resolveSecret(spec, { container } = {}) {
+function resolveSecret(spec, { container } = {}) {
   if (spec === undefined || spec === null || spec === "") return undefined;
   const m = String(spec).match(/^(env|container-env):([A-Za-z_][A-Za-z0-9_]*)$/);
   if (!m) throw new Error(`passwordFrom must be "env:VAR" or "container-env:VAR", got ${JSON.stringify(spec)}`);
@@ -78,7 +78,7 @@ export function resolveSecret(spec, { container } = {}) {
 }
 
 /** The running container for a compose service, or the container named outright. */
-export function resolveContainer(docker, cwd) {
+function resolveContainer(docker, cwd) {
   if (!docker) return null;
   if (docker.container) return docker.container;
   if (docker.service) {

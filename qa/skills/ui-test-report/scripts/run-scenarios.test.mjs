@@ -13,7 +13,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { execFileSync, spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 import { same, COMPARATORS, check, normalize, fill, getPath } from "./lib/compare.mjs";
@@ -261,7 +261,6 @@ test("loop: pass, fail with reason and source, blocked by given, blocked by requ
   assert.equal(by["05"].screenshot, "screenshots/05-s05.error.jpg");
   assert.equal(errored, 1);
   assert.equal(by["01"].values.total, 3);
-  assert.equal(by["01"].hashVersion, 2);
   const index = loadIndex(taskDir);
   assert.equal(index.run.status, "completed");
   assert.deepEqual(index.run.executed, ["01", "02", "03", "04", "05"]);
@@ -269,8 +268,6 @@ test("loop: pass, fail with reason and source, blocked by given, blocked by requ
   assert.equal(by["03"].screenshot, null, "blocked has no picture");
   assert.equal(index.runId, run.runId);
   assert.ok(index.scenarios.every((r) => r.runId === run.runId));
-  assert.equal(index.scenarios[0].history, undefined, "no history in the index");
-  assert.ok(!fs.existsSync(path.join(taskDir, "runs")), "no per-run directories");
   assert.ok(!fs.existsSync(path.join(taskDir, "records.json")), "nothing created, no ledger file");
 });
 
@@ -288,7 +285,6 @@ test("partial re-run: the untouched scenario keeps its old run id and its pictur
   assert.ok(index.scenarios.every((r) => r.runId === second.run.runId));
   assert.equal(index.scenarios[1].screenshot, "screenshots/02-s02.jpg", "same path, overwritten");
   assert.ok(fs.statSync(pic02).mtimeMs >= stamp02);
-  assert.equal(index.scenarios[0].history, undefined);
   // A third run touching only 01 leaves 02 pointing at the second run, picture untouched.
   const before02 = fs.readFileSync(pic02);
   const third = await runOnce(taskDir, doc, {}, { only: ["01"] });
@@ -318,7 +314,6 @@ test("rewrite detection: a changed comparator is reported against the previous r
   const r = loadIndex(taskDir).scenarios[0];
   assert.equal(r.status, "pass");
   assert.equal(r.revisionHash, r.stepsHash);
-  assert.equal(r.history, undefined);
   const diff = diffAgainst(second.prevByN, second.results);
   assert.deepEqual(diff, [{ n: "01", stepsChanged: true, statusFrom: "fail", status: "pass", revisionMissing: false }]);
   // The same revision sentence on a second rewrite does not cover the new steps.
@@ -342,8 +337,6 @@ test("interrupt: results written after every scenario, the run is marked interru
   process.env.QA_CLEAN_LOG = log;
   const state = { onClick: null };
   // Ask to stop as soon as 01 has run: the loop checks between scenarios.
-  const origEval = fakePage(state).evaluate;
-  void origEval;
   const page = fakePage(state);
   const run = startRun(taskDir, { driver: "playwright", scope: "all" });
   const ledger = new Ledger(path.join(taskDir, "records.json"), run.runId);
@@ -366,28 +359,17 @@ test("interrupt: results written after every scenario, the run is marked interru
   assert.ok(!fs.existsSync(path.join(taskDir, "records.json")), "cleaned up: the ledger file is gone");
 });
 
-test("loadIndex reads a 0.7.0 index into the flat shape and drops what nothing reads any more", () => {
+test("loadIndex: no file reads as an empty index, and entries survive the start of a run", () => {
+  assert.deepEqual(loadIndex(tmp()), { runId: null, run: null, scenarios: [] });
   const taskDir = tmp();
   writeJsonAtomic(path.join(taskDir, "results.json"), {
-    latestRunId: "20260910-172617-d964", latestScope: "all",
-    scenarios: [
-      { n: "01", status: "pass", sourceRunId: "20260910-172617-d964", fresh: true, screenshot: "runs/20260910-172617-d964/screenshots/01-a.jpg", history: [{ runId: "x" }], rewritten: true, statusChangedFrom: "fail" },
-      { n: "02", status: "fail", sourceRunId: "20260910-171010-1aef", fresh: false, screenshot: "runs/20260910-171010-1aef/screenshots/02-b.jpg" },
-    ],
+    runId: "20260910-171010-1aef", run: { runId: "20260910-171010-1aef", status: "completed" },
+    scenarios: [{ n: "01", status: "pass", runId: "20260910-171010-1aef", screenshot: "screenshots/01-a.jpg" }],
   });
-  const idx = loadIndex(taskDir);
-  assert.equal(idx.migratedFrom, "0.7.0");
-  assert.equal(idx.runId, "20260910-172617-d964");
-  assert.equal(idx.run, null);
-  assert.deepEqual(idx.scenarios.map((r) => [r.n, r.runId, r.screenshot]), [["01", "20260910-172617-d964", "screenshots/01-a.jpg"], ["02", "20260910-171010-1aef", "screenshots/02-b.jpg"]]);
-  for (const k of ["history", "fresh", "rewritten", "statusChangedFrom", "sourceRunId"]) assert.equal(idx.scenarios[0][k], undefined, k);
-  const run = startRun(taskDir, { driver: "playwright" });
-  assert.equal(run.migratedFrom, "0.7.0", "startRun says where the index came from");
+  startRun(taskDir, { driver: "playwright" });
   const after = loadIndex(taskDir);
-  assert.equal(after.migratedFrom, undefined, "written once in the new shape, it is no longer a migration");
   assert.equal(after.run.status, "running");
-  assert.equal(after.scenarios[1].runId, "20260910-171010-1aef", "entries survive the start of a run");
-  assert.deepEqual(loadIndex(tmp()), { runId: null, run: null, scenarios: [] });
+  assert.equal(after.scenarios[0].runId, "20260910-171010-1aef", "entries survive the start of a run");
 });
 
 // ------------------------------------------------------------ fixtures
@@ -451,7 +433,7 @@ test("--keep-data leaves the records and says so; cleanupRun later removes them"
   const file = path.join(taskDir, "records.json");
   const kept = readJson(file);
   assert.equal(kept.records.length, 1, "the ledger stays while the row is there");
-  assert.deepEqual(kept.prepared, [{ name: "seed", runId: run.runId }]);
+  assert.deepEqual(kept.prepared, [{ name: "seed", runId: run.runId, baseUrl: "http://app" }], "a prepared setup remembers where it was prepared");
   assert.equal(kept.cleaned, undefined, "no cleaned list: what is cleaned leaves the file");
   // A second run sees the leftover, cleans only its own, and the file keeps the old row.
   const second = await runOnce(taskDir, doc, {}, { db });
@@ -490,7 +472,149 @@ test("a failing setup blocks the scenarios that use it; a failing cleanup is rec
   assert.ok(ledger, "a failed cleanup keeps the file");
   assert.equal(ledger.records.length, 1, "the record it could not remove is still listed");
   assert.equal(ledger.failures.length, 1);
-  void run;
+});
+
+/** A store served over http: DELETE /api/views/:id removes, and remembers what it was asked. */
+async function stubApi(ids = []) {
+  const http = await import("node:http");
+  const store = new Set(ids);
+  const seen = [];
+  const server = http.createServer((req, res) => {
+    seen.push(`${req.method} ${req.url}`);
+    const id = Number(req.url.split("/").pop());
+    if (req.method === "DELETE" && req.url.startsWith("/api/views/") && store.has(id)) {
+      store.delete(id);
+      res.writeHead(204);
+    } else {
+      res.writeHead(404);
+    }
+    res.end();
+  });
+  await new Promise((r) => server.listen(0, "127.0.0.1", r));
+  return { store, seen, baseUrl: `http://127.0.0.1:${server.address().port}`, close: () => server.close() };
+}
+
+const DELETE_VIEW = { http: { method: "DELETE", url: "/api/views/${id}" } };
+
+test("cleanup removes each record where it was made, not where the context happens to point", async () => {
+  const a = await stubApi([1]);
+  const b = await stubApi([1, 2]);
+  const taskDir = tmp();
+  const file = path.join(taskDir, "records.json");
+  writeJsonAtomic(file, {
+    prepared: [],
+    records: [
+      { runId: "20260101-000000-aaaa", kind: "view", id: 1, via: "http", baseUrl: a.baseUrl, cleanup: DELETE_VIEW },
+      { runId: "20260102-000000-bbbb", kind: "view", id: 2, via: "http", baseUrl: b.baseUrl, cleanup: DELETE_VIEW },
+    ],
+    failures: [],
+  });
+  const ledger = new Ledger(file, "20260102-000000-bbbb");
+  // The context points at B, as it would after a second run against another app.
+  const c = await cleanupRun({ runId: "20260102-000000-bbbb", baseUrl: b.baseUrl, values: {}, db: null, ledger, cwd: taskDir }, { setups: {}, all: true });
+  assert.equal(c.cleaned, 2);
+  assert.deepEqual([...a.store], [], "A's record was removed at A");
+  assert.deepEqual([...b.store], [1], "the row B holds under A's id is untouched");
+  assert.ok(!a.seen.some((l) => l.endsWith("/2")), "A never saw B's id");
+  assert.ok(!b.seen.some((l) => l.endsWith("/1")), "B never saw A's id");
+  assert.equal(ledger.compact(), false);
+  a.close();
+  b.close();
+});
+
+test("cleanup refuses a record with no base URL, and --base-url names one on purpose", async () => {
+  const a = await stubApi([7, 8]);
+  const taskDir = tmp();
+  const file = path.join(taskDir, "records.json");
+  writeJsonAtomic(file, { prepared: [], records: [{ runId: "20260101-000000-aaaa", kind: "view", id: 7, via: "http", cleanup: DELETE_VIEW }], failures: [] });
+  const ledger = new Ledger(file, "cleanup");
+  const ctx = { runId: "cleanup", baseUrl: a.baseUrl, values: {}, db: null, ledger, cwd: taskDir };
+  let c = await cleanupRun(ctx, { setups: {}, all: true });
+  assert.equal(c.cleaned, 0);
+  assert.equal(c.failures.length, 1);
+  assert.match(c.failures[0].error, /no base URL/);
+  assert.equal(ledger.records.length, 1, "the record stays listed rather than being sent somewhere unnamed");
+  assert.deepEqual([...a.store], [7, 8], "nothing was guessed at from the context");
+  c = await cleanupRun(ctx, { setups: {}, all: true, baseUrl: a.baseUrl });
+  assert.equal(c.cleaned, 1);
+  assert.deepEqual([...a.store], [8]);
+  assert.equal(ledger.failures.length, 0, "a failure the retry solved leaves the ledger");
+  assert.equal(ledger.compact(), false);
+  a.close();
+});
+
+test("cleanup retry: an unsolved task stays retryable, and prepared alone keeps the file", async () => {
+  const taskDir = tmp();
+  const file = path.join(taskDir, "records.json");
+  const once = (flag) => ({ shell: `if [ -e ${path.join(taskDir, flag)} ]; then exit 0; else touch ${path.join(taskDir, flag)}; exit 1; fi` });
+  const setups = { seed: { prepare: [], cleanup: [once("setup-tried")] } };
+  writeJsonAtomic(file, {
+    prepared: [{ name: "seed", runId: "r1" }],
+    records: [{ runId: "r1", kind: "view", id: 5, via: "shell", cleanup: once("record-tried") }],
+    failures: [],
+  });
+  const ledger = new Ledger(file, "r1");
+  const ctx = { runId: "r1", baseUrl: null, values: {}, db: null, ledger, cwd: taskDir };
+
+  let c = await cleanupRun(ctx, { setups });
+  assert.equal(c.cleaned, 0);
+  assert.equal(c.failures.length, 2, "both the record and the setup failed");
+  assert.equal(ledger.records.length, 1);
+  assert.deepEqual(ledger.prepared.map((p) => p.name), ["seed"], "a setup whose cleanup failed is still owed it");
+  assert.equal(ledger.compact(), true, "nothing solved, the file stays");
+
+  c = await cleanupRun(ctx, { setups });
+  assert.equal(c.cleaned, 1);
+  assert.equal(c.failures.length, 0);
+  assert.equal(ledger.records.length, 0);
+  assert.equal(ledger.prepared.length, 0);
+  assert.equal(ledger.failures.length, 0, "the earlier failures were about tasks now done");
+  assert.equal(ledger.compact(), false);
+  assert.ok(!fs.existsSync(file), "nothing to clean up or explain, no file");
+
+  const owed = new Ledger(path.join(tmp(), "records.json"), "r1");
+  owed.prepared.push({ name: "seed", runId: "r1" });
+  assert.equal(owed.compact(), true, "a setup still owed its cleanup block keeps the file on its own");
+});
+
+test("a setup's cleanup retries only the steps that did not finish", async () => {
+  const taskDir = tmp();
+  const file = path.join(taskDir, "records.json");
+  const log = path.join(taskDir, "steps.log");
+  const flag = path.join(taskDir, "second-tried");
+  const setups = {
+    seed: {
+      prepare: [],
+      cleanup: [
+        { shell: `echo one >> ${log}` },
+        { shell: `echo two >> ${log}; if [ -e ${flag} ]; then exit 0; else touch ${flag}; exit 1; fi` },
+      ],
+    },
+  };
+  writeJsonAtomic(file, { prepared: [{ name: "seed", runId: "r1" }], records: [], failures: [] });
+  const ledger = new Ledger(file, "r1");
+  const ctx = { runId: "r1", baseUrl: null, values: {}, db: null, ledger, cwd: taskDir };
+
+  let c = await cleanupRun(ctx, { setups });
+  assert.equal(c.failures.length, 1, "the second step failed");
+  assert.deepEqual(ledger.prepared[0].cleanupDone, [0], "the first step is remembered as done");
+
+  c = await cleanupRun(ctx, { setups });
+  assert.equal(c.failures.length, 0, "the retry repeated only what was left, and it worked");
+  assert.equal(ledger.prepared.length, 0);
+  assert.deepEqual(fs.readFileSync(log, "utf8").trim().split("\n"), ["one", "two", "two"], "the step that had succeeded was not run again");
+  assert.equal(ledger.compact(), false);
+});
+
+test("cleanup keeps a setup it can no longer run, rather than forgetting it", async () => {
+  const taskDir = tmp();
+  const file = path.join(taskDir, "records.json");
+  writeJsonAtomic(file, { prepared: [{ name: "gone", runId: "r1" }], records: [], failures: [] });
+  const ledger = new Ledger(file, "r1");
+  const c = await cleanupRun({ runId: "r1", baseUrl: null, values: {}, db: null, ledger, cwd: taskDir }, { setups: {} });
+  assert.equal(c.failures.length, 1);
+  assert.match(c.failures[0].error, /no longer in the scenario file/);
+  assert.deepEqual(ledger.prepared.map((p) => p.name), ["gone"]);
 });
 
 test("http fixture step: creates through the API, records the id from the response, cleans up through DELETE", async () => {
@@ -642,11 +766,9 @@ test("check-evidence: accepts a consistent report, refuses a wrong (earlier) mar
   fs.writeFileSync(file, report("PASS", ` The run ${run.runId} was interrupted after 02.\n\n## Test data\n\nOne record is still there, see records.json; --cleanup removes it.`));
   r = check();
   assert.equal(r.status, 0, r.stderr);
-  // a 0.7.0 leftover and the old four-column table are refused
-  fs.mkdirSync(path.join(taskDir, "runs", "x"), { recursive: true });
+  // a fourth column is refused: an earlier run is marked in the Result cell
   fs.writeFileSync(file, report("PASS", ` The run ${run.runId} was interrupted after 02.\n\n## Test data\n\nrecords.json`).replace("| # | Scenario | Result |", "| # | Scenario | Result | Run |"));
   r = check();
-  assert.match(r.stderr, /runs\/ exists — a 0\.7\.0 layout/);
   assert.match(r.stderr, /the table has a "Run" column/);
 });
 
@@ -705,7 +827,6 @@ test("a record created through the UI is in the ledger before the step that erro
   assert.equal(meta.data.records, 1);
   assert.equal(meta.data.cleaned, 1);
   assert.ok(!fs.existsSync(path.join(taskDir, "records.json")));
-  void run;
 });
 
 test("an error picture is replaced when a later run re-executes the scenario, and refused while the row is still an error", async () => {
@@ -727,6 +848,127 @@ test("an error picture is replaced when a later run re-executes the scenario, an
   fs.writeFileSync(file, `# QA\n\nRun ${runB.run.runId} on http://app; 01 from run ${runA.run.runId}.\n\n| # | Scenario | Result |\n| --- | --- | --- |\n| 01 | S 01 | PASS (earlier) |\n| 02 | S 02 | PASS |\n`);
   const r2 = spawnSync("node", [path.join(HERE, "check-evidence.js"), file], { encoding: "utf8" });
   assert.equal(r2.status, 0, r2.stderr);
+});
+
+/** The CLI as a child process. Async on purpose: some of these children talk
+ *  to a stub server running here, and spawnSync would block it from answering. */
+const cli = (taskDir, ...args) =>
+  new Promise((resolve) => {
+    const child = spawn("node", [path.join(HERE, "run-scenarios.mjs"), ...args, "--task-dir", taskDir], { cwd: taskDir, encoding: "utf8" });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.on("data", (c) => (stdout += c));
+    child.stderr.on("data", (c) => (stderr += c));
+    child.on("close", (status) => resolve({ status, stdout, stderr }));
+  });
+
+function handDrivenRun(taskDir, { runId, baseUrl, doc }) {
+  fs.writeFileSync(path.join(taskDir, "scenarios.json"), JSON.stringify(doc));
+  fs.mkdirSync(path.join(taskDir, "screenshots"), { recursive: true });
+  fs.writeFileSync(path.join(taskDir, "screenshots", "01-s01.jpg"), Buffer.alloc(6000, 1));
+  writeJsonAtomic(path.join(taskDir, "results.json"), {
+    runId,
+    run: { runId, status: "manual", startedAt: new Date().toISOString(), finishedAt: null, driver: "chrome", baseUrl },
+    scenarios: [{
+      n: "01", slug: "s01", title: "S 01", status: "pass", runId, completed: true,
+      expects: [{ desc: "the row is listed", source: "ui", passed: true, actual: 1, expected: 1 }],
+      screenshot: "screenshots/01-s01.jpg",
+    }],
+  });
+}
+
+test("--cleanup does not send an earlier run's record to the environment the latest run used", async () => {
+  const a = await stubApi([11]);
+  const b = await stubApi([11]);
+  const taskDir = tmp();
+  fs.writeFileSync(path.join(taskDir, "scenarios.json"), JSON.stringify({ scenarios: [okScenario("01")] }));
+  writeJsonAtomic(path.join(taskDir, "results.json"), {
+    runId: "20260102-000000-bbbb",
+    run: { runId: "20260102-000000-bbbb", status: "completed", baseUrl: b.baseUrl, data: { records: 0 } },
+    scenarios: [],
+  });
+  writeJsonAtomic(path.join(taskDir, "records.json"), {
+    prepared: [],
+    records: [{ runId: "20260101-000000-aaaa", kind: "view", id: 11, via: "http", baseUrl: a.baseUrl, cleanup: DELETE_VIEW }],
+    failures: [],
+  });
+  const r = await cli(taskDir, "--cleanup");
+  assert.equal(r.status, 0, r.stderr);
+  assert.deepEqual([...a.store], [], "removed where it was made");
+  assert.deepEqual([...b.store], [11], "the latest run's environment is untouched");
+  assert.ok(!fs.existsSync(path.join(taskDir, "records.json")));
+  a.close();
+  b.close();
+});
+
+test("--finish cleans through one ledger: what it removed does not come back", async () => {
+  const a = await stubApi([21]);
+  const taskDir = tmp();
+  const runId = "20260103-000000-cccc";
+  const flag = path.join(taskDir, "unloaded");
+  handDrivenRun(taskDir, { runId, baseUrl: a.baseUrl, doc: { scenarios: [okScenario("01", { uses: ["seed"] })], setups: { seed: { prepare: [{ shell: "true" }], cleanup: [{ shell: `touch ${flag}` }] } } } });
+  writeJsonAtomic(path.join(taskDir, "records.json"), {
+    prepared: [{ name: "seed", runId, baseUrl: a.baseUrl }],
+    records: [{ runId, kind: "view", id: 21, via: "http", baseUrl: a.baseUrl, cleanup: DELETE_VIEW }],
+    failures: [],
+  });
+  const r = await cli(taskDir, "--finish");
+  assert.equal(r.status, 0, r.stderr);
+  assert.deepEqual([...a.store], [], "the record was deleted");
+  assert.ok(!fs.existsSync(path.join(taskDir, "records.json")), "and was not written back by a stale snapshot");
+  assert.ok(fs.existsSync(flag), "the setup's cleanup block ran too");
+  const data = loadIndex(taskDir).run.data;
+  assert.equal(data.cleaned, 1);
+  assert.deepEqual(data.failures, []);
+  a.close();
+});
+
+test("--finish drops a prepared setup that owes no cleanup instead of keeping the ledger alive", async () => {
+  const taskDir = tmp();
+  const runId = "20260105-000000-eeee";
+  handDrivenRun(taskDir, { runId, baseUrl: "http://app", doc: { scenarios: [okScenario("01", { uses: ["seed"] })], setups: { seed: { prepare: [{ shell: "true" }] } } } });
+  writeJsonAtomic(path.join(taskDir, "records.json"), { prepared: [{ name: "seed", runId, baseUrl: "http://app" }], records: [], failures: [] });
+  const r = await cli(taskDir, "--finish");
+  assert.equal(r.status, 0, r.stderr);
+  assert.ok(!fs.existsSync(path.join(taskDir, "records.json")), "nothing owed and nothing left, so no file");
+});
+
+test("--cleanup keeps the run's created count and adds to what earlier walks removed", async () => {
+  const a = await stubApi([31]);
+  const taskDir = tmp();
+  const runId = "20260106-000000-ffff";
+  fs.writeFileSync(path.join(taskDir, "scenarios.json"), JSON.stringify({ scenarios: [okScenario("01")] }));
+  writeJsonAtomic(path.join(taskDir, "results.json"), {
+    runId,
+    // the run created two records and an earlier walk removed one of them
+    run: { runId, status: "completed", baseUrl: a.baseUrl, data: { records: 2, cleaned: 1, skipped: 0, kept: false, failures: [] } },
+    scenarios: [],
+  });
+  writeJsonAtomic(path.join(taskDir, "records.json"), {
+    prepared: [],
+    records: [{ runId, kind: "view", id: 31, via: "http", baseUrl: a.baseUrl, cleanup: DELETE_VIEW }],
+    failures: [],
+  });
+  const r = await cli(taskDir, "--cleanup");
+  assert.equal(r.status, 0, r.stderr);
+  const data = loadIndex(taskDir).run.data;
+  assert.equal(data.records, 2, "how many the run created is a fact about the run, not a count of what is left");
+  assert.equal(data.cleaned, 2, "this walk adds to what the earlier one removed");
+  assert.equal(data.kept, false);
+  assert.deepEqual(data.failures, []);
+  a.close();
+});
+
+test("--finish runs a setup's cleanup block even when the setup recorded nothing", async () => {
+  const taskDir = tmp();
+  const runId = "20260104-000000-dddd";
+  const flag = path.join(taskDir, "unloaded");
+  handDrivenRun(taskDir, { runId, baseUrl: "http://app", doc: { scenarios: [okScenario("01", { uses: ["seed"] })], setups: { seed: { prepare: [{ shell: "true" }], cleanup: [{ shell: `touch ${flag}` }] } } } });
+  writeJsonAtomic(path.join(taskDir, "records.json"), { prepared: [{ name: "seed", runId, baseUrl: "http://app" }], records: [], failures: [] });
+  const r = await cli(taskDir, "--finish");
+  assert.equal(r.status, 0, r.stderr);
+  assert.ok(fs.existsSync(flag), "a teardown with no records of its own is still owed");
+  assert.ok(!fs.existsSync(path.join(taskDir, "records.json")));
 });
 
 test("--cleanup with a browser-session step: refused with the way out when no QA window is open", () => {
@@ -752,5 +994,4 @@ test("writeJsonAtomic leaves no partial file behind", () => {
   writeJsonAtomic(f, { a: 1 });
   assert.deepEqual(readJson(f), { a: 1 });
   assert.deepEqual(fs.readdirSync(dir), ["x.json"]);
-  void execFileSync;
 });

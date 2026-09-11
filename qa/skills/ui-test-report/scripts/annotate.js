@@ -98,7 +98,7 @@
       try { els = [...document.querySelectorAll(selector)]; } catch { missing.push(selector); continue; }
       const rects = els.map(visibleRect).filter(Boolean);
       if (!rects.length) { missing.push(selector); continue; }
-      rects.forEach((r, i) => { const f = frame(r, i === 0 ? opts : { color: opts.color, width: opts.width }); if (!first) first = r; void f; });
+      rects.forEach((r, i) => { frame(r, i === 0 ? opts : { color: opts.color, width: opts.width }); if (!first) first = r; });
     }
     return { missing, first };
   }

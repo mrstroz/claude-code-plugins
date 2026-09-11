@@ -79,7 +79,7 @@ The second scenario is the shape most rows take: data prepared by a setup, a pre
 | `n` | zero-padded number, `"01"`… — the key joining the report row to the screenshot file; it never changes once the table is approved |
 | `slug` | lowercase letters, digits, dashes; the file becomes `NN-slug.jpg` |
 | `title` | the row text in the report table |
-| `uses` | setups this scenario needs. Each runs once per run, before the first scenario that uses it — under `--only 07` too, so a single scenario re-runs on fresh data without the chain before it. A setup that fails blocks the scenarios that use it |
+| `uses` | setups this scenario needs. Each runs once per run, before the first scenario that uses it — under `--only` too, so a single scenario re-runs on fresh data. A setup that fails blocks the scenarios that use it |
 | `requires` | earlier scenarios whose *state* this one builds on: a drawer left open, a value `read` into `${…}`. Under `--only` they are pulled in and run first; one that did not finish in this run blocks this one |
 | `given` | preconditions checked before the first step, each in the shape of an `expect`. One that does not hold makes the scenario `blocked`, with the check and the value it saw |
 | `steps` | run in order; see below |
@@ -150,8 +150,8 @@ The file is validated before the first click, all problems at once: two operatio
 
 ## Identity of a scenario
 
-The runner hashes what a scenario checks — `given`, `steps`, `manual`, `requires`, `uses` and the content of the setups it uses — and keeps the hash with every result. A changed comparator, a changed fixture or a new dependency is a rewrite; the runner compares against the previous `results.json` and names every rewritten scenario at the end of the run, and says when its `revision` was written for an earlier version of the steps. A rewritten scenario is expected to carry `revision` — the file keeps no history, so the sentence and the report's "Changes" section are the only record of what the earlier check got wrong. The title is not part of the hash.
+The runner hashes what a scenario checks — `given`, `steps`, `manual`, `requires`, `uses` and the content of the setups it uses — and keeps that hash with every result. A changed comparator, a changed fixture or a new dependency is a rewrite; the runner compares against the previous `results.json` and names every rewritten scenario at the end of the run, and says when its `revision` was written for an earlier version of the steps. A rewritten scenario is expected to carry `revision` — the file keeps no history, so the sentence and the report's "Changes" section are the only record of what the earlier check got wrong. The title is not part of the hash.
 
 ## Ordering
 
-Sequence scenarios so each leaves the app where the next one starts, and prefer short chains with a shared setup over one long chain: a `--only 07` that needs a setup and one predecessor costs two scenarios, one that needs six costs seven. Every scenario runs in the same page in one session, so 02 opens the drawer that 03 uses; say so with `"requires": ["02"]`. A dependency has to be earlier in the file. Put a `goto` at the start of a scenario only when it genuinely needs a clean state.
+Sequence scenarios so each leaves the app where the next one starts, and prefer short chains with a shared setup over one long chain: a broken link then blocks two rows rather than thirty, and a single scenario can be re-run on a setup and one predecessor. Every scenario runs in the same page in one session, so 02 opens the drawer that 03 uses; say so with `"requires": ["02"]`. A dependency has to be earlier in the file. Put a `goto` at the start of a scenario only when it genuinely needs a clean state.

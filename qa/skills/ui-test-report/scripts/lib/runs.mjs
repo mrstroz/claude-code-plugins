@@ -4,9 +4,8 @@
  * in the database, records.json. results.json carries the metadata of the
  * latest run under `run` and one entry per scenario; a scenario the latest run
  * did not execute keeps its earlier entry with its own runId, which is what
- * the report's "(earlier)" mark comes from. Nothing is archived per run: the
- * repository's history is the archive between builds, and a picture that a
- * later run replaced was evidence for a result that no longer stands.
+ * the report's "(earlier)" mark comes from. A re-run overwrites the entry and
+ * the picture of every scenario it executed and leaves the rest untouched.
  *
  * Files are written atomically (tmp + rename) after every scenario, so a run
  * killed half way leaves a readable record with status "interrupted" rather
@@ -39,8 +38,6 @@ export function newRunId(date = new Date()) {
   const stamp = `${date.getFullYear()}${p(date.getMonth() + 1)}${p(date.getDate())}-${p(date.getHours())}${p(date.getMinutes())}${p(date.getSeconds())}`;
   return `${stamp}-${crypto.randomBytes(2).toString("hex")}`;
 }
-
-export const RUN_ID_RE = /^\d{8}-\d{6}-[0-9a-f]{4}$/;
 
 export function readJson(file) {
   try {
@@ -82,40 +79,21 @@ export function gitBuildInfo(cwd) {
 }
 
 const indexFile = (taskDir) => path.join(taskDir, INDEX_FILE);
-const DROPPED = ["history", "fresh", "rewritten", "statusChangedFrom", "sourceRunId"];
 
-/**
- * The index, or an empty one. A 0.7.0 index (latestRunId + runs/) is read
- * into the flat shape: the run that last executed each scenario becomes its
- * runId, the per-run bookkeeping is dropped, and screenshot paths point at
- * screenshots/ — the pictures themselves are not moved, the next run takes
- * new ones. The caller says so when it notices `migratedFrom`.
- */
+/** The index, or an empty one when there is no file yet. */
 export function loadIndex(taskDir) {
-  const doc = readJson(indexFile(taskDir));
-  if (!doc) return { runId: null, run: null, scenarios: [] };
-  if (doc.latestRunId === undefined && doc.run !== undefined) return doc;
-  const legacy = doc.latestRunId !== undefined ? "0.7.0" : "0.6.0";
-  const scenarios = (doc.scenarios || []).map((r) => {
-    const out = { ...r, runId: r.sourceRunId && r.sourceRunId !== "legacy" ? r.sourceRunId : r.runId || null };
-    for (const k of DROPPED) delete out[k];
-    if (out.screenshot) out.screenshot = path.posix.join(SHOTS_DIR, path.posix.basename(out.screenshot));
-    return out;
-  });
-  return { runId: doc.latestRunId || null, run: null, scenarios, migratedFrom: legacy };
+  return readJson(indexFile(taskDir)) || { runId: null, run: null, scenarios: [] };
 }
 
 /** Start a run: a fresh id, `run` in the index set to running, screenshots/ present. */
 export function startRun(taskDir, meta = {}, { runId = newRunId() } = {}) {
   const index = loadIndex(taskDir);
-  const migratedFrom = index.migratedFrom;
-  delete index.migratedFrom;
   index.runId = runId;
   index.run = { runId, status: "running", startedAt: new Date().toISOString(), finishedAt: null, ...meta };
   index.updatedAt = index.run.startedAt;
   fs.mkdirSync(path.join(taskDir, SHOTS_DIR), { recursive: true });
   writeJsonAtomic(indexFile(taskDir), index);
-  return { runId, dir: taskDir, shotsDir: path.join(taskDir, SHOTS_DIR), migratedFrom };
+  return { runId, dir: taskDir, shotsDir: path.join(taskDir, SHOTS_DIR) };
 }
 
 /** Merge fields into the latest run's metadata. */
@@ -134,7 +112,6 @@ export function patchRun(taskDir, patch) {
  */
 export function updateIndex(taskDir, runId, entries) {
   const index = loadIndex(taskDir);
-  delete index.migratedFrom;
   const byN = new Map(index.scenarios.map((r) => [r.n, r]));
   for (const e of entries) byN.set(e.n, { ...e, runId });
   index.runId = runId;
@@ -146,7 +123,7 @@ export function updateIndex(taskDir, runId, entries) {
 
 /**
  * What changed between the previous index and this run's entries: steps
- * rewritten (same hash version, different hash), status changed, and a
+ * rewritten (a different hash), status changed, and a
  * rewrite that carries no revision for the steps as they are now. Printed at
  * the end of the run; the report's "Changes to the scenarios" section is
  * written from that print, since the index keeps no history.
@@ -156,7 +133,7 @@ export function diffAgainst(prevByN, entries) {
   for (const e of entries) {
     const p = prevByN?.get(e.n);
     if (!p) continue;
-    const stepsChanged = !!(p.stepsHash && e.stepsHash && p.hashVersion === e.hashVersion && p.stepsHash !== e.stepsHash);
+    const stepsChanged = !!(p.stepsHash && e.stepsHash && p.stepsHash !== e.stepsHash);
     const statusFrom = p.status && p.status !== e.status ? p.status : null;
     const revisionMissing = stepsChanged && (!e.revision || (e.revisionHash && e.revisionHash !== e.stepsHash));
     if (stepsChanged || statusFrom) out.push({ n: e.n, stepsChanged, statusFrom, status: e.status, revisionMissing });

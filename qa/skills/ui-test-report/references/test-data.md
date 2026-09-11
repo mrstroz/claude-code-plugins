@@ -25,7 +25,7 @@ Every execution gets a run id, `20260910-103212-9f3a` (date, time, four hex digi
 }
 ```
 
-A scenario declares `"uses": ["villaSeed"]`. The setup runs once per run, immediately before the first scenario that uses it, and its records go into the ledger as they are made. Under `--only 07` the setup still runs, so a single scenario re-runs on fresh data without the six scenarios before it — which is why short flows with a shared setup beat one long chain. A setup that fails blocks every scenario that uses it (`blockedBy: "setup:villaSeed"`); nothing runs on data that is not there.
+A scenario declares `"uses": ["villaSeed"]`. The setup runs once per run, immediately before the first scenario that uses it, and its records go into the ledger as they are made. Under `--only` the setup still runs, so a single scenario re-runs on fresh data rather than on what the last run left. A setup that fails blocks every scenario that uses it (`blockedBy: "setup:villaSeed"`); nothing runs on data that is not there.
 
 Three kinds of step, and a step is exactly one of them:
 
@@ -48,16 +48,18 @@ appended to the ledger the moment the id can be read — after the step that sto
 `docs/qa/<TASK>/records.json`:
 
 ```json
-{ "prepared": [{ "name": "villaSeed", "runId": "20260910-103212-9f3a" }],
-  "records": [{ "runId": "20260910-103212-9f3a", "at": "…", "setup": "villaSeed", "kind": "view", "id": 42, "via": "http", "cleanup": { "http": { "method": "DELETE", "url": "/api/views/${id}" } } }],
+{ "prepared": [{ "name": "villaSeed", "runId": "20260910-103212-9f3a", "baseUrl": "http://localhost:3000", "cleanupDone": [0] }],
+  "records": [{ "runId": "20260910-103212-9f3a", "at": "…", "baseUrl": "http://localhost:3000", "setup": "villaSeed", "kind": "view", "id": 42, "via": "http", "cleanup": { "http": { "method": "DELETE", "url": "/api/views/${id}" } } }],
   "failures": [] }
 ```
 
-Every record is written the moment it exists, not at the end, so a setup that fails on its third step still leaves the first two where cleanup will find them. The file lists what is still in the database: a record that cleanup removed leaves it, and when nothing is left — no record, no failure — the file is deleted. So `records.json` existing at all means rows are there, which is why `check-evidence.js` refuses a report that does not mention it. A run cleans its own records and warns when the file lists another run's; `--cleanup` walks everything.
+Every record is written the moment it exists, not at the end, so a setup that fails on its third step still leaves the first two where cleanup will find them. `baseUrl` is where it was made: an http cleanup step is relative, and the next run may point at another environment.
+
+The file lists what is still to be done — a record still in the database, a setup still owed its `cleanup` block, or a failure nobody has explained. Each of the three leaves the file as it is settled: a removed record, a cleaned-up setup, and a failure that a retry solved. When none is left the file is deleted, so `records.json` existing at all means there is something to remove or to read, which is why `check-evidence.js` refuses a report that does not mention it. A run cleans its own records and warns when the file lists another run's; `--cleanup` walks everything.
 
 ## Cleanup
 
-At the end of the run — after the last scenario, after an error, and after Ctrl-C (the runner finishes the current scenario, then cleans up; a second Ctrl-C leaves at once and says the data may still be there) — the runner walks the ledger backwards and runs each record's cleanup step, then each prepared setup's `cleanup` block in reverse order. It touches only what the ledger lists: no truncate, no reset, no "delete everything named QA". A record whose cleanup fails stays listed and is recorded under `failures` with the error, and the walk continues; the runner prints the count and the `run.data` block in `results.json` keeps it, so the report can list what is still there. A record with no cleanup step stays listed too.
+At the end of the run — after the last scenario, after an error, and after Ctrl-C (the runner finishes the current scenario, then cleans up; a second Ctrl-C leaves at once and says the data may still be there) — the runner walks the ledger backwards and runs each record's cleanup step, then each prepared setup's `cleanup` block in reverse order. It touches only what the ledger lists: no truncate, no reset, no "delete everything named QA". A record whose cleanup fails stays listed and is recorded under `failures` with the error, and the walk continues; the runner prints the count and the `run.data` block in `results.json` keeps it, so the report can list what is still there. The same holds for a setup whose `cleanup` block failed — it stays in `prepared`, so a later `--cleanup` tries it again, and the failure entry is replaced or dropped by what that attempt finds. What already worked is not repeated: the steps that completed are listed on the entry as `cleanupDone`, and a retry runs only the rest, because a `DELETE` that worked the first time answers 404 the second and would be read as a fresh failure of a job already done. A record with no cleanup step stays listed too.
 
 `--keep-data` skips cleanup and records `data.kept: true` — for looking at the rows behind a FAIL. The report has to say so under Test data, and `check-evidence.js` refuses one that does not. Later:
 
@@ -65,7 +67,7 @@ At the end of the run — after the last scenario, after an error, and after Ctr
 node …/run-scenarios.mjs --cleanup
 ```
 
-removes everything the ledger lists, from any run, using the base URL the latest run recorded, and deletes the file when it is empty. A cleanup step with `"session": "browser"` needs the QA window: the command attaches to it when it is open and stops with the way out (`--open`, log in, run again) when it is not — a window started now would have no session. The same holds for `--prepare`. `--prepare [--setups a,b]` runs setups into the ledger for the current run without a browser, for a run driven by hand.
+removes everything the ledger lists, from any run, each record against the base URL **that record** remembers — not the one the latest run used, which after a run against another app would send a DELETE to the wrong place. A record with no recorded base URL and a relative http cleanup step is not guessed at: it stays listed with a failure saying so, and `--base-url` on the command names the address on purpose, for every record in the walk. A cleanup step with `"session": "browser"` needs the QA window: the command attaches to it when it is open and stops with the way out (`--open`, log in, run again) when it is not — a window started now would have no session. The same holds for `--prepare`. `--prepare [--setups a,b]` runs setups into the ledger for the current run without a browser, for a run driven by hand.
 
 What cleanup does not do: it does not roll anything back. The runner opens no transaction and assumes none covers the application's writes — the app wrote through its own connection, and the only way to undo that is the explicit cleanup step. Shared rows, other people's records and the schema are never touched, because nothing in the ledger names them.
 

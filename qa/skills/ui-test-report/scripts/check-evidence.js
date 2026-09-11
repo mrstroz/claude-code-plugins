@@ -20,7 +20,6 @@
  *     records.json still listing rows are all mentioned
  *   - no scenario is still `error`; a verdict that overturned the badge on
  *     the picture is said so in the prose
- *   - a runs/ directory from 0.7.0 is refused: nothing reads it any more
  */
 const fs = require("fs");
 const path = require("path");
@@ -60,7 +59,7 @@ function rowsOf(lines) {
     if (cells.length < 3) continue;
     if (/^#$/.test(cells[0])) {
       cols = { status: cells.findIndex((c) => /^result$/i.test(c)), title: cells.findIndex((c) => /^scenario$/i.test(c)) };
-      if (cells.some((c) => /^run$/i.test(c))) problems.push(`the table has a "Run" column — 0.8.0 reports have three columns; a row from an earlier run says "(earlier)" in its Result cell instead`);
+      if (cells.some((c) => /^run$/i.test(c))) problems.push(`the table has a "Run" column — the table has three columns; a row from an earlier run says "(earlier)" in its Result cell instead`);
       continue;
     }
     if (!/^\d{2,3}$/.test(cells[0])) continue;
@@ -75,10 +74,6 @@ function rowsOf(lines) {
 
 const rows = rowsOf(lines);
 if (rows.size === 0) problems.push(`no scenario rows found in ${path.basename(reportPath)} — the results table needs a leading "| # |" header and "| NN |" rows`);
-
-if (fs.existsSync(path.join(taskDir, "runs"))) {
-  problems.push(`runs/ exists — a 0.7.0 layout; nothing reads it since 0.8.0 and its pictures are not this report's evidence. Delete it`);
-}
 
 // ---- pictures: one per number, none for a row that did not run
 const shotsDir = path.join(taskDir, "screenshots");
@@ -104,7 +99,6 @@ else {
 // ---- rows against results.json
 const index = readJson(path.join(taskDir, "results.json"));
 if (!index) problems.push(`results.json is missing or not valid JSON`);
-else if (index.latestRunId !== undefined) problems.push(`results.json is a 0.7.0 index — run the scenarios again with the 0.8.0 runner, which rewrites it`);
 const entries = new Map((index?.scenarios || []).map((r) => [r.n, r]));
 const latest = index?.runId || null;
 

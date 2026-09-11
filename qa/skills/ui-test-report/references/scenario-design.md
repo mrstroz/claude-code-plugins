@@ -63,7 +63,7 @@ Every scenario names a `target`: the element or region a reader should look at o
 
 ## 7. Order and dependencies
 
-Sequence the run so each scenario leaves the app close to where the next one starts, and keep the chains short. A scenario that uses the state an earlier one built — or a value it read — names it in `requires`; a scenario that needs data names the setup in `uses`. Prefer several short flows on a shared setup over one long chain: `--only 07` then re-runs a setup and a predecessor, not six scenarios, and a broken link blocks two rows, not thirty. Put the destructive scenarios — delete, reset, sign out — near the end.
+Sequence the run so each scenario leaves the app close to where the next one starts, and keep the chains short. A scenario that uses the state an earlier one built — or a value it read — names it in `requires`; a scenario that needs data names the setup in `uses`. Prefer several short flows on a shared setup over one long chain: a broken link then blocks two rows, not thirty. Put the destructive scenarios — delete, reset, sign out — near the end.
 
 ## Scope
 
