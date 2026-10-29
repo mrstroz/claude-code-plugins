@@ -29,6 +29,7 @@ import { basename, dirname, resolve, join } from 'node:path';
 import { markdownToAdf, adfToText } from './adf.mjs';
 
 const API = '/rest/api/3';
+const AGILE = '/rest/agile/1.0';
 
 // In the order they are tried at every directory on the way up. The Tesoro file
 // is a fallback rather than a peer: a project that has both wrote the first one
@@ -132,13 +133,18 @@ function usage(code = 2) {
       '  jira.mjs find-user <query> [--json]',
       '  jira.mjs create-issue --type <type> --summary <text> --description-file <path>',
       '                        [--labels a,b] [--parent <KEY>] [--assignee <person>]',
+      '                        [--sprint <sprint>] [--board <id>]',
       '                        [--attach <path>[,<path>]] [--dry-run] [--json]',
       '  jira.mjs update-issue <KEY> [--summary <text>] [--description-file <path>]',
-      '                        [--labels a,b] [--assignee <person>] [--attach <path>[,<path>]]',
-      '                        [--dry-run] [--json]',
+      '                        [--labels a,b] [--assignee <person>] [--sprint <sprint>]',
+      '                        [--board <id>] [--attach <path>[,<path>]] [--dry-run] [--json]',
       '  jira.mjs attach-file <KEY> --file <path>[,<path>] [--dry-run] [--json]',
       '  jira.mjs link-issues <KEY> --to <KEY> [--type Relates] [--dry-run] [--json]',
+      '  jira.mjs list-transitions <KEY> [--json]',
+      '  jira.mjs transition-issue <KEY> --to <status|id> [--dry-run] [--json]',
       '  jira.mjs add-comment <KEY> --body-file <path> [--reply-to <id|url>]',
+      '                       [--dry-run] [--json]',
+      '  jira.mjs update-comment <KEY> --comment <id|url> --body-file <path>',
       '                       [--dry-run] [--json]',
       '',
       'Options:',
@@ -157,6 +163,9 @@ function usage(code = 2) {
       '  --jql <predicate> a JQL predicate; the project scope is composed around it',
       `  --limit N         search results, 1-${SEARCH_LIMIT_MAX} (default ${SEARCH_LIMIT_DEFAULT})`,
       "  --reply-to <c>    answer inside a comment's thread; a comment id or a link to one",
+      '  --comment <c>     the comment to edit; a comment id or a link to one, yours only',
+      '  --sprint <s>      active, next, a sprint id, a sprint name, or none for the backlog',
+      '  --board <id>      the board whose sprints --sprint picks from, when there are several',
       '',
       'Environment: JIRA_EMAIL, JIRA_API_TOKEN',
       '',
@@ -191,6 +200,9 @@ const VALUED_FLAGS = new Set([
   '--to',
   '--body-file',
   '--reply-to',
+  '--comment',
+  '--sprint',
+  '--board',
 ]);
 
 // Flags whose count is optional: `--with-comments` and `--with-comments 5` both
@@ -235,10 +247,10 @@ function assertKey(value, what) {
 // Same check as an issue key and for the same reason — the value ends up in a
 // URL path. The URL form is accepted because it is what somebody copies out of
 // the browser; whether the id exists is the tracker's answer, not this one's.
-function parseCommentId(value) {
+function parseCommentId(value, flag = '--reply-to') {
   const raw = String(value || '');
   const id = /^\d+$/.test(raw) ? raw : (raw.match(FOCUSED_COMMENT) || [])[1];
-  if (!id) fail(`--reply-to is not a comment id or a link to one: ${value}`, 2);
+  if (!id) fail(`${flag} is not a comment id or a link to one: ${value}`, 2);
   return id;
 }
 
@@ -548,6 +560,104 @@ function referencesUploads(markdown, media) {
   return imageReferences(markdown).some((src) => media[src] || media[basename(src)]);
 }
 
+// --- sprints -----------------------------------------------------------------
+
+// The sprint is a custom field whose id differs from one instance to the next, so
+// it is found by what it is rather than spelled out here. Looked up once per
+// command, however many steps need it; `null` means the instance has none.
+let sprintFieldCache;
+
+async function sprintFieldId(config) {
+  if (sprintFieldCache === undefined) {
+    const fields = await request(config, 'GET', `${API}/field`);
+    const field = (fields || []).find((f) => /:gh-sprint$/.test(f.schema?.custom || ''));
+    sprintFieldCache = field ? field.id : null;
+  }
+  return sprintFieldCache;
+}
+
+// The field keeps every sprint the issue has been in, closed ones included. The
+// one a person asks about is the sprint it sits in now — the open one, if any.
+function currentSprint(value) {
+  const open = (Array.isArray(value) ? value : []).filter((s) => s && s.state !== 'closed');
+  const sprint = open[open.length - 1];
+  return sprint ? { id: sprint.id, name: sprint.name, state: sprint.state } : null;
+}
+
+// Sprints belong to a board, not to a project. A project nearly always has one
+// board that runs them, and then it is found rather than configured; with several,
+// picking one is a decision, so the command stops and names them.
+const SPRINT_BOARDS = new Set(['scrum', 'simple']);
+
+// Agile listings come in pages. "This is the only board" and "no sprint matches" are
+// true only over every page, so every page is read before either is decided.
+async function agileValues(config, path) {
+  const values = [];
+  const join = path.includes('?') ? '&' : '?';
+  for (let startAt = 0; ; ) {
+    const page = await request(config, 'GET', `${path}${join}startAt=${startAt}`);
+    const batch = page.values || [];
+    values.push(...batch);
+    if (page.isLast !== false || !batch.length) return values;
+    startAt += batch.length;
+  }
+}
+
+async function sprintBoard(config, args) {
+  if (args.board !== undefined) {
+    if (!/^\d+$/.test(args.board)) fail(`--board is not a board id: ${args.board}`, 2);
+    return args.board;
+  }
+
+  const all = await agileValues(
+    config,
+    `${AGILE}/board?projectKeyOrId=${encodeURIComponent(config.projectKey)}`,
+  );
+  const boards = all.filter((board) => SPRINT_BOARDS.has(board.type));
+  if (!boards.length) fail(`project ${config.projectKey} has no board that runs sprints`);
+  if (boards.length > 1) {
+    const list = boards.map((board) => `  ${board.id}  ${board.name}`).join('\n');
+    fail(`project ${config.projectKey} has several boards with sprints; pick one with --board:\n${list}`, 2);
+  }
+  return String(boards[0].id);
+}
+
+// What `--sprint` can say: `active`, `next` (the first future sprint in the board's
+// own order), a sprint id, a sprint name, or `none` for the backlog. Only open
+// sprints are candidates — the tracker refuses to move work into a closed one — and
+// anything that does not name exactly one fails with the list of those that would.
+// Resolved before `--dry-run` prints, like a person's name: a typo costs a second
+// here and an issue in the wrong sprint once it is sent.
+async function resolveSprint(config, args) {
+  const value = String(args.sprint).trim();
+  if (!value) fail('--sprint is empty', 2);
+
+  const field = await sprintFieldId(config);
+  if (!field) fail('this tracker has no sprint field');
+  if (value.toLowerCase() === 'none') return { field, sprint: null };
+
+  const board = await sprintBoard(config, args);
+  const open = await agileValues(config, `${AGILE}/board/${board}/sprint?state=active,future`);
+
+  const wanted = value.toLowerCase();
+  let matches;
+  if (wanted === 'active') matches = open.filter((s) => s.state === 'active');
+  else if (wanted === 'next') matches = open.filter((s) => s.state === 'future').slice(0, 1);
+  else if (/^\d+$/.test(value)) matches = open.filter((s) => String(s.id) === value);
+  else matches = open.filter((s) => String(s.name).toLowerCase() === wanted);
+
+  if (matches.length !== 1) {
+    const list = open.map((s) => `  ${s.id}  ${s.state.padEnd(6)}  ${s.name}`).join('\n') || '  (none)';
+    const why = matches.length
+      ? `--sprint ${value} matches ${matches.length} sprints`
+      : `no open sprint matches --sprint ${value}`;
+    fail(`${why}; the open sprints on board ${board}:\n${list}`, 2);
+  }
+
+  const [sprint] = matches;
+  return { field, sprint: { id: sprint.id, name: sprint.name, state: sprint.state } };
+}
+
 // --- operations --------------------------------------------------------------
 
 async function whoami(config, args) {
@@ -567,11 +677,9 @@ async function whoami(config, args) {
 
 async function getIssue(config, args) {
   const key = assertKey(args._[1], 'issue key');
-  const issue = await request(
-    config,
-    'GET',
-    `${API}/issue/${key}?fields=${ISSUE_FIELDS.join(',')}`,
-  );
+  const sprintField = await sprintFieldId(config);
+  const fields = sprintField ? [...ISSUE_FIELDS, sprintField] : ISSUE_FIELDS;
+  const issue = await request(config, 'GET', `${API}/issue/${key}?fields=${fields.join(',')}`);
 
   const f = issue.fields || {};
   const result = {
@@ -587,6 +695,8 @@ async function getIssue(config, args) {
     summary: f.summary || null,
     labels: f.labels || [],
     priority: f.priority?.name || null,
+    // `null` is the backlog, or an instance without sprints.
+    sprint: sprintField ? currentSprint(f[sprintField]) : null,
     parent: f.parent ? { key: f.parent.key, summary: f.parent.fields?.summary || null } : null,
     subtasks: (f.subtasks || []).map((s) => ({
       key: s.key,
@@ -780,8 +890,19 @@ async function createIssue(config, args) {
 
   if (args.assignee) fields.assignee = { id: await resolveAssignee(config, args.assignee) };
 
+  // In the same request as everything else, so the exit code still means one thing.
+  // `none` asks for what a new issue gets anyway: the backlog.
+  let sprint = null;
+  if (args.sprint !== undefined) {
+    const resolved = await resolveSprint(config, args);
+    sprint = resolved.sprint;
+    if (sprint) fields[resolved.field] = sprint.id;
+  }
+
   if (args.dryRun) {
-    const steps = [{ method: 'POST', path: `${API}/issue`, body: { fields } }];
+    const steps = [
+      { method: 'POST', path: `${API}/issue`, ...(sprint ? { sprint: sprint.name } : {}), body: { fields } },
+    ];
     if (attachments.length) {
       steps.push({ method: 'POST', path: `${API}/issue/<new key>/attachments`, files: attachments });
       steps.push({
@@ -796,6 +917,7 @@ async function createIssue(config, args) {
 
   const created = await request(config, 'POST', `${API}/issue`, { fields });
   const result = { key: created.key, url: browseUrl(config, created.key) };
+  if (sprint) result.sprint = sprint.name;
 
   // An attachment cannot exist before the issue does, so a description that
   // shows one is necessarily written twice. Only the second write knows the
@@ -817,7 +939,8 @@ async function createIssue(config, args) {
   if (args.json) {
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   } else {
-    process.stdout.write(`${result.key} — ${result.url}\n`);
+    const where = sprint ? ` — in ${sprint.name}` : '';
+    process.stdout.write(`${result.key} — ${result.url}${where}\n`);
   }
 }
 
@@ -1102,8 +1225,8 @@ async function findUser(config, args) {
 // the issue first and prints what each field holds today. "A human confirms every
 // write" is an empty rule when the person confirming cannot see what disappears.
 //
-// Status stays out of reach on purpose: deciding on its own that work has moved is
-// the one thing the process definition says a skill may never do.
+// Status is not a field here. Moving an issue is transition-issue, its own operation,
+// because a skill may never decide on its own that work has moved — only a person can.
 async function updateIssue(config, args) {
   const key = assertKey(args._[1], 'issue key');
 
@@ -1130,21 +1253,41 @@ async function updateIssue(config, args) {
     if (!existsSync(resolve(path))) fail(`attachment not found: ${resolve(path)}`, 2);
   }
 
+  // `none` sends an empty sprint, which puts the issue back in the backlog.
+  let sprint;
+  let sprintField = null;
+  if (args.sprint !== undefined) {
+    const resolved = await resolveSprint(config, args);
+    sprintField = resolved.field;
+    sprint = resolved.sprint;
+    fields[sprintField] = sprint ? sprint.id : null;
+  }
+
   if (!Object.keys(fields).length && markdown === null && !attachments.length) {
-    fail('update-issue needs one of --summary, --description-file, --labels, --assignee, --attach', 2);
+    fail(
+      'update-issue needs one of --summary, --description-file, --labels, --assignee, --sprint, --attach',
+      2,
+    );
   }
 
   // Only the fields being overwritten. Listing the rest would bury the ones that
   // matter under the ones nothing is happening to. An attach-only run touches no
-  // field and reads nothing.
+  // field and reads nothing; a sprint change also reads the type and the parent,
+  // because a subtask cannot take one.
   const replacing = {};
   let known = config;
   if (Object.keys(fields).length || markdown !== null) {
-    const before = await request(
-      config,
-      'GET',
-      `${API}/issue/${key}?fields=summary,labels,assignee,description`,
-    );
+    const read = ['summary', 'labels', 'assignee', 'description'];
+    if (sprintField) read.push('issuetype', 'parent', sprintField);
+    const before = await request(config, 'GET', `${API}/issue/${key}?fields=${read.join(',')}`);
+
+    // The tracker refuses a sprint on a subtask with an error that does not say why:
+    // a subtask sits wherever its parent sits, so the parent is the issue to move.
+    if (sprintField && before.fields.issuetype?.subtask) {
+      const parent = before.fields.parent?.key || 'the parent';
+      fail(`${key} is a subtask, and a subtask follows its parent's sprint — move ${parent} instead`, 2);
+    }
+
     if (fields.summary !== undefined) replacing.summary = before.fields.summary;
     if (fields.labels !== undefined) replacing.labels = before.fields.labels;
     if (fields.assignee !== undefined) {
@@ -1158,6 +1301,7 @@ async function updateIssue(config, args) {
       // editor, where a mention need not be anybody in the file or on the thread.
       known = { ...config, people: { ...mentionsIn(before.fields.description), ...config.people } };
     }
+    if (sprintField) replacing.sprint = currentSprint(before.fields[sprintField])?.name || 'backlog';
   }
 
   // Converted once, after the uploads, so the media ids are in it; the dry run
@@ -1170,7 +1314,8 @@ async function updateIssue(config, args) {
 
   if (args.dryRun) {
     await describe(null);
-    const put = { method: 'PUT', path: `${API}/issue/${key}`, replacing, body: { fields } };
+    const target = sprintField ? { sprint: sprint ? sprint.name : 'backlog' } : {};
+    const put = { method: 'PUT', path: `${API}/issue/${key}`, replacing, ...target, body: { fields } };
     const steps = attachments.length
       ? [{ method: 'POST', path: `${API}/issue/${key}/attachments`, files: attachments }, put]
       : null;
@@ -1191,7 +1336,9 @@ async function updateIssue(config, args) {
     process.stderr.write(`replacing:\n${JSON.stringify(replacing, null, 2)}\n`);
     await request(config, 'PUT', `${API}/issue/${key}`, { fields });
   }
-  const result = { key, updated: Object.keys(fields), url: browseUrl(config, key) };
+  const updated = Object.keys(fields).map((name) => (name === sprintField ? 'sprint' : name));
+  const result = { key, updated, url: browseUrl(config, key) };
+  if (sprintField) result.sprint = sprint ? sprint.name : 'backlog';
   if (uploaded.length) result.attachments = uploaded;
 
   if (args.json) {
@@ -1271,6 +1418,121 @@ async function linkIssues(config, args) {
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   } else {
     process.stdout.write(`${from} ${result.type.toLowerCase()} ${to} — ${result.url}\n`);
+  }
+}
+
+// Where the issue is now and every move the workflow allows from there. Fields a
+// transition screen demands without a default come along, because they are what makes
+// a move fail, and seeing them before the move is cheaper than reading the error after.
+async function readTransitions(config, key) {
+  const issue = await request(config, 'GET', `${API}/issue/${key}?fields=status`);
+  const data = await request(
+    config,
+    'GET',
+    `${API}/issue/${key}/transitions?expand=transitions.fields`,
+  );
+  const transitions = (data.transitions || []).map((t) => ({
+    id: String(t.id),
+    name: t.name,
+    to: t.to?.name || null,
+    category: t.to?.statusCategory?.name || null,
+    requires: Object.entries(t.fields || {})
+      .filter(([, field]) => field.required && !field.hasDefaultValue)
+      .map(([id, field]) => field.name || id),
+  }));
+  return { status: issue.fields?.status?.name || null, transitions };
+}
+
+function formatTransition(t) {
+  const requires = t.requires.length ? ` — requires ${t.requires.join(', ')}` : '';
+  return `  ${t.id.padEnd(6)}${t.name} → ${t.to} (${t.category})${requires}`;
+}
+
+async function listTransitions(config, args) {
+  const key = assertKey(args._[1], 'issue key');
+  const { status, transitions } = await readTransitions(config, key);
+
+  if (args.json) {
+    process.stdout.write(`${JSON.stringify({ key, status, transitions }, null, 2)}\n`);
+    return;
+  }
+
+  process.stdout.write(`${key} — ${status}\n`);
+  process.stdout.write(
+    transitions.length ? `${transitions.map(formatTransition).join('\n')}\n` : '  no transitions\n',
+  );
+}
+
+// A status change is a write a person asked for, never one a skill arrives at on its
+// own — the process definition is explicit about that, and it is why status is not a
+// field of update-issue. What this operation adds over a raw request is the reading
+// first: where the issue is now, and whether the move asked for exists from there.
+//
+// No comment and no screen fields ride along. A comment is add-comment, so each exit
+// code means one thing; a screen that demands a field fails here before anything is
+// sent, and the move is finished in the tracker, where the field can be filled in.
+async function transitionIssue(config, args) {
+  const key = assertKey(args._[1], 'issue key');
+  // Present, not truthy, as with --reply-to: an empty variable is not a status.
+  const wanted = args.to === undefined ? '' : String(args.to).trim();
+  if (!wanted) fail('transition-issue needs --to <status|id>', 2);
+
+  const byId = /^\d+$/.test(wanted);
+  const lower = wanted.toLowerCase();
+  const { status, transitions } = await readTransitions(config, key);
+  const available = transitions.map(formatTransition).join('\n') || '  no transitions';
+
+  // Nothing to move, so a second run of the same command is harmless. An id skips
+  // this: a transition back into the same status is a real move somebody may want.
+  if (!byId && status?.toLowerCase() === lower) {
+    const result = { key, status, changed: false, url: browseUrl(config, key) };
+    if (args.json) process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+    else process.stdout.write(`${key} is already in ${status} — ${result.url}\n`);
+    return;
+  }
+
+  let matches = byId
+    ? transitions.filter((t) => t.id === wanted)
+    : transitions.filter((t) => t.to?.toLowerCase() === lower);
+  if (!matches.length && !byId) matches = transitions.filter((t) => t.name.toLowerCase() === lower);
+
+  if (!matches.length) {
+    fail(`${key} is in ${status}, and no transition from there matches "${wanted}":\n${available}`);
+  }
+  if (matches.length > 1) {
+    fail(
+      `several transitions lead to ${matches[0].to}; pick one with --to <id>:\n` +
+        matches.map(formatTransition).join('\n'),
+    );
+  }
+
+  const [transition] = matches;
+  const path = `${API}/issue/${key}/transitions`;
+  const body = { transition: { id: transition.id } };
+
+  if (args.dryRun) {
+    const requires = transition.requires.length ? { requires: transition.requires } : {};
+    process.stdout.write(
+      `${JSON.stringify({ method: 'POST', path, from: status, to: transition.to, transition: transition.name, ...requires, body }, null, 2)}\n`,
+    );
+    return;
+  }
+
+  if (transition.requires.length) {
+    fail(
+      `moving ${key} to ${transition.to} asks for ${transition.requires.join(', ')}, which this ` +
+        `operation does not set — finish the move in the tracker: ${browseUrl(config, key)}`,
+    );
+  }
+
+  process.stderr.write(`from: ${status}\n`);
+  await request(config, 'POST', path, body);
+  const result = { key, from: status, to: transition.to, changed: true, url: browseUrl(config, key) };
+
+  if (args.json) {
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  } else {
+    process.stdout.write(`${key} — ${status} → ${transition.to} — ${result.url}\n`);
   }
 }
 
@@ -1483,6 +1745,62 @@ async function addComment(config, args) {
   }
 }
 
+// Correcting a comment instead of posting a second one that contradicts it — but
+// only one's own. Somebody else's comment is their words, and an edit made in their
+// name is the one change a reader of the thread cannot see. So the author is checked
+// against the account running this before anything is converted or written, and what
+// the comment says today is printed first, as update-issue does with a description.
+async function updateComment(config, args) {
+  const key = assertKey(args._[1], 'issue key');
+  if (args.comment === undefined) fail('update-comment needs --comment <id|url>', 2);
+  if (!args['body-file']) fail('update-comment needs --body-file', 2);
+  const id = parseCommentId(args.comment, '--comment');
+
+  const bodyPath = resolve(args['body-file']);
+  if (!existsSync(bodyPath)) fail(`body file not found: ${bodyPath}`, 2);
+  const markdown = readFileSync(bodyPath, 'utf8');
+
+  // Scoped by key, so a comment of another issue comes back 404 before anything else.
+  const path = `${API}/issue/${key}/comment/${id}`;
+  const [comment, me] = await Promise.all([
+    request(config, 'GET', path),
+    request(config, 'GET', `${API}/myself`),
+  ]);
+  if (comment.author?.accountId !== me.accountId) {
+    fail(
+      `comment ${id} on ${key} was written by ${comment.author?.displayName || 'somebody else'}; ` +
+        'update-comment edits only your own comments',
+    );
+  }
+
+  // Seeded from the comment's own mentions for the reason update-issue seeds from
+  // the description: get-issue prints them as `@[Name]`, and an edit of a comment
+  // written in the editor must not stop on somebody outside the file and the thread.
+  const known = { ...config, people: { ...mentionsIn(comment.body), ...config.people } };
+  const doc = markdownToAdf(markdown, await adfOptions(known, markdown, null, key));
+
+  const replacing = adfToText(comment.body, readOptions(config)).trim();
+  // Carried over on a root comment: an edit without it would lift a restriction somebody
+  // chose. A reply inherits its root's visibility, and the tracker refuses one that sends it.
+  const keep = comment.visibility && !comment.parentId;
+  const body = { body: doc, ...(keep ? { visibility: comment.visibility } : {}) };
+
+  if (args.dryRun) {
+    process.stdout.write(`${JSON.stringify({ method: 'PUT', path, replacing, body }, null, 2)}\n`);
+    return;
+  }
+
+  process.stderr.write(`replacing:\n${replacing}\n`);
+  await request(config, 'PUT', path, body);
+  const result = { id, url: `${browseUrl(config, key)}?focusedCommentId=${id}` };
+
+  if (args.json) {
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+  } else {
+    process.stdout.write(`updated comment — ${result.url}\n`);
+  }
+}
+
 // --- main --------------------------------------------------------------------
 
 const args = parseArgs(process.argv.slice(2));
@@ -1506,7 +1824,10 @@ const operations = {
   'create-issue': createIssue,
   'update-issue': updateIssue,
   'link-issues': linkIssues,
+  'list-transitions': listTransitions,
+  'transition-issue': transitionIssue,
   'add-comment': addComment,
+  'update-comment': updateComment,
   'attach-file': attachFile,
 };
 const run = operations[operation];

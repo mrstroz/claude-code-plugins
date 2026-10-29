@@ -200,6 +200,22 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/jira-api/scripts/jira.mjs" \
   add-comment "${ISSUE_KEY}" --body-file "/tmp/comment.md" [--reply-to <id>]
 ```
 
+**Correcting an earlier comment of the user's** is an edit, not a new comment.
+When the user wants to fix what they posted before rather than add to it, find
+that comment in the thread from Step 1 (its `author` is the name `whoami`
+prints) and edit it by its `id`, so the thread does not carry two versions that
+contradict each other:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/skills/jira-api/scripts/jira.mjs" \
+  update-comment "${ISSUE_KEY}" --comment <id> --body-file "/tmp/comment.md" --dry-run
+```
+
+The dry run prints `replacing`, the comment as it reads today. Show it beside
+the new text and post only after the user confirms the swap: once the edit
+lands, the old wording is gone. The script refuses a comment somebody else
+wrote, so anything that is not the user's own gets a reply instead.
+
 The script converts the Markdown to the tracker's rich-text format and prints
 the comment id and a link to it. Show the link to the user. What the Markdown
 turns into, and which constructs are available, is

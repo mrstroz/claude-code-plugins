@@ -1,6 +1,6 @@
 ---
 name: jira-api
-description: Named operations against the JIRA REST API — resolve the current account, read an issue by key with its comment thread, search with a JQL predicate, export every issue a predicate matches to a JSON file, list a project's versions, look up a person's account id, create an issue from a Markdown file, edit one, link two of them, attach files, comment on one or reply inside a thread. Every other skill in this plugin calls these operations instead of touching the API, so credentials, configuration, the Markdown-to-ADF conversion and the confirm-before-writing rule live in one place. Use whenever someone asks to look up, open, inspect, search for, find, export, edit, relabel, reassign, link or attach something to a JIRA issue, or asks who somebody is in JIRA — "pokaż TES-42", "co jest w tym tickecie", "znajdź zadania o imporcie", "zmień tytuł", "przypisz do", "podlinkuj", "wrzuć screenshot do", "show me PROJ-12", "search jira for", "who is X in jira", "export the sprint to a file" — and whenever another skill needs tracker data or has to write to the tracker. Do NOT use it to draft a new ticket from a description of work (jira-task), to write a comment from rough notes (jira-feedback), or to produce a summary, release notes, a roadmap or a test plan (the other jira skills); those call this one.
+description: Named operations against the JIRA REST API — resolve the current account, read an issue by key with its comment thread, search with a JQL predicate, export every issue a predicate matches to a JSON file, list a project's versions, look up a person's account id, create an issue from a Markdown file, edit one, move it to another status, link two of them, attach files, comment on one or reply inside a thread. Every other skill in this plugin calls these operations instead of touching the API, so credentials, configuration, the Markdown-to-ADF conversion and the confirm-before-writing rule live in one place. Use whenever someone asks to look up, open, inspect, search for, find, export, edit, relabel, reassign, move, link or attach something to a JIRA issue, or asks who somebody is in JIRA — "pokaż TES-42", "co jest w tym tickecie", "znajdź zadania o imporcie", "zmień tytuł", "przypisz do", "przenieś do In Progress", "zmień status", "podlinkuj", "wrzuć screenshot do", "show me PROJ-12", "search jira for", "who is X in jira", "move it to code review", "export the sprint to a file" — and whenever another skill needs tracker data or has to write to the tracker. Do NOT use it to draft a new ticket from a description of work (jira-task), to write a comment from rough notes (jira-feedback), or to produce a summary, release notes, a roadmap or a test plan (the other jira skills); those call this one.
 ---
 
 # JIRA operations
@@ -33,19 +33,23 @@ node "$J" list-versions [--json]
 node "$J" list-types [--json]
 node "$J" find-user <query> [--json]
 node "$J" create-issue --type <type> --summary "<text>" --description-file <path.md> \
-    [--labels a,b] [--parent <KEY>] [--assignee <person>] [--attach <path>[,<path>]] [--dry-run]
+    [--labels a,b] [--parent <KEY>] [--assignee <person>] [--sprint <sprint>] \
+    [--attach <path>[,<path>]] [--dry-run]
 node "$J" update-issue <KEY> [--summary "<text>"] [--description-file <path.md>] \
-    [--labels a,b] [--assignee <person>] [--attach <path>[,<path>]] [--dry-run]
+    [--labels a,b] [--assignee <person>] [--sprint <sprint>] [--attach <path>[,<path>]] [--dry-run]
 node "$J" attach-file <KEY> --file <path>[,<path>] [--dry-run]
 node "$J" link-issues <KEY> --to <KEY> [--type <relationship>] [--dry-run]
+node "$J" list-transitions <KEY> [--json]
+node "$J" transition-issue <KEY> --to <status|id> [--dry-run]
 node "$J" add-comment <KEY> --body-file <path.md> [--reply-to <id|url>] [--dry-run]
+node "$J" update-comment <KEY> --comment <id|url> --body-file <path.md> [--dry-run]
 ```
 
 | Operation | Returns | Notes |
 |---|---|---|
 | `whoami` | account id and display name | how a skill learns who is running it, for assignee and reporter |
 | `show-config` | site, project key, the names in `people`, and `language`, `taxonomy`, `risk` when the file has them | where the values came from; the way a skill reads the optional blocks without parsing JSON itself |
-| `get-issue` | one JSON object: key, type, status and status category, resolution, summary, labels, parent, subtasks, links, attachments, assignee, reporter, dates, description as Markdown | `--with-comments` adds the thread, replies nested under what they answer |
+| `get-issue` | one JSON object: key, type, status and status category, resolution, summary, labels, sprint, parent, subtasks, links, attachments, assignee, reporter, dates, description as Markdown | `--with-comments` adds the thread, replies nested under what they answer |
 | `search-issues` | one line per match, or the full objects with `--json` | the project scope is composed by the script — see [Searching](#searching) |
 | `export-issues` | the path of the file it wrote | every match, to disk, with descriptions and comments as Markdown — see [Exporting](#exporting) |
 | `list-versions` | the project's versions: unreleased first, then the newest release, archived last | cheaper and more honest than scanning issues for version names |
@@ -54,7 +58,10 @@ node "$J" add-comment <KEY> --body-file <path.md> [--reply-to <id|url>] [--dry-r
 | `create-issue` | the new key and its browse URL | the description is read **from a file**, never from an argument |
 | `update-issue` | which fields changed, and a link | prints what it is about to overwrite first — see [Editing](#editing) |
 | `link-issues` | the two keys and the relationship | its own operation, not a flag on `create-issue` — see [Linking](#linking) |
+| `list-transitions` | the current status and every move allowed from it | with the fields a move demands — see [Transitions](#transitions) |
+| `transition-issue` | the key, the status it left and the one it entered | only when a person asked for that move — see [Transitions](#transitions) |
 | `add-comment` | the comment id and a link to it | `--reply-to` answers inside a thread; people are named in the body |
+| `update-comment` | a link to the comment | your own comments only; prints what it replaces first |
 | `attach-file` | for each file: its attachment id and its media id | uploading on its own, and how an image that will not appear is diagnosed |
 
 **Status and status category are different questions.** A board may call a column anything, so
@@ -66,9 +73,13 @@ asking "is this already done" reads the category, and `resolution` next to it.
 outweigh everything else on the issue, and most reads do not need it. A reply comes back under what
 it answers, in the root's `replies`; every comment carries `id`, which is what `--reply-to` needs.
 
-**Every call writes a new comment.** Nothing looks for what this plugin wrote last time, so a skill
-that runs twice leaves two comments. Read the issue before writing, and correct an earlier comment
-in the tracker rather than posting a second one that contradicts it.
+**`add-comment` always writes a new comment.** Nothing looks for what this plugin wrote last time,
+so a skill that runs twice leaves two. Read the thread first, and correct your own earlier comment
+with `update-comment` rather than posting a second one that contradicts it. `--comment` takes the
+`id` that `get-issue --with-comments` prints, or the comment's link. It refuses a comment somebody
+else wrote, because an edit in their name is the one change a reader of the thread cannot see. Like
+`update-issue`, it prints the text it replaces: beside the request under `--dry-run`, on stderr
+before a real write.
 
 ## Setup
 
@@ -160,8 +171,8 @@ not.
 ## Editing
 
 `update-issue` changes the fields it is given and leaves the rest alone: summary, description,
-labels, assignee. **Status is not among them.** Deciding on its own that work has moved is the one
-thing no skill here does; a transition is a person's call, made in the browser.
+labels, assignee, sprint ([Sprints](#sprints)). **Status is not among them** — moving an issue is
+its own operation, see [Transitions](#transitions).
 
 Replacing a description destroys one, including whatever somebody added to it since it was
 written. So the operation reads the issue first and prints what every field it touches holds
@@ -176,6 +187,35 @@ mention comes back as `@[Name]`, and on the way in `update-issue` resolves it th
 the current description already mentions before the file and the thread, so an editor-written
 mention of somebody outside both survives an edit. What the round trip loses is listed in
 [the dialect](references/markdown.md#reading-is-the-same-dialect-backwards).
+
+## Sprints
+
+`--sprint` on `create-issue` and `update-issue` takes `active`, `next` (the first future sprint in
+the board's order), a sprint id, a sprint name, or `none` for the backlog. The script finds the
+sprint field and the project's board itself; nothing about sprints goes into the configuration.
+When the project has several boards that run sprints, it lists them and wants `--board <id>`. A
+value that names no open sprint fails with the list of open ones, before `--dry-run` prints
+anything. `get-issue` returns the issue's current `sprint` as `{ id, name, state }`, or `null` for
+the backlog.
+
+**A subtask has no sprint of its own.** It sits wherever its parent sits, so `update-issue` refuses
+`--sprint` on one and names the parent to move instead.
+
+## Transitions
+
+**A status changes only because a person asked for that move.** Deciding on its own that work has
+moved is the one thing no skill here does. A skill that sees the board disagree with reality says
+so and hands over the `transition-issue` command; it does not run it.
+
+`--to` takes the target status as the board names it, or a transition id from `list-transitions`
+when several moves lead to the same status. The operation reads where the issue is first: a move
+the workflow does not allow from there fails with the list of the ones it does, and an issue already
+in the target status is left alone and exits `0`. A workflow need not offer a way back, so a move
+made to try the operation out may not be undoable from the command line.
+
+No comment and no screen fields ride along. A comment is `add-comment`, so each exit code means one
+thing. A move whose screen demands a field, such as a resolution, fails before anything is sent —
+`list-transitions` shows those fields beforehand — and is finished in the tracker.
 
 ## Linking
 
@@ -233,7 +273,6 @@ Three failures account for most of them:
 
 ## What is deliberately absent
 
-Status transitions — the converter already produces the format they need, but moving work is a
-person's decision, made where the board is. Deduplication — see [Writing](#writing). Paging in
+Filling the fields a transition screen asks for — see [Transitions](#transitions). Deduplication — see [Writing](#writing). Paging in
 `search-issues` — see [Searching](#searching). Anything Confluence: publishing a page is the
 Atlassian MCP's job, and the two skills that do it say so.

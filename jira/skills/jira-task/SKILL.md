@@ -210,7 +210,7 @@ First with `--dry-run`, so the user sees the exact request, then without:
 node "${CLAUDE_PLUGIN_ROOT}/skills/jira-api/scripts/jira.mjs" create-issue \
     --type <type> --summary "<title>" --description-file <draft.md> \
     [--labels risk-<level>,<category>] --assignee "<name>" [--parent <KEY>] \
-    [--attach <file>[,<file>]] --dry-run
+    [--sprint <sprint>] [--attach <file>[,<file>]] --dry-run
 ```
 
 `--labels` goes in only when §4 produced any. For a `Story`: create the `Story`, then each subtask
@@ -224,6 +224,12 @@ check by looking at it.
 Set the type, the title, the description, the labels, the parent and the assignee. **Leave
 priority and release version alone.** Those are decisions someone else makes, and a guessed value
 in either is worse than an empty one, because it looks like a decision.
+
+**`--sprint` goes in only when the author named a sprint**: "the current sprint" or "bieżący
+sprint" is `active`, "the next one" or "następny" is `next`, and a sprint's own name is passed as
+written. Otherwise leave it out and the issue lands in the backlog. Never ask about it; it is the
+same kind of decision as priority. A subtask never gets `--sprint`, because it follows its
+parent's.
 
 ## 7. Report
 

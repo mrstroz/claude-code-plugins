@@ -132,7 +132,7 @@ After saving (or keeping), mention that the file is ready for use by other skill
 
 ## Raw API Access
 
-For a read the named operations do not cover (workflow transitions, boards, sprints), call the REST API directly with the same credentials. Reads only: anything that changes JIRA state goes through a `jira-api` operation, which shows the request and waits for confirmation. The tracker's rich-text format is what makes a hand-written write break, and the script already handles it.
+For a read the named operations do not cover (boards, sprints), call the REST API directly with the same credentials. Reads only: anything that changes JIRA state goes through a `jira-api` operation, which shows the request and waits for confirmation. The tracker's rich-text format is what makes a hand-written write break, and the script already handles it.
 
 **Auth** — Basic auth with the same env vars the script uses:
 
@@ -144,6 +144,5 @@ curl -s -u "${JIRA_EMAIL}:${JIRA_API_TOKEN}" \
 
 | Endpoint | Purpose |
 |----------|---------|
-| `GET /rest/api/3/issue/{key}/transitions` | Available workflow transitions (IDs are instance-specific) |
 | `GET /rest/agile/1.0/board?projectKeyOrId={key}` | Boards; `/rest/agile/1.0/board/{id}/sprint` lists sprints |
 | `GET /rest/api/3/myself` | Verify credentials / current account |
