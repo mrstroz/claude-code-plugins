@@ -117,6 +117,28 @@ Start every reviewing tab before the driver; each waits for the driver's first m
 
 The sessions are real tabs, not subagents; the protocol lives in `pair/references/protocol.md`, and the task's state (goal, members with their profiles and scopes, plan, decisions, open blockers, pending reviews) in `~/.cache/claude-pair/<repo>-<hash>/<run>.md`, written by the driver only. Every review request points at a snapshot of the working tree, taken by `pair/scripts/snap.sh` as an immutable ref under `refs/pair/<run>/` without touching the index, so a reviewer reads the revision and not whatever the driver has typed since. Every verdict is recorded against one member, one item, one revision and one sha: a gate opens when every required reviewer has approved that exact revision, one reviewer's `FIX` is not answered by another's `OK`, and a reviewer is never dropped from the required list to get past either. Approval is required where the plan says so — the plan itself, interfaces, schema, and any deployment, migration or push before it runs — and asynchronous elsewhere; `--strict` gates every step.
 
+### team
+
+A driver, architects and testers on one task, in separate sessions and possibly in different CLIs: an architect in Codex next to a driver in Claude Code, for instance. Sessions talk only through a run's files, so any CLI with a shell can hold a seat. It sits next to `pair`, which stays as it is.
+
+| Skill | Role |
+|---|---|
+| `driver` | Does the task, holds the plan, reports to the user |
+| `architect` | The approach, the interfaces, the consequences elsewhere |
+| `tester` | The criteria as checks, the edge cases, independent runs |
+
+Start with `/team:driver <task>`, or `/team:driver <task> lite` for a small change with one reviewer. It prints a line to paste into each other session, including one in another CLI, with nothing to install there.
+
+Each run lives in `<repo>/.team/<run>/`, ignored by git without touching `.git`: `events.jsonl` is the record, and `chat.md`, `team.md` and `plan.md` are generated from it to read. `team.mjs`, copied into the run, is the only writer, and it owns what instructions alone failed to keep true:
+
+- A message counts as read when the receiver says so with `--seen`. An unacknowledged batch comes back, so an interrupted or compacted session recovers by itself.
+- An `OK` counts for one revision from one required reviewer, and lapses when something it rests on moves. `gates` says what is missing and `close --status complete` refuses while anything is.
+- A check is run through `exec`, which records the command, directory, exit code and output, and says whether that directory holds the revision. A verdict states whether it was executed, inspected or not run, and "executed" has to cite such a record.
+
+**Waiting.** Claude Code runs `wait` in the background and spends no turns until a message arrives. Codex ends its turn, and `team.mjs watch`, an ordinary process the driver keeps running, wakes it with `codex queue --resume`. The signal carries no content. After failed signals the driver gets `WAKE_FAILED`, and you can always tell a session by hand to read its messages.
+
+Architects can weigh `code-quality`, `project` or `pragmatist` (`join --profile`). The contract is `team/references/protocol.md`. Tests: `node --test team/scripts/*.test.mjs`.
+
 ## Repository layout
 
 ```

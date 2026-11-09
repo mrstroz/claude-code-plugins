@@ -43,6 +43,11 @@
       "name": "pair",
       "source": "./pair",
       "description": "Pair or a team across Claude Code tabs — one session drives, a navigator or several architects and testers review the plan, approve the gated items and verify the result; architects pick the profiles they weigh, and every verdict is recorded against one member and revision"
+    },
+    {
+      "name": "team",
+      "source": "./team",
+      "description": "A driver, architects and testers across separate sessions and different CLIs (an architect in Codex, say), talking only through a run's files — a script owns delivery, per-revision verdicts, recorded check runs and the refusal to close with anything unreviewed"
     }
   ]
 }

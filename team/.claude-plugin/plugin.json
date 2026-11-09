@@ -1,0 +1,8 @@
+{
+  "name": "team",
+  "description": "A driver, architects and testers on one task, in separate sessions and possibly different CLIs (an architect in Codex, say), communicating only through a run's files. A script owns what instructions failed to keep true: delivery, which verdict belongs to which revision, recorded check runs, and nothing obligatory left unreviewed at close",
+  "version": "0.1.0",
+  "author": {
+    "name": "mrstroz"
+  }
+}
